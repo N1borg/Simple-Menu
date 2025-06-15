@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Menu - Chez Jojo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+
+  <div class="max-w-2xl mx-auto px-4 py-6">
+
+    <div class="bg-yellow-100 text-yellow-900 text-sm px-4 py-2 text-center font-semibold shadow-sm">
+      🍹 Happy Hour : -50% sur les cocktails de 17h à 19h, tous les jours !
+    </div>
+
+    <div class="bg-red-100 text-red-800 text-sm px-4 py-2 text-center font-bold shadow-md animate-pulse">
+      🚨 Fermeture exceptionnelle ce samedi 15 pour privatisation. Merci de votre compréhension !
+    </div>
+
+    <!-- Overlay -->
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <!-- Pop-up box -->
+      <div class="bg-white rounded-lg shadow-lg p-6 w-80 text-center relative">
+        <button onclick="this.parentElement.parentElement.remove()" class="absolute top-2 right-2 text-gray-400 hover:text-black">&times;</button>
+        <h3 class="text-lg font-bold mb-2">🎉 Soirée blind test vendredi !</h3>
+        <p class="text-sm text-gray-600 mb-4">Venez tester votre culture musicale et gagner des cocktails gratuits 🥳</p>
+        <button onclick="this.parentElement.parentElement.remove()" class="bg-bordeaux text-black px-4 py-2 rounded font-semibold">
+          Fermer
+        </button>
+      </div>
+    </div>
+
+    <div class="fixed bottom-4 right-4 bg-green-100 border border-green-300 text-green-900 px-4 py-2 rounded-lg shadow-md text-sm">
+      <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-gray-400 hover:text-black">&times;</button>
+      ✅ Offre “Apéro Duo” activée jusqu'à 20h.
+    </div>
+
+    <!-- Logo / Titre -->
+    <div class="text-center mb-6">
+      <img src="https://res.cloudinary.com/demo/image/upload/logo.png" alt="Logo" class="mx-auto w-20 h-20 rounded-full mb-2">
+      <h1 class="text-3xl font-bold">Chez Jojo</h1>
+      <p class="text-red-600 mt-2 font-semibold">🍹 Happy Hour : -50% sur les cocktails de 17h à 19h</p>
+    </div>
+
+    <!-- Section générée dynamiquement -->
+    <div class="space-y-8">
+
+      <section class="max-w-4xl mx-auto px-4 py-6">
+        <h2 class="text-2xl font-bold mb-4">🍸 Cocktails</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
+            <h3 class="text-lg font-semibold">Mojito</h3>
+            <p class="text-sm text-gray-500 mt-1">Rhum, menthe, sucre de canne</p>
+            <div class="text-right font-bold text-green-600 mt-2">8€</div>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
+            <h3 class="text-lg font-semibold">Spritz</h3>
+            <p class="text-sm text-gray-500 mt-1">Aperol, prosecco, orange</p>
+            <div class="text-right font-bold text-green-600 mt-2">7€</div>
+          </div>
+          <div class="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
+            <h3 class="text-lg font-semibold">Sex on the Beach</h3>
+            <p class="text-sm text-gray-500 mt-1">Vodka, cranberry, pêche</p>
+            <div class="text-right font-bold text-green-600 mt-2">9€</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="max-w-3xl mx-auto px-4 py-6">
+        <h2 class="text-2xl font-bold mb-4">🍷 Vins</h2>
+
+        <div class="space-y-4">
+          <div class="flex gap-4 items-center bg-gray-50 rounded-xl p-4 shadow-sm">
+            <img src="https://res.cloudinary.com/demo/image/upload/sample.jpg" class="w-20 h-20 rounded-lg object-cover" alt="Vin rouge">
+            <div class="flex-1">
+              <h3 class="font-semibold">Bordeaux Rouge</h3>
+              <p class="text-sm text-gray-500">2019, tannique et fruité</p>
+            </div>
+            <div class="font-bold text-green-600">4€</div>
+          </div>
+
+          <div class="flex gap-4 items-center bg-gray-50 rounded-xl p-4 shadow-sm">
+            <img src="https://res.cloudinary.com/demo/image/upload/sample.jpg" class="w-20 h-20 rounded-lg object-cover" alt="Vin rosé">
+            <div class="flex-1">
+              <h3 class="font-semibold">Rosé de Provence</h3>
+              <p class="text-sm text-gray-500">2021, léger et frais</p>
+            </div>
+            <div class="font-bold text-green-600">4€</div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="bg-gray-100 py-6">
+        <div class="max-w-2xl mx-auto px-4">
+          <h2 class="text-2xl font-bold mb-4">🍺 Bières</h2>
+          <div class="space-y-4">
+            <div class="bg-white p-4 rounded-lg shadow-md">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="font-semibold text-lg">Heineken (25cl)</h3>
+                  <p class="text-sm text-gray-500">Bière blonde légère</p>
+                </div>
+                <div class="text-green-600 font-bold">3€</div>
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-md">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="font-semibold text-lg">Leffe Blonde (50cl)</h3>
+                  <p class="text-sm text-gray-500">Bière belge, douce et maltée</p>
+                </div>
+                <div class="text-green-600 font-bold">5€</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold mb-2">🥤 Softs</h2>
+        <ul class="space-y-1">
+          <li class="flex justify-between border-b pb-1">
+            <span>Coca-Cola</span>
+            <span>2.5€</span>
+          </li>
+          <li class="flex justify-between border-b pb-1">
+            <span>Jus d’orange</span>
+            <span>2.5€</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="bg-white py-6 px-4 max-w-3xl mx-auto">
+        <h2 class="text-2xl font-bold border-b-2 border-bordeaux pb-2 mb-4">🥤 Boissons fraîches / Cold drinks</h2>
+        <ul class="grid sm:grid-cols-2 gap-4 text-gray-800">
+          <li class="flex justify-between">
+            <span>Perrier 33cl</span>
+            <span class="font-semibold">3,90€</span>
+          </li>
+          <li class="flex justify-between">
+            <span>Orangina 25cl</span>
+            <span class="font-semibold">3,90€</span>
+          </li>
+          <li class="flex justify-between">
+            <span>Sirop à l’eau 25cl</span>
+            <span class="font-semibold">2,50€</span>
+          </li>
+          <li class="flex justify-between">
+            <span>Diabolo 25cl</span>
+            <span class="font-semibold">3,30€</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="bg-gray-50 py-6 px-4 max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 border-b border-bordeaux pb-2">🍽️ Plats / Dishes</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-white p-4 shadow rounded">
+            <h3 class="text-lg font-semibold">Carbonade Flamande</h3>
+            <p class="text-sm text-gray-600 italic mb-1">Bœuf mijoté à la bière & pain d’épices</p>
+            <div class="text-right font-bold text-green-700">16,00€</div>
+          </div>
+          <div class="bg-white p-4 shadow rounded">
+            <h3 class="text-lg font-semibold">Welsh</h3>
+            <p class="text-sm text-gray-600 italic mb-1">Fromage fondu à la bière, pain, jambon</p>
+            <div class="text-right font-bold text-green-700">16,00€</div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="bg-white py-6 px-4 max-w-3xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4 border-b border-bordeaux pb-2">🍨 Desserts</h2>
+        <div class="space-y-4">
+          <div class="flex items-center gap-4">
+            <img src="https://res.cloudinary.com/demo/image/upload/sample.jpg" class="w-20 h-20 object-cover rounded-md" alt="Dame Blanche">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold">Dame Blanche</h3>
+              <p class="text-sm text-gray-600">Vanille, chocolat chaud, chantilly</p>
+            </div>
+            <div class="font-bold text-green-700">7,00€</div>
+          </div>
+          <div class="flex items-center gap-4">
+            <img src="https://res.cloudinary.com/demo/image/upload/sample.jpg" class="w-20 h-20 object-cover rounded-md" alt="Mousse au chocolat">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold">Mousse au chocolat</h3>
+              <p class="text-sm text-gray-600">Maison, au chocolat noir</p>
+            </div>
+            <div class="font-bold text-green-700">6,00€</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white py-6 px-4 max-w-3xl mx-auto">
+        <h2 class="text-2xl font-bold border-b-2 border-gray-300 pb-2 mb-6">🧪 Test d'affichages dynamiques</h2>
+
+        <ul class="space-y-4">
+
+          <!-- Plat indisponible -->
+          <li class="flex justify-between items-start bg-gray-100 text-gray-400 line-through px-4 py-3 rounded border border-gray-200">
+            <div>
+              <h3 class="text-lg font-semibold">Mojito</h3>
+              <p class="text-sm italic">Indisponible pour le moment</p>
+            </div>
+            <span class="font-bold">8,00€</span>
+          </li>
+
+          <!-- Réduction avec prix barré -->
+          <li class="flex justify-between items-start px-4 py-3 rounded border border-green-200 bg-green-50">
+            <div>
+              <h3 class="text-lg font-semibold">Spritz</h3>
+              <p class="text-sm text-gray-600">Apéritif à base de prosecco et Aperol</p>
+              <div class="flex gap-2 mt-1">
+                <span class="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full line-through">7,00€</span>
+                <span class="bg-green-100 text-green-800 text-sm px-2 py-0.5 rounded-full font-bold">5,50€</span>
+              </div>
+            </div>
+            <span class="text-sm font-medium bg-red-600 text-white px-2 py-0.5 rounded">Promo</span>
+          </li>
+
+          <!-- Icônes info (vegan, sans alcool, etc.) -->
+          <li class="flex justify-between items-start px-4 py-3 rounded border border-gray-300">
+            <div>
+              <h3 class="text-lg font-semibold">Virgin Mojito</h3>
+              <p class="text-sm text-gray-600">Menthe, citron vert, sucre, eau gazeuse</p>
+              <div class="flex gap-2 mt-2">
+                <span class="text-green-700 bg-green-100 text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                  🥬 Vegan
+                </span>
+                <span class="text-blue-700 bg-blue-100 text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                  🚫 Sans alcool
+                </span>
+              </div>
+            </div>
+            <span class="font-bold text-green-600">4,50€</span>
+          </li>
+
+        </ul>
+      </section>
+
+    </div>
+  </div>
+</body>
+</html>
