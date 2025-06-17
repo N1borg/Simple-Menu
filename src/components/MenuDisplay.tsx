@@ -1,7 +1,8 @@
 'use client'
 import Image from 'next/image'
+import type { MenuDisplayProps } from '@/types/supabase_types'
 
-export default function MenuDisplay({ establishment }) {
+export default function MenuDisplay({ establishment }: MenuDisplayProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
 
@@ -18,7 +19,7 @@ export default function MenuDisplay({ establishment }) {
       </div>
 
       <div className="text-center mb-6">
-        <img src={establishment.logo_url} alt="Logo" className="mx-auto w-20 h-20 rounded-full mb-2"/>
+        <Image src={establishment.logo_url} alt="Logo" className="mx-auto w-20 h-20 rounded-full mb-2"/>
         <h1 className="text-3xl font-bold">{establishment.name}</h1>
         <p className="text-red-600 mt-2 font-semibold">🍹 Happy Hour : -50% sur les cocktails de 17h à 19h</p>
       </div>
