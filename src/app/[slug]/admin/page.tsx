@@ -1,122 +1,84 @@
-'use client'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
+import AdminDashboard from '@/components/AdminDashboard'
+import AdminLoginForm from '@/components/AdminLoginForm'
+import { Database, EstablishmentWithCategories } from '@/types/supabase'
+import Link from 'next/link'
 
-import { /* useEffect, */useState } from 'react'
-import { createPagesBrowserClient  } from '@supabase/auth-helpers-nextjs'
-import { useRouter, useParams } from 'next/navigation'
-import type { Database } from '@/types/supabase'
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret'
 
-export default function AdminPage() {
-  const supabase = createPagesBrowserClient<Database>()
-//   const router = useRouter()
-  const params = useParams()
-  const slug = params.slug as string
+interface PageProps {
+  params: Promise<{ slug: string }>
+}
 
-  const [auth, setAuth] = useState(false)
-  const [passwordInput, setPasswordInput] = useState('')
-  const [establishment, setEstablishment] = useState<any>(null)
+export default async function AdminPage({ params }: PageProps) {
+  const { slug } = await params
+  const cookieStore = cookies()
+  const supabase = createServerComponentClient<Database>({ cookies: () => cookieStore })
 
-  const [menuItems, setMenuItems] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: establishment, error } = await supabase
+    .from('establishments')
+    .select(`
+      *,
+      categories (
+        *,
+        menu_items (*)
+      )
+    `)
+    .eq('slug', slug)
+    .single()
 
-  async function loadData() {
-    const { data, error } = await supabase
-      .from('establishments')
-      .select(`*, categories (*, menu_items (*))`)
-      .eq('slug', slug)
-      .single()
-
-    if (error || !data) return
-    setEstablishment(data)
-
-    const flatItems = data.categories.flatMap((cat: any) => cat.menu_items.map((i: any) => ({ ...i, category: cat.name })))
-    setMenuItems(flatItems)
-    setLoading(false)
+  if (error || !establishment) {
+    return <div className="p-8 text-center">Établissement non trouvé</div>
   }
 
-  async function checkPassword() {
-    const { data } = await supabase
-      .from('establishments')
-      .select('admin_hash')
-      .eq('slug', slug)
-      .single()
+  // Check single session cookie
+  const token = (await cookieStore).get('admin-session')?.value
+  let isAuthenticated = false
+  let tokenSlug: string | undefined
 
-    if (!data?.admin_hash) return
-
-    const res = await fetch('/api/verify-password', {
-      method: 'POST',
-      body: JSON.stringify({ hash: data.admin_hash, password: passwordInput }),
-    })
-
-    const ok = await res.json()
-    if (ok === true) {
-      setAuth(true)
-      loadData()
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET))
+      tokenSlug = payload.slug as string
+      isAuthenticated = tokenSlug === slug
+    } catch {
+      isAuthenticated = false
     }
   }
 
-  async function updateItem(item: any) {
-    await supabase.from('menu_items').update({
-      name: item.name,
-      description: item.description,
-      price: item.price,
-      is_available: item.is_available,
-    }).eq('id', item.id)
-    alert('Enregistré ✅')
-  }
-
-  if (!auth) {
+  if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow">
-        <h1 className="text-xl font-bold mb-4">Connexion admin</h1>
-        <input
-          type="password"
-          value={passwordInput}
-          onChange={(e) => setPasswordInput(e.target.value)}
-          className="border p-2 rounded w-full mb-4"
-          placeholder="Mot de passe"
-        />
-        <button onClick={checkPassword} className="bg-black text-white px-4 py-2 rounded">
-          Se connecter
-        </button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full space-y-8">
+          <div>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+              Administration - {establishment.name}
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Connectez-vous pour gérer votre menu
+            </p>
+          </div>
+          <AdminLoginForm slug={slug} />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-6">Édition du menu — {establishment.name}</h1>
-      {loading && <p>Chargement...</p>}
-      {!loading && menuItems.map((item) => (
-        <div key={item.id} className="bg-white shadow p-4 rounded mb-4">
-          <input
-            className="font-bold text-lg w-full border-b mb-2"
-            value={item.name}
-            onChange={(e) => setMenuItems((prev) => prev.map((it) => it.id === item.id ? { ...it, name: e.target.value } : it))}
-          />
-          <textarea
-            className="w-full text-sm border mb-2"
-            value={item.description || ''}
-            onChange={(e) => setMenuItems((prev) => prev.map((it) => it.id === item.id ? { ...it, description: e.target.value } : it))}
-          />
-          <input
-            type="number"
-            className="w-full border mb-2"
-            value={item.price}
-            onChange={(e) => setMenuItems((prev) => prev.map((it) => it.id === item.id ? { ...it, price: parseFloat(e.target.value) } : it))}
-          />
-          <label className="flex items-center gap-2 mb-2">
-            <input
-              type="checkbox"
-              checked={item.is_available}
-              onChange={(e) => setMenuItems((prev) => prev.map((it) => it.id === item.id ? { ...it, is_available: e.target.checked } : it))}
-            />
-            Disponible
-          </label>
-          <button onClick={() => updateItem(item)} className="bg-green-600 text-white px-4 py-1 rounded">
-            Enregistrer
-          </button>
-        </div>
-      ))}
+    <div>
+      <div className="flex justify-end p-4">
+        <Link
+          href={`/${slug}`}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Voir la page menu publique
+        </Link>
+      </div>
+      <AdminDashboard
+        establishment={establishment as EstablishmentWithCategories}
+      />
     </div>
   )
 }

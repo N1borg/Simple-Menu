@@ -1,6 +1,7 @@
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import MenuDisplay from '@/components/MenuDisplay'
+import { Database } from '@/types/supabase'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,12 +10,9 @@ interface PageProps {
 }
 
 export default async function MenuPage({ params }: PageProps) {
-  // Await params to get the slug
   const { slug } = await params
-  
-  // Await cookies() before using it
-  const cookieStore = await cookies()
-  const supabase = createServerComponentClient({ cookies: () => cookieStore })
+  const cookieStore = cookies()
+  const supabase = createServerComponentClient<Database>({ cookies: () => cookieStore })
   
   const { data: establishment } = await supabase
     .from('establishments')

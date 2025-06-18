@@ -15,7 +15,7 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
       </div>
 
       <div className="fixed bottom-4 right-4 bg-green-100 border border-green-300 text-green-900 px-4 py-2 rounded-lg shadow-md text-sm">
-        ✅ Offre “Apéro Duo” activée jusqu'à 20h.
+        ✅ Offre &quot;Apéro Duo&quot; activée jusqu&apos;à 20h.
       </div>
 
       <div className="text-center mb-6">

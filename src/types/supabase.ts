@@ -241,3 +241,9 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+export type EstablishmentWithCategories = Database['public']['Tables']['establishments']['Row'] & {
+  categories: (Database['public']['Tables']['categories']['Row'] & {
+    menu_items: Database['public']['Tables']['menu_items']['Row'][]
+  })[]
+}
