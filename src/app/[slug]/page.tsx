@@ -1,7 +1,6 @@
 import { getServerSupabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import MenuDisplay from '@/components/MenuDisplay'
-import { Database } from '@/types/supabase'
 import Link from 'next/link'
 import { jwtVerify } from 'jose'
 

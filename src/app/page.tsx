@@ -1,103 +1,148 @@
-import Image from "next/image";
+'use client'
+import Link from 'next/link'
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="bg-[#f0f4ff] min-h-screen text-[#1e293b]">
+      {/* HERO */}
+      <section className="px-6 py-24 text-center max-w-3xl mx-auto">
+        <h1 className="text-5xl md:text-6xl font-extrabold text-blue-600 mb-6">Simple Menu</h1>
+        <p className="text-lg md:text-xl text-gray-700 mb-8">
+          Votre menu digital personnalisé, élégant et à jour en permanence.
+          Gagnez du temps, améliorez l’expérience client, restez flexible à tout moment.
+        </p>
+        <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-4">
+          <Link
+            href="#contact"
+            className="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Demander une période d'essai
+          </Link>
+          <Link
+            href="/demo"
+            className="inline-block bg-white border border-blue-600 text-blue-600 font-semibold py-3 px-6 rounded-xl shadow hover:bg-blue-50 transition"
           >
-            Read our docs
-          </a>
+            Voir un exemple de menu
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
+      </section>
+
+      {/* FONCTIONNALITÉS */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">Ce que Simple Menu peut faire pour vous</h2>
+          <div className="grid md:grid-cols-3 gap-10 text-center">
+            <div className="p-6 rounded-lg border bg-[#f9fbff] shadow-sm hover:shadow-md transition">
+              <h3 className="text-xl font-semibold text-blue-600 mb-2">QR code unique</h3>
+              <p>Un simple scan pour accéder à votre menu depuis n'importe quel smartphone.</p>
+            </div>
+            <div className="p-6 rounded-lg border bg-[#f9fbff] shadow-sm hover:shadow-md transition">
+              <h3 className="text-xl font-semibold text-blue-600 mb-2">Éditeur ultra-simple</h3>
+              <p>Modifiez prix, produits, dispo et annonces en temps réel sans aucune compétence technique.</p>
+            </div>
+            <div className="p-6 rounded-lg border bg-[#f9fbff] shadow-sm hover:shadow-md transition">
+              <h3 className="text-xl font-semibold text-blue-600 mb-2">Personnalisation complète</h3>
+              <p>Logo, couleurs, textes, happy hour, évènements : tout est fait à votre image.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TARIFS */}
+      <section className="bg-[#e6eeff] py-20 px-6">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-12">Choisissez votre formule</h2>
+          <div className="grid md:grid-cols-3 gap-8 text-left">
+            <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition">
+              <h3 className="text-xl font-bold text-blue-600 mb-2">Essentiel</h3>
+              <p className="text-4xl font-extrabold text-blue-600 mb-2">6,99€ / mois</p>
+              <ul className="text-sm text-gray-700 mb-6">
+                <li>✅ Menu digital</li>
+                <li>✅ QR code personnalisé</li>
+                <li>✅ Accès administrateur</li>
+                <li>✅ Design responsive</li>
+              </ul>
+              <Link
+                href="#contact"
+                className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700"
+              >
+                Je suis intéressé
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-md border-2 border-blue-600">
+              <h3 className="text-xl font-bold text-blue-600 mb-2">Pro <div className="text-sm text-gray-500">Le plus populaire</div></h3>
+              <p className="text-4xl font-extrabold text-blue-600 mb-2">12,99€ / mois</p>
+              <ul className="text-sm text-gray-700 mb-6">
+                <li>✅ Plan Essentiel inclus</li>
+                <li>✅ Personnalisation avancée (logo, couleurs)</li>
+                <li>✅ Nom de domaine personnalisé</li>
+                <li>✅ Affichage des offres & stocks</li>
+                <li>✅ Statistiques en temps réel</li>
+                <li>✅ Support prioritaire</li>
+              </ul>
+              <Link
+                href="#contact"
+                className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700"
+              >
+                Je passe au Pro
+              </Link>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition">
+              <h3 className="text-xl font-bold text-blue-600 mb-2">Premium</h3>
+              <p className="text-4xl font-extrabold text-blue-600 mb-2">19,99€ / mois</p>
+              <ul className="text-sm text-gray-700 mb-6">
+                <li>✅ Plan Pro inclus</li>
+                <li>✅ Pages événementielles personnalisées</li>
+                <li>✅ Menu multilingue</li>
+                <li>✅ Assistance créative (design, contenu)</li>
+                <li>✅ Intégration avec outils de réservation</li>
+                <li>✅ Gestion des avis clients</li>
+                <li>✅ Formation à l'utilisation de la plateforme</li>
+                <li>✅ Support téléphonique dédié</li>
+                <li>✅ Gestion multi-établissements</li>
+              </ul>
+              <Link
+                href="#contact"
+                className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700"
+              >
+                Me faire une offre
+              </Link>
+            </div>
+          </div>
+        </div>
+        <div className="mt-4 max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl font-bold text-blue-600 mb-4">Des besoins plus spécifiques ?</h2>
+          <p className="text-gray-700 mb-6">
+            Tu cherches une fonctionnalité particulière ou un accompagnement sur-mesure ?
+            <br />
+            <a href="#contact" className="text-blue-600 hover:underline">Parlons-en directement.</a>
+          </p>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section id="contact" className="py-24 px-6 max-w-2xl mx-auto text-center">
+        <h2 className="text-3xl font-bold mb-6">Prêt à digitaliser votre menu ?</h2>
+        <p className="mb-4 text-gray-700">
+          Je vous accompagne personnellement pour mettre en ligne un menu à votre image, en moins de 24h.
+        </p>
+        <a className="text-blue-600 font-semibold text-lg hover:underline" href="mailto:robin.caboche@epitech.eu">📩 robin.caboche@epitech.eu</a>
+        <p className="mt-2">ou</p>
         <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          href="https://wa.me/33637702875?text=Bonjour%20Robin,%20j'aimerais%20discuter%20de%20Simple%20Menu."
           target="_blank"
-          rel="noopener noreferrer"
+          className="inline-block mt-4 bg-blue-600 text-white py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
+          Discuter sur WhatsApp
         </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="text-center text-sm text-gray-500 py-6 border-t">
+        © {new Date().getFullYear()} Simple Menu — Conçu avec passion à Lille 🧑‍🍳
       </footer>
-    </div>
-  );
+    </main>
+  )
 }
