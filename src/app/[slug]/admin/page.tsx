@@ -1,15 +1,15 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getServerSupabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
 import AdminDashboard from '@/components/AdminDashboard'
 import AdminLoginForm from '@/components/AdminLoginForm'
-import { Database, EstablishmentWithCategories } from '@/types/supabase'
+import { EstablishmentWithCategories } from '@/types/supabase'
 import Link from 'next/link'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
 if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is not defined in environment variables')
+  throw new Error('JWT_SECRET non défini dans les variables d\'environnement')
 }
 
 interface PageProps {
@@ -19,7 +19,7 @@ interface PageProps {
 export default async function AdminPage({ params }: PageProps) {
   const { slug } = await params
   const cookieStore = cookies()
-  const supabase = createServerComponentClient<Database>({ cookies: () => cookieStore })
+  const supabase = await getServerSupabase()
 
   const { data: establishment, error } = await supabase
     .from('establishments')

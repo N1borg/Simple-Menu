@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { getServerSupabase } from '@/lib/supabase'
 import { hashPassword } from '@/lib/auth'
 
 export async function createEstablishment(data: {
@@ -9,6 +9,7 @@ export async function createEstablishment(data: {
   primary_color?: string
 }) {
   const hashedPassword = await hashPassword(data.adminPassword)
+  const supabase = await getServerSupabase()
 
   const { data: establishment, error } = await supabase
     .from('establishments')
@@ -23,7 +24,7 @@ export async function createEstablishment(data: {
     .single()
 
   if (error) {
-    throw new Error(`Error creating establishment: ${error.message}`)
+    throw new Error(`Erreur lors de la création de l'établissement : ${error.message}`)
   }
 
   return establishment

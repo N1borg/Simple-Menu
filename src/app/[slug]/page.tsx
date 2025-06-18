@@ -1,4 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getServerSupabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import MenuDisplay from '@/components/MenuDisplay'
 import { Database } from '@/types/supabase'
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 const JWT_SECRET = process.env.JWT_SECRET
 
 if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is not defined in environment variables')
+  throw new Error('JWT_SECRET non défini dans les variables d\'environnement')
 }
 
 interface PageProps {
@@ -20,7 +20,7 @@ interface PageProps {
 export default async function MenuPage({ params }: PageProps) {
   const { slug } = await params
   const cookieStore = cookies()
-  const supabase = createServerComponentClient<Database>({ cookies: () => cookieStore })
+  const supabase = await getServerSupabase()
 
   const token = (await cookieStore).get('admin-session')?.value
   let isAuthenticated = false
