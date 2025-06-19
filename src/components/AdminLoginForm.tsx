@@ -31,21 +31,19 @@ export default function AdminLoginForm({ slug, error }: AdminLoginFormProps) {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-          Mot de passe administrateur
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-        />
-      </div>
+      <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        Mot de passe administrateur
+      </label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+      />
       {formError && (
         <div className="text-red-500 text-sm">{formError}</div>
       )}

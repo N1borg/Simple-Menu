@@ -24,20 +24,27 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
         <p className="text-red-600 mt-2 font-semibold">🍹 Happy Hour : -50% sur les cocktails de 17h à 19h</p>
       </div>
 
-      <div className="space-y-8"></div>
-      {/* Menu */}
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="space-y-8">
         {establishment.categories?.map((category) => (
-          <section key={category.id}>
-            <h2 className="text-2xl font-bold mb-4">{category.name}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-              {category.menu_items?.filter(item => item.is_available).map((item) => (
-                <div key={item.id} className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
-                  <h3 className="text-lg font-semibold">{item.name}</h3>
-                  {item.description && <p className="text-sm text-gray-500 mt-1">{item.description}</p>}
-                  <div className="text-right font-bold text-green-600 mt-2">{item.price}€</div>
-                </div>
+          <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
+            <h2 className="text-2xl font-bold mb-4">
+              {category.name}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {category.menu_items
+                ?.filter(item => item.is_available)
+                .map((item) => (
+                  <div key={item.id} className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
+                    <h3 className="text-lg font-semibold">{item.name}</h3>
+                    {item.description && (
+                      <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                    )}
+                    <div className="text-right font-bold text-green-600 mt-2">
+                      {item.price}€
+                    </div>
+                  </div>
               ))}
+            </div>
           </section>
         ))}
       </div>

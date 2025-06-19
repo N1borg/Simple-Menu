@@ -34,7 +34,7 @@ export default async function MenuPage({ params }: PageProps) {
       isAuthenticated = false
     }
   }
-  
+
   const { data: establishment } = await supabase
     .from('establishments')
     .select(`
