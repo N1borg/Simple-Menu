@@ -64,7 +64,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           />
           <input
             type="number"
-            value={item.price ?? ''}
+            value={item.price.toFixed(2) ?? ''}
             onChange={(e) => handleChange(item.id, 'price', e.target.value === '' ? '' : parseFloat(e.target.value))}
             className="w-full border text-sm p-1"
           />

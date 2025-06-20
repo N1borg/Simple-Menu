@@ -40,7 +40,7 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
                       <p className="text-sm text-gray-500 mt-1">{item.description}</p>
                     )}
                     <div className="text-right font-bold text-green-600 mt-2">
-                      {item.price}€
+                      {item.price.toFixed(2)}€
                     </div>
                   </div>
               ))}
