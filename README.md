@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🧾 Simple Menu – QR Code Digital Menu for Bars & Restaurants
 
-## Getting Started
+Simple Menu est un projet SaaS minimaliste destiné aux bars, cafés et restaurants, permettant de créer **des menus en ligne personnalisés** accessibles via **QR Code**.
 
-First, run the development server:
+Chaque établissement dispose :
+- d'une page publique dynamique (`/e/nom-du-bar`)
+- d'une interface d'administration sécurisée (`/e/nom-du-bar/admin`)
+- d'une base de données personnalisée pour gérer ses produits, offres, happy hours…
+
+---
+
+## 🚀 Fonctionnalités
+
+- 🔐 Authentification admin par mot de passe hashé
+- 🧾 Affichage du menu avec sections et produits dynamiques
+- ✍️ Édition en ligne (nom, description, prix, disponibilité…)
+- 🎨 Couleurs & logo personnalisables par bar
+- 📸 Images uploadables via Cloudinary
+- 📦 Architecture multi-clients scalable (`/e/[slug]`)
+- 🧠 Rendu SSR avec cache intelligent (Next.js App Router)
+- 📱 Accès mobile-friendly (idéal pour les QR codes)
+- 💸 Stripe (à venir) pour la gestion des abonnements
+
+---
+
+## 🧠 Stack technique
+
+| Technologie    | Rôle                                             |
+|----------------|--------------------------------------------------|
+| **Next.js 15** | Frontend SSR (App Router)                        |
+| **Supabase**   | BDD Postgres, Auth & API                         |
+| **TailwindCSS**| UI responsive et rapide                          |
+| **Cloudinary** | Hébergement d’images (logo, produits)            |
+| **JWT (JOSE)** | Auth admin avec cookie signé (secure sessions)  |
+| **Stripe**     | (à venir) pour la facturation                    |
+
+---
+
+## 🗂️ Structure du projet
+
+```
+src/
+├─ app/
+│ ├─ e/[slug]/ → Pages dynamiques par établissement
+│ │ ├─ page.tsx → Page publique (menu)
+│ │ ├─ admin/page.tsx→ Interface d’administration
+│ └─ layout.tsx → Layout principal avec <Footer>
+├─ components/ → Composants réutilisables (MenuDisplay, Footer…)
+├─ lib/ → Clients Supabase (server/browser)
+├─ pages/api/ → API legacy (si Pages Router utilisé)
+├─ app/api/ → API route handlers (App Router)
+├─ types/ → Types TypeScript pour la base Supabase
+.env → Clés d’environnement
+```
+
+---
+
+## ⚙️ Variables d’environnement
+
+Exemple `.env` :
+
+```env
+NEXT_PUBLIC_SUPABASE_URL="https://xxxxx.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
+SUPABASE_SERVICE_ROLE_KEY="eyJ..."
+
+DATABASE_URL="postgresql://...@supabase.com:5432/postgres?pgbouncer=true"
+
+# Cloudinary
+CLOUDINARY_URL="cloudinary://API_KEY:API_SECRET@CLOUD_NAME"
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="..."
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
+
+# JWT
+JWT_SECRET="votreclétrèssecrète"
+
+# App
+NEXT_PUBLIC_URL=http://localhost:3000
+```
+
+## 🛠️ Installation & Lancement
+
+### 1. Cloner le repo
+   
+```bash
+git clone https://github.com/N1borg/Simple-Menu.git
+cd Simple-Menu
+```
+
+### 2. Installer les dépendances
+
+```bash
+npm install
+```
+
+### 3. Lancer le projet en local
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4. Accéder à l’app
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Page menu : http://localhost:3000/demo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Admin : http://localhost:3000/demo/admin
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+🔑 Mot de passe admin par défaut : `admin1234`
