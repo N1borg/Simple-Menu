@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
       description: item.description,
       price: item.price,
       is_available: item.is_available,
+      display_order: item.display_order,
+      category_id: item.category_id,
+      display_style: item.display_style,
     })
     .eq('id', item.id)
 

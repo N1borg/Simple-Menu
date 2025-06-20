@@ -7,8 +7,14 @@ interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
 }
 
+const DISPLAY_STYLES = [
+  { value: 'card', label: 'Carte' },
+  { value: 'list', label: 'Liste' },
+  { value: 'compact', label: 'Compact' },
+  { value: 'table', label: 'Tableau' },
+]
+
 export default function AdminDashboard({ establishment }: AdminDashboardProps) {
-  // Defensive: ensure menu_items and categories are always arrays
   const [menuItems, setMenuItems] = useState(() =>
     (establishment.categories || []).flatMap((cat) =>
       (cat.menu_items || []).map((item) => ({
@@ -47,7 +53,16 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           className="bg-white rounded shadow p-4 mb-6 space-y-2 border"
         >
           <p className="text-sm text-gray-600 italic">
-            {item.category_name}
+            Catégorie :&nbsp;
+            <select
+              value={item.category_id || ''}
+              onChange={e => handleChange(item.id, 'category_id', e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              {establishment.categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
           </p>
           <input
             value={item.name || ''}
@@ -64,20 +79,47 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           />
           <input
             type="number"
-            value={item.price.toFixed(2) ?? ''}
+            value={item.price ?? ''}
             onChange={(e) => handleChange(item.id, 'price', e.target.value === '' ? '' : parseFloat(e.target.value))}
             className="w-full border text-sm p-1"
+            min={0}
+            step={0.01}
           />
-          <label className="flex items-center gap-2 text-sm mt-1">
-            <input
-              type="checkbox"
-              checked={!!item.is_available}
-              onChange={(e) =>
-                handleChange(item.id, 'is_available', e.target.checked)
-              }
-            />
-            Disponible
-          </label>
+          <div className="flex gap-2">
+            <label className="flex items-center gap-2 text-sm mt-1">
+              <input
+                type="checkbox"
+                checked={!!item.is_available}
+                onChange={(e) =>
+                  handleChange(item.id, 'is_available', e.target.checked)
+                }
+              />
+              Disponible
+            </label>
+            <label className="flex items-center gap-2 text-sm mt-1">
+              Ordre d'affichage :
+              <input
+                type="number"
+                value={item.display_order ?? 0}
+                onChange={e => handleChange(item.id, 'display_order', parseInt(e.target.value, 10))}
+                className="border rounded px-2 py-1 w-16"
+                min={0}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm mt-1">
+              Style :
+              <select
+                value={item.display_style || ''}
+                onChange={e => handleChange(item.id, 'display_style', e.target.value)}
+                className="border rounded px-2 py-1"
+              >
+                <option value="">(hérite de la catégorie)</option>
+                {DISPLAY_STYLES.map(style => (
+                  <option key={style.value} value={style.value}>{style.label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
           <button
             onClick={() => saveItem(item)}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
