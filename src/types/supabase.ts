@@ -13,23 +13,29 @@ export type Database = {
         Row: {
           created_at: string | null
           display_order: number | null
+          display_style: string | null
           establishment_id: string | null
           id: string
           name: string
+          order: number | null
         }
         Insert: {
           created_at?: string | null
           display_order?: number | null
+          display_style?: string | null
           establishment_id?: string | null
           id?: string
           name: string
+          order?: number | null
         }
         Update: {
           created_at?: string | null
           display_order?: number | null
+          display_style?: string | null
           establishment_id?: string | null
           id?: string
           name?: string
+          order?: number | null
         }
         Relationships: [
           {
@@ -77,10 +83,12 @@ export type Database = {
           created_at: string | null
           description: string | null
           display_order: number | null
+          display_style: string | null
           id: string
           image_url: string | null
           is_available: boolean | null
           name: string
+          order: number | null
           price: number
         }
         Insert: {
@@ -88,10 +96,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          display_style?: string | null
           id?: string
           image_url?: string | null
           is_available?: boolean | null
           name: string
+          order?: number | null
           price: number
         }
         Update: {
@@ -99,10 +109,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           display_order?: number | null
+          display_style?: string | null
           id?: string
           image_url?: string | null
           is_available?: boolean | null
           name?: string
+          order?: number | null
           price?: number
         }
         Relationships: [

@@ -17,7 +17,7 @@ export default function NotFound() {
         </Link>
       </div>
       <footer className="mt-10 text-center text-sm text-gray-500">
-        © {new Date().getFullYear()} Simple Menu — Conçu avec passion à Lille 🧑‍🍳
+        © 2025 Simple Menu — Conçu avec passion à Lille 🧑‍🍳
       </footer>
     </main>
   );
