@@ -14,17 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Menu digital Lille | SimpleMenu - Solution SaaS pour bars & restaurants",
+  title: "Menu digital | Simple-Menu - Solution SaaS pour bars & restaurants",
   description:
-    "Créez et gérez facilement le menu digital de votre bar ou restaurant à Lille avec SimpleMenu. Solution SaaS rapide, mobile, QR code, adaptée à l’hôtellerie-restauration.",
+    "Créez et gérez facilement le menu digital de votre bar ou restaurant avec Simple-Menu. Solution SaaS rapide, mobile, QR code, adaptée à l’hôtellerie-restauration.",
   keywords:
-    "Menu digital, SaaS, Lille, Restaurants, Bars, QR Code, Menu en ligne, SimpleMenu, Hôtellerie",
+    "Menu digital, SaaS, Restaurants, Bars, QR Code, Menu en ligne, Simple-Menu, Hôtellerie",
   openGraph: {
-    title: "Menu digital Lille | SimpleMenu",
+    title: "Menu digital | Simple-Menu",
     description:
-      "Créez et gérez facilement le menu digital de votre bar ou restaurant à Lille avec SimpleMenu.",
+      "Créez et gérez facilement le menu digital de votre bar ou restaurant avec Simple-Menu.",
     url: "https://simple-menu.niborgpro.fr",
-    siteName: "SimpleMenu",
+    siteName: "Simple-Menu",
     locale: "fr_FR",
     type: "website",
     images: [
@@ -32,15 +32,15 @@ export const metadata: Metadata = {
         url: "https://simple-menu.niborgpro.fr/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "SimpleMenu - Menu digital Lille",
+        alt: "Simple-Menu - Menu digital",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Menu digital Lille | SimpleMenu",
+    title: "Menu digital | Simple-Menu",
     description:
-      "Créez et gérez facilement le menu digital de votre bar ou restaurant à Lille avec SimpleMenu.",
+      "Créez et gérez facilement le menu digital de votre bar ou restaurant avec Simple-Menu.",
     images: ["https://simple-menu.niborgpro.fr/og-image.jpg"],
   },
   alternates: {
