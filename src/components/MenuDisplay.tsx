@@ -1,83 +1,96 @@
 import Image from 'next/image'
 import type { MenuDisplayProps, Category, MenuItem } from '@/types/supabase_types'
 
+function renderMenuItem(item: MenuItem, category: Category) {
+  const style = item.display_style || category.display_style || 'card'
+  switch (style) {
+    case 'list':
+      return (
+        <li key={item.id} className="flex justify-between border-b pb-1">
+          <span>{item.name}</span>
+          <span>{item.price.toFixed(2)}€</span>
+        </li>
+      )
+    case 'compact':
+      return (
+        <span
+          key={item.id}
+          className="bg-gray-100 rounded px-2 py-1 text-sm font-medium"
+          title={item.description || ''}
+        >
+          {item.name} <span className="text-green-700">{item.price.toFixed(2)}€</span>
+        </span>
+      )
+    case 'table':
+      return (
+        <tr key={item.id}>
+          <td className="border-b p-2">{item.name}</td>
+          <td className="border-b p-2">{item.description}</td>
+          <td className="border-b p-2 text-right">{item.price.toFixed(2)}€</td>
+        </tr>
+      )
+    case 'card':
+    default:
+      return (
+        <div key={item.id} className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
+          <h3 className="text-lg font-semibold">{item.name}</h3>
+          {item.description && (
+            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+          )}
+          <div className="text-right font-bold text-green-600 mt-2">
+            {item.price.toFixed(2)}€
+          </div>
+        </div>
+      )
+  }
+}
+
 function renderCardStyle(category: Category) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
-      <h2 className="text-2xl font-bold mb-4">
-        {category.name}
-      </h2>
+      <h2 className="text-2xl font-bold mb-4">{category.name}</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
-          .sort((a: MenuItem, b: MenuItem) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map((item: MenuItem) => (
-            <div key={item.id} className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
-              <h3 className="text-lg font-semibold">{item.name}</h3>
-              {item.description && (
-                <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-              )}
-              <div className="text-right font-bold text-green-600 mt-2">
-                {item.price.toFixed(2)}€
-              </div>
-            </div>
-        ))}
+          .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+          .map(item => renderMenuItem(item, category))}
       </div>
     </section>
   )
 }
 
-function renderListStyle(category: any) {
+function renderListStyle(category: Category) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
-      <h2 className="text-xl font-bold mb-2">
-        {category.name}
-      </h2>
+      <h2 className="text-xl font-bold mb-2">{category.name}</h2>
       <ul className="space-y-1">
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
-          .sort((a: MenuItem, b: MenuItem) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map((item: MenuItem) => (
-            <li key={item.id} className="flex justify-between border-b pb-1">
-              <span>{item.name}</span>
-              <span>{item.price.toFixed(2)}€</span>
-            </li>
-        ))}
+          .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+          .map(item => renderMenuItem(item, category))}
       </ul>
     </section>
   )
 }
 
-function renderCompactStyle(category: any) {
+function renderCompactStyle(category: Category) {
   return (
     <section key={category.id} className="max-w-2xl mx-auto px-2 py-4">
-      <h2 className="text-lg font-semibold mb-2">
-        {category.name}
-      </h2>
+      <h2 className="text-lg font-semibold mb-2">{category.name}</h2>
       <div className="flex flex-wrap gap-2">
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
-          .sort((a: MenuItem, b: MenuItem) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map((item: MenuItem) => (
-            <span
-              key={item.id}
-              className="bg-gray-100 rounded px-2 py-1 text-sm font-medium"
-              title={item.description || ''}
-            >
-              {item.name} <span className="text-green-700">{item.price.toFixed(2)}€</span>
-            </span>
-        ))}
+          .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+          .map(item => renderMenuItem(item, category))}
       </div>
     </section>
   )
 }
 
-function renderTableStyle(category: any) {
+function renderTableStyle(category: Category) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
-      <h2 className="text-xl font-bold mb-2">
-        {category.name}
-      </h2>
+      <h2 className="text-xl font-bold mb-2">{category.name}</h2>
       <table className="w-full text-left border">
         <thead>
           <tr>
@@ -89,21 +102,15 @@ function renderTableStyle(category: any) {
         <tbody>
           {category.menu_items
             ?.filter((item: MenuItem) => item.is_available)
-            .sort((a: MenuItem, b: MenuItem) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map((item: MenuItem) => (
-              <tr key={item.id}>
-                <td className="border-b p-2">{item.name}</td>
-                <td className="border-b p-2">{item.description}</td>
-                <td className="border-b p-2 text-right">{item.price.toFixed(2)}€</td>
-              </tr>
-          ))}
+            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+            .map(item => renderMenuItem(item, category))}
         </tbody>
       </table>
     </section>
   )
 }
 
-function renderCategoryByStyle(category: any) {
+function renderCategoryByStyle(category: Category) {
   switch (category.display_style) {
     case 'list':
       return renderListStyle(category)
