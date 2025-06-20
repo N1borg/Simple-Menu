@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 import MenuDisplay from '@/components/MenuDisplay'
 import Link from 'next/link'
 import { jwtVerify } from 'jose'
+import Footer from '@/components/Footer'
+import AdminBanner from '@/components/AdminBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,16 +54,12 @@ export default async function MenuPage({ params }: PageProps) {
   }
 
   return (
-    <div>
-      {isAuthenticated && <div className="flex justify-end p-4">
-        <Link
-          href={`/${slug}/admin`}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-          Voir la page d'administration
-        </Link>
-      </div>}
-      <MenuDisplay establishment={establishment} />
+    <div className="min-h-screen flex flex-col">
+      {isAuthenticated && <AdminBanner slug={slug} />}
+      <main className="flex-grow">
+        <MenuDisplay establishment={establishment} />
+      </main>
+      <Footer />
     </div>
   )
 }

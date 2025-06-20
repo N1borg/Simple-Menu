@@ -19,7 +19,7 @@ export default function HomePage() {
             Demander une période d'essai
           </Link>
           <Link
-            href="/demo"
+            href="/e/demo"
             className="inline-block bg-white border border-blue-600 text-blue-600 font-semibold py-3 px-6 rounded-xl shadow hover:bg-blue-50 transition"
           >
             Voir un exemple de menu
