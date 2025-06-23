@@ -407,10 +407,6 @@ function renderListStyle(cat: any) {
     <div className="max-w-2xl mx-auto px-4 py-6">
       {/* Logo upload */}
       <div className="mb-4">
-        <Label>Logo de l'entreprise</Label>
-        <div className="text-xs text-gray-500 mb-2">
-          Taille max : 50 Mo avant optimisation, formats acceptés : JPG/PNG/WebP/GIF, 400x400px conseillé
-        </div>
         <ImageUpload
           currentImageUrl={establishment.logo_url ?? undefined}
           slug={establishment.slug}

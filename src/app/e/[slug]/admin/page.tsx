@@ -5,6 +5,7 @@ import AdminDashboard from '@/components/AdminDashboard'
 import AdminLoginForm from '@/components/AdminLoginForm'
 import { EstablishmentWithCategories } from '@/types/supabase'
 import Link from 'next/link'
+import AdminBanner from '@/components/AdminBanner'
 import Image from 'next/image'
 
 const JWT_SECRET = process.env.JWT_SECRET
@@ -83,14 +84,7 @@ export default async function AdminPage({ params }: PageProps) {
 
   return (
     <div>
-      <div className="flex justify-end p-4">
-        <Link
-          href={`/e/${slug}`}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Voir la page menu publique
-        </Link>
-      </div>
+      {isAuthenticated && <AdminBanner slug={slug} isDashboard />}
       <AdminDashboard
         establishment={establishment as EstablishmentWithCategories}
       />
