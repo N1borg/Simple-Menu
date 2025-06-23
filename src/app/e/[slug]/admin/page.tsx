@@ -5,6 +5,7 @@ import AdminDashboard from '@/components/AdminDashboard'
 import AdminLoginForm from '@/components/AdminLoginForm'
 import { EstablishmentWithCategories } from '@/types/supabase'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -56,7 +57,17 @@ export default async function AdminPage({ params }: PageProps) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full space-y-8">
-          <div>
+          <div className="flex flex-col items-center">
+            {establishment.logo_url && (
+              <Image
+                src={establishment.logo_url}
+                alt={`Logo de ${establishment.name}`}
+                width={100}
+                height={100}
+                className="mb-4 w-24 h-24 object-contain rounded-full"
+                priority
+              />
+            )}
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
               Administration - {establishment.name}
             </h2>
