@@ -111,7 +111,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
 
   const saveItem = async (item: any) => {
     setSavingItemId(item.id)
-    const res = await fetch('/api/menu-item/update', {
+    const res = await fetch('/api/admin/menu-item/update', {
       method: 'POST',
       body: JSON.stringify(item),
       headers: { 'Content-Type': 'application/json' },
@@ -409,7 +409,7 @@ function renderListStyle(cat: any) {
       <div className="mb-4">
         <Label>Logo de l'entreprise</Label>
         <div className="text-xs text-gray-500 mb-2">
-          Taille max : 1 Mo, format JPG/PNG, 300x300px conseillé
+          Taille max : 50 Mo avant optimisation, formats acceptés : JPG/PNG/WebP/GIF, 400x400px conseillé
         </div>
         <ImageUpload
           currentImageUrl={establishment.logo_url ?? undefined}

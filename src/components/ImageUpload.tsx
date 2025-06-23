@@ -274,7 +274,8 @@ export default function ImageUpload({
       {/* Upload Guidelines */}
       <div className="text-xs text-gray-500 space-y-1">
         <p>• Images automatiquement optimisées à 400x400px</p>
-        <p>• Formats: JPEG, PNG, WebP, GIF</p>
+        <p>• Formats acceptés : JPEG, PNG, WebP, GIF</p>
+        <p>• Taille maximale : 50MB avant optimisation</p>
         <p>• Compression et conversion automatiques</p>
       </div>
     </div>
