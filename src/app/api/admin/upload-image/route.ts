@@ -1,0 +1,137 @@
+import { NextRequest, NextResponse } from "next/server"
+import cloudinary from "cloudinary"
+import sharp from "sharp"
+import { jwtVerify } from 'jose'
+
+cloudinary.v2.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
+
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
+
+export async function POST(req: NextRequest) {
+  try {
+    // Auth: get token from cookie or Authorization header
+    const token = req.cookies.get('admin-session')?.value || req.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: "Non autorisé - Token manquant" }, { status: 401 })
+    }
+    let slug = null
+    try {
+      const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET))
+      slug = payload.slug as string
+      if (!slug) throw new Error('Slug manquant dans le token')
+    } catch (e) {
+      return NextResponse.json({ error: "Token invalide" }, { status: 401 })
+    }
+
+    // Parse and validate request
+    const contentType = req.headers.get('content-type')
+    if (!contentType?.includes('application/json')) {
+      return NextResponse.json({ error: "Content-Type doit être application/json" }, { status: 400 })
+    }
+
+    const body = await req.json()
+    const { file, folder = "logos" } = body
+
+    // Validate file presence
+    if (!file) {
+      return NextResponse.json({ error: "Aucun fichier fourni" }, { status: 400 })
+    }
+
+    // Validate and extract image data
+    const matches = /^data:(image\/(png|jpeg|jpg|webp|gif));base64,/.exec(file)
+    if (!matches) {
+      return NextResponse.json({ 
+        error: "Format invalide. Formats acceptés: PNG, JPEG, WebP, GIF" 
+      }, { status: 400 })
+    }
+
+    const base64Data = file.replace(/^data:image\/[^;]+;base64,/, "")
+    
+    try {
+      const buffer = Buffer.from(base64Data, 'base64')
+      
+      // No file size limit - we'll optimize any image
+      console.log(`Processing image: ${(buffer.length / 1024 / 1024).toFixed(2)}MB`)
+
+      // 6. Process and optimize image server-side
+      // First, get image metadata to handle orientation
+      const metadata = await sharp(buffer).metadata()
+      
+      let processedImage = sharp(buffer)
+        .rotate() // Auto-rotate based on EXIF orientation
+        .resize(400, 400, { 
+          fit: 'inside',
+          withoutEnlargement: false, // Allow enlargement of small images
+          background: { r: 255, g: 255, b: 255, alpha: 1 } // White background for transparent images
+        })
+
+      // Always convert to JPEG for consistency and smaller file size
+      const optimizedBuffer = await processedImage
+        .jpeg({ 
+          quality: 85,
+          progressive: true,
+          mozjpeg: true // Use mozjpeg encoder if available
+        })
+        .toBuffer()
+
+      console.log(`Optimized image: ${(optimizedBuffer.length / 1024).toFixed(0)}KB`)
+
+      // 7. Upload to Cloudinary with establishment-specific folder
+      const cloudinaryUrl = await new Promise<string>((resolve, reject) => {
+        const stream = cloudinary.v2.uploader.upload_stream(
+          {
+            folder: `${folder}/${slug}`,
+            overwrite: false,
+            unique_filename: true,
+            resource_type: "image",
+            format: "jpg", // Force JPEG
+            quality: "auto:good",
+            fetch_format: "auto", // Let Cloudinary serve WebP to supporting browsers
+            transformation: [
+              { width: 400, height: 400, crop: "limit" },
+              { quality: "auto:good" },
+              { format: "auto" } // Auto-format based on browser support
+            ]
+          },
+          (error, result) => {
+            if (error || !result) {
+              console.error('Cloudinary error:', error)
+              return reject(error || new Error("Échec de l'upload Cloudinary"))
+            }
+            resolve(result.secure_url)
+          }
+        )
+        stream.end(optimizedBuffer)
+      })
+
+      return NextResponse.json({ 
+        url: cloudinaryUrl,
+        message: "Image optimisée et uploadée avec succès"
+      })
+
+    } catch (imageError: any) {
+      console.error("Image processing error:", imageError)
+      
+      if (imageError.message?.includes('Input buffer contains unsupported image format')) {
+        return NextResponse.json({ 
+          error: "Format d'image non supporté ou fichier corrompu" 
+        }, { status: 400 })
+      }
+      
+      return NextResponse.json({ 
+        error: "Impossible de traiter l'image. Vérifiez que c'est un fichier valide." 
+      }, { status: 400 })
+    }
+
+  } catch (error: any) {
+    console.error("Upload error:", error)
+    return NextResponse.json({ 
+      error: "Erreur interne du serveur" 
+    }, { status: 500 })
+  }
+}

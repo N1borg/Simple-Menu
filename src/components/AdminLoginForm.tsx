@@ -49,7 +49,7 @@ export default function AdminLoginForm({ slug, error }: AdminLoginFormProps) {
       )}
       <button
         type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
         disabled={loading}
       >
         {loading ? 'Connexion...' : 'Se connecter'}

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Pencil, Plus, Trash2 } from "lucide-react"
+import ImageUpload from "@/components/ImageUpload"
 
 const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
@@ -404,6 +405,33 @@ function renderListStyle(cat: any) {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
+      {/* Logo upload */}
+      <div className="mb-4">
+        <Label>Logo de l'entreprise</Label>
+        <div className="text-xs text-gray-500 mb-2">
+          Taille max : 1 Mo, format JPG/PNG, 300x300px conseillé
+        </div>
+        <ImageUpload
+          currentImageUrl={establishment.logo_url ?? undefined}
+          slug={establishment.slug}
+          onImageUploaded={async (url: string) => {
+            // Update logo_url in DB
+            const res = await fetch("/api/admin/update-logo", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: establishment.id, logo_url: url }),
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              toast.success("Logo mis à jour !");
+              // Optionally update local state if you want instant UI update
+              establishment.logo_url = url;
+            } else {
+              toast.error(data.error || "Erreur lors de la mise à jour du logo");
+            }
+          }}
+        />
+      </div>
       {/* Add new category button */}
       <div className="flex justify-end mb-4">
         <Button onClick={addCategory} variant="default">

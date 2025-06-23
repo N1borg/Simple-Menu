@@ -5,6 +5,14 @@ import { Database } from '@/types/supabase'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+if (!supabaseUrl) {
+  throw new Error('Supabase URL not defined in environment variables');
+}
+
+if (!supabaseAnonKey) {
+  throw new Error('Supabase Anon Key not defined in environment variables');
+}
+
 // For server components and API routes
 export async function getServerSupabase() {
   const cookieStore = await cookies();

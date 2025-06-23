@@ -1,7 +1,7 @@
 import { getServerSupabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import MenuDisplay from '@/components/MenuDisplay'
-import Link from 'next/link'
+import NotFound from '@/app/not-found'
 import { jwtVerify } from 'jose'
 import Footer from '@/components/Footer'
 import AdminBanner from '@/components/AdminBanner'
@@ -50,7 +50,7 @@ export default async function MenuPage({ params }: PageProps) {
     .single()
 
   if (!establishment) {
-    return <div>Restaurant non trouvé</div>
+    return NotFound()
   }
 
   return (
