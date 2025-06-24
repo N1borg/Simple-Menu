@@ -409,6 +409,7 @@ function renderListStyle(cat: any) {
       <div className="mb-4">
         <ImageUpload
           currentImageUrl={establishment.logo_url ?? undefined}
+          color={establishment.primary_color ?? undefined}
           slug={establishment.slug}
           onImageUploaded={async (url: string) => {
             // Update logo_url in DB

@@ -76,15 +76,15 @@ export default async function AdminPage({ params }: PageProps) {
               Connectez-vous pour gérer votre menu
             </p>
           </div>
-          <AdminLoginForm slug={slug} />
-        </div>
+            <AdminLoginForm slug={slug} color={establishment.primary_color ?? undefined} />
+          </div>
       </div>
     )
   }
 
   return (
     <div>
-      {isAuthenticated && <AdminBanner slug={slug} isDashboard />}
+      {isAuthenticated && <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />}
       <AdminDashboard
         establishment={establishment as EstablishmentWithCategories}
       />

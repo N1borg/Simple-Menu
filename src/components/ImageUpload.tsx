@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { Upload, X, AlertCircle, CheckCircle2 } from 'lucide-react'
+import Image from 'next/image'
 
 interface ImageUploadProps {
   onImageUploaded: (url: string) => void
@@ -9,6 +10,7 @@ interface ImageUploadProps {
   slug: string
   folder?: string
   className?: string
+  color?: string
 }
 
 interface UploadError {
@@ -17,11 +19,11 @@ interface UploadError {
 }
 
 export default function ImageUpload({ 
-  onImageUploaded, 
-  currentImageUrl, 
-  slug, 
+  onImageUploaded,
+  currentImageUrl,
   folder = 'logos',
-  className = ''
+  className = '',
+  color = '#3a4fff',
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<UploadError | null>(null)
@@ -174,12 +176,15 @@ export default function ImageUpload({
       {/* Current Image Preview */}
       {currentImageUrl && (
         <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-          <img 
+          <Image 
             src={currentImageUrl} 
-            alt="Current" 
-            className="w-12 h-12 object-cover rounded"
+            alt="Logo actuel" 
+            width={100}
+            height={100}
+            className="w-25 h-25 object-cover rounded"
+            priority
           />
-          <span className="text-sm text-gray-600">Image actuelle</span>
+          <span className="text-sm text-gray-600">Logo actuel</span>
         </div>
       )}
 
@@ -188,14 +193,20 @@ export default function ImageUpload({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`
+        className={
+          `
           relative border-2 border-dashed rounded-lg p-6 text-center transition-colors
           ${dragActive 
-            ? 'border-blue-400 bg-blue-50' 
-            : 'border-gray-300 hover:border-gray-400'
+            ? '' 
+            : ''
           }
           ${isUploading ? 'opacity-50 pointer-events-none' : ''}
-        `}
+        `
+        }
+        style={{
+          borderColor: dragActive ? color : '#d1d5db', // blue-400 or gray-300
+          backgroundColor: dragActive ? color + '20' : undefined, // 20 = ~12% opacity
+        }}
       >
         <input
           ref={fileInputRef}
@@ -207,13 +218,10 @@ export default function ImageUpload({
         />
         
         <div className="space-y-3">
-          <Upload className={`mx-auto h-12 w-12 ${
-            dragActive ? 'text-blue-500' : 'text-gray-400'
-          }`} />
-          
+          <Upload className={`mx-auto h-12 w-12`} style={{ color: dragActive ? color : '#9ca3af' }} />
           {isUploading ? (
             <div className="space-y-2">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderColor: color }}></div>
               <p className="text-sm text-gray-600">Optimisation et upload...</p>
               <p className="text-xs text-gray-500">
                 L'image est automatiquement optimisée
@@ -222,9 +230,7 @@ export default function ImageUpload({
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-gray-600">
-                <span className="font-medium text-blue-600 hover:text-blue-500">
-                  Cliquez pour sélectionner
-                </span>
+                <span className="font-medium hover:underline" style={{ color }}>{'Cliquez pour sélectionner'}</span>
                 {' '}ou glissez-déposez votre image
               </p>
               <p className="text-xs text-gray-500">
@@ -273,10 +279,8 @@ export default function ImageUpload({
 
       {/* Upload Guidelines */}
       <div className="text-xs text-gray-500 space-y-1">
-        <p>• Images automatiquement optimisées à 400x400px</p>
         <p>• Formats acceptés : JPEG, PNG, WebP, GIF</p>
         <p>• Taille maximale : 50MB avant optimisation</p>
-        <p>• Compression et conversion automatiques</p>
       </div>
     </div>
   )

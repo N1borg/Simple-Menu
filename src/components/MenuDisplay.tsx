@@ -150,6 +150,19 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
             className="mx-auto w-20 h-20 rounded-full mb-2"
           />
         )}
+        {establishment.logo_url && (
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <Image 
+              src={establishment.logo_url} 
+              alt="Logo actuel" 
+              width={100}
+              height={100}
+              className="w-25 h-25 object-cover rounded"
+              priority
+            />
+            <span className="text-sm text-gray-600">Logo actuel</span>
+          </div>
+        )}
         <h1 className="text-3xl font-bold">{establishment.name}</h1>
         <p className="text-red-600 mt-2 font-semibold">🍹 Happy Hour : -50% sur les cocktails de 17h à 19h</p>
       </div>

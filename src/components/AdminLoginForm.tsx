@@ -1,12 +1,15 @@
 "use client"
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Loader2Icon } from "lucide-react"
 
 interface AdminLoginFormProps {
   slug: string
+  color?: string
   error?: string
 }
 
-export default function AdminLoginForm({ slug, error }: AdminLoginFormProps) {
+export default function AdminLoginForm({ slug, color, error }: AdminLoginFormProps) {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState<string | undefined>(error)
@@ -47,13 +50,19 @@ export default function AdminLoginForm({ slug, error }: AdminLoginFormProps) {
       {formError && (
         <div className="text-red-500 text-sm">{formError}</div>
       )}
-      <button
+      <Button
         type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+        className="w-full flex justify-center py-2 px-4"
         disabled={loading}
+        style={color ? { backgroundColor: color, borderColor: color, color: '#fff' } : {}}
       >
-        {loading ? 'Connexion...' : 'Se connecter'}
-      </button>
+        {loading ? (
+          <>
+            <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+            Connexion...
+          </>
+        ) : 'Se connecter'}
+      </Button>
     </form>
   )
 }
