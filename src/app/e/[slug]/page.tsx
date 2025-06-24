@@ -55,7 +55,7 @@ export default async function MenuPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {isAuthenticated && <AdminBanner slug={slug} color={establishment.primary_color ?? undefined} />}
+      {isAuthenticated || slug === 'demo' && <AdminBanner slug={slug} color={establishment.primary_color ?? undefined} />}
       <main className="flex-grow">
         <MenuDisplay establishment={establishment} />
       </main>

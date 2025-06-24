@@ -18,7 +18,7 @@ function renderMenuItem(item: MenuItem, category: Category) {
           className="bg-gray-100 rounded px-2 py-1 text-sm font-medium"
           title={item.description || ''}
         >
-          {item.name} <span className="text-green-700">{item.price.toFixed(2)}€</span>
+          {item.name} <span>{item.price.toFixed(2)}€</span>
         </span>
       )
     case 'table':
@@ -37,7 +37,7 @@ function renderMenuItem(item: MenuItem, category: Category) {
           {item.description && (
             <p className="text-sm text-gray-500 mt-1">{item.description}</p>
           )}
-          <div className="text-right font-bold text-green-600 mt-2">
+          <div className="text-right font-bold mt-2">
             {item.price.toFixed(2)}€
           </div>
         </div>

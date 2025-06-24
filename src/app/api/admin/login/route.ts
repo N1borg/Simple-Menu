@@ -11,6 +11,10 @@ if (!JWT_SECRET) {
 
 export async function POST(req: NextRequest) {
   const { slug, password } = await req.json()
+  // Block login for demo page
+  if (slug === 'demo') {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 403 })
+  }
   const supabase = await getServerSupabase()
 
   const { data: establishment, error } = await supabase

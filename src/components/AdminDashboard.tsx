@@ -36,6 +36,11 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const [editingItem, setEditingItem] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'category' | 'item', catId: string, itemId?: string } | null>(null)
 
+  const isDemo = establishment.slug === 'demo'
+
+  // For demo: allow client-side visual changes only (no API call)
+  const [demoLogoUrl, setDemoLogoUrl] = useState<string | undefined>(isDemo ? (establishment.logo_url ?? undefined) : undefined)
+
   const addCategory = () => {
     const newCat = {
       id: `new-${Date.now()}`,
@@ -79,6 +84,21 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   }
 
   const deleteMenuItem = (catId: string, itemId: string) => {
+    if (isDemo) {
+      // Suppression purement client-side en mode démo
+      setCategories(cats =>
+        cats.map(cat =>
+          cat.id === catId
+            ? {
+                ...cat,
+                menu_items: cat.menu_items.filter(item => item.id !== itemId),
+              }
+            : cat
+        )
+      )
+      toast.info("Élément supprimé (démo, non sauvegardé)")
+      return
+    }
     setCategories(cats =>
       cats.map(cat =>
         cat.id === catId
@@ -92,6 +112,12 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   }
 
   const deleteCategory = (catId: string) => {
+    if (isDemo) {
+      // Suppression purement client-side en mode démo
+      setCategories(cats => cats.filter(cat => cat.id !== catId))
+      toast.info("Catégorie supprimée (démo, non sauvegardé)")
+      return
+    }
     setCategories(cats => cats.filter(cat => cat.id !== catId))
   }
 
@@ -111,6 +137,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   }
 
   const saveItem = async (item: any) => {
+    if (isDemo) {
+      toast.error("Modification interdite sur la page de démonstration.")
+      return
+    }
     setSavingItemId(item.id)
     const res = await fetch('/api/admin/menu-item/update', {
       method: 'POST',
@@ -423,6 +453,11 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           color={establishment.primary_color ?? undefined}
           slug={establishment.slug}
           onImageUploaded={async (url: string) => {
+            if (isDemo) {
+              setDemoLogoUrl(url)
+              toast.info("Aperçu du logo modifié (démo, non sauvegardé)")
+              return
+            }
             // Update logo_url in DB
             const res = await fetch("/api/admin/update-logo", {
               method: "POST",
@@ -432,12 +467,12 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             const data = await res.json();
             if (res.ok && data.success) {
               toast.success("Logo mis à jour !");
-              // Optionally update local state if you want instant UI update
               establishment.logo_url = url;
             } else {
               toast.error(data.error || "Erreur lors de la mise à jour du logo");
             }
           }}
+          onDeleteLogo={isDemo ? () => { setDemoLogoUrl(undefined); toast.info("Logo supprimé (démo, non sauvegardé)") } : undefined}
         />
       </div>
       {/* Add new category button */}

@@ -32,6 +32,13 @@ export async function middleware(request: NextRequest) {
           { status: 401 }
         )
       }
+      // Block all admin API calls for demo slug
+      if (payload.slug === 'demo') {
+        return NextResponse.json(
+          { error: 'Modification interdite sur la page de démonstration.' },
+          { status: 403 }
+        )
+      }
       // Authenticated, allow request
       return NextResponse.next()
     } catch (error) {

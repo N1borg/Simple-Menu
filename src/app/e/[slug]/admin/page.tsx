@@ -54,7 +54,7 @@ export default async function AdminPage({ params }: PageProps) {
     }
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && slug !== 'demo') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full space-y-8">
@@ -84,7 +84,7 @@ export default async function AdminPage({ params }: PageProps) {
 
   return (
     <div>
-      {isAuthenticated && <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />}
+      {isAuthenticated || slug === 'demo' && <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />}
       <AdminDashboard
         establishment={establishment as EstablishmentWithCategories}
       />
