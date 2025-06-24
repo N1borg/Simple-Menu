@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Upload, X, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Upload, X, AlertCircle, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 
 interface ImageUploadProps {
@@ -11,6 +11,7 @@ interface ImageUploadProps {
   folder?: string
   className?: string
   color?: string
+  onDeleteLogo?: () => void // Ajout de la prop optionnelle
 }
 
 interface UploadError {
@@ -24,11 +25,14 @@ export default function ImageUpload({
   folder = 'logos',
   className = '',
   color = '#3a4fff',
+  onDeleteLogo,
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<UploadError | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
+  const [showPopup, setShowPopup] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const clearMessages = () => {
@@ -173,115 +177,174 @@ export default function ImageUpload({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Current Image Preview */}
+      {/* Centered Logo Preview (same as menu page) + Edit/Trash Buttons */}
       {currentImageUrl && (
-        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-          <Image 
-            src={currentImageUrl} 
-            alt="Logo actuel" 
+        <div className="flex flex-col items-center justify-center mb-2 relative">
+          <Image
+            src={currentImageUrl}
+            alt="Logo actuel"
             width={100}
             height={100}
-            className="w-25 h-25 object-cover rounded"
+            className="mx-auto w-25 h-25 rounded-full mb-2 shadow"
             priority
           />
-          <span className="text-sm text-gray-600">Logo actuel</span>
-        </div>
-      )}
-
-      {/* Upload Area */}
-      <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        className={
-          `
-          relative border-2 border-dashed rounded-lg p-6 text-center transition-colors
-          ${dragActive 
-            ? '' 
-            : ''
-          }
-          ${isUploading ? 'opacity-50 pointer-events-none' : ''}
-        `
-        }
-        style={{
-          borderColor: dragActive ? color : '#d1d5db', // blue-400 or gray-300
-          backgroundColor: dragActive ? color + '20' : undefined, // 20 = ~12% opacity
-        }}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-          onChange={handleInputChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          disabled={isUploading}
-        />
-        
-        <div className="space-y-3">
-          <Upload className={`mx-auto h-12 w-12`} style={{ color: dragActive ? color : '#9ca3af' }} />
-          {isUploading ? (
-            <div className="space-y-2">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderColor: color }}></div>
-              <p className="text-sm text-gray-600">Optimisation et upload...</p>
-              <p className="text-xs text-gray-500">
-                L'image est automatiquement optimisée
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium hover:underline" style={{ color }}>{'Cliquez pour sélectionner'}</span>
-                {' '}ou glissez-déposez votre image
-              </p>
-              <p className="text-xs text-gray-500">
-                Tous formats acceptés • Optimisation automatique
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Error Message */}
-      {error && (
-        <div className={`p-3 rounded-lg border flex items-start space-x-3 ${getErrorColor(error.type)}`}>
-          <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium">
-              Erreur d'upload
-            </p>
-            <p className="text-xs mt-1">{error.message}</p>
+          <div className="absolute top-2 right-1 flex gap-2">
+            <button
+              type="button"
+              className="p-2 rounded-full bg-white border border-gray-200 shadow hover:bg-gray-100 focus:outline-none transition"
+              aria-label="Changer le logo"
+              onClick={() => setShowPopup(true)}
+              style={{ color }}
+            >
+              <Pencil className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              className="p-2 rounded-full bg-white border border-red-200 shadow hover:bg-red-50 focus:outline-none text-red-600 transition"
+              aria-label="Supprimer le logo"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={clearMessages}
-            className="flex-shrink-0 opacity-70 hover:opacity-100"
-          >
-            <X className="h-4 w-4" />
-          </button>
         </div>
       )}
-
-      {/* Success Message */}
-      {success && (
-        <div className="p-3 rounded-lg border border-green-200 bg-green-50 text-green-700 flex items-start space-x-3">
-          <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium">Succès</p>
-            <p className="text-xs mt-1">{success}</p>
+      {/* Current Image Preview (legacy, can be removed if not needed) */}
+      {/* Popup for Upload Area */}
+      {showPopup && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setShowPopup(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-auto relative min-h-[340px] min-w-[320px] flex flex-col justify-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 focus:outline-none z-10"
+              aria-label="Fermer"
+              onClick={() => setShowPopup(false)}
+            >
+              <X className="h-6 w-6" />
+            </button>
+            {/* Upload Area (copié depuis plus bas) */}
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              className={
+                `relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragActive ? '' : ''} ${isUploading ? 'opacity-50 pointer-events-none' : ''}`
+              }
+              style={{
+                borderColor: dragActive ? color : '#d1d5db',
+                backgroundColor: dragActive ? color + '20' : undefined,
+              }}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                onChange={handleInputChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                disabled={isUploading}
+              />
+              <div className="space-y-3">
+                <Upload className={`mx-auto h-12 w-12`} style={{ color: dragActive ? color : '#9ca3af' }} />
+                {isUploading ? (
+                  <div className="space-y-2">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderColor: color }}></div>
+                    <p className="text-sm text-gray-600">Optimisation et upload...</p>
+                    <p className="text-xs text-gray-500">L'image est automatiquement optimisée</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium hover:underline" style={{ color }}>{'Cliquez pour sélectionner'}</span>
+                      {' '}ou glissez-déposez votre image
+                    </p>
+                    <p className="text-xs text-gray-500">Tous formats acceptés • Optimisation automatique</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Error Message */}
+            {error && (
+              <div className={`p-3 rounded-lg border flex items-start space-x-3 mt-4 ${getErrorColor(error.type)}`}>
+                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Erreur d'upload</p>
+                  <p className="text-xs mt-1">{error.message}</p>
+                </div>
+                <button
+                  onClick={clearMessages}
+                  className="flex-shrink-0 opacity-70 hover:opacity-100"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            {/* Success Message */}
+            {success && (
+              <div className="p-3 rounded-lg border border-green-200 bg-green-50 text-green-700 flex items-start space-x-3 mt-4">
+                <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Succès</p>
+                  <p className="text-xs mt-1">{success}</p>
+                </div>
+                <button
+                  onClick={clearMessages}
+                  className="flex-shrink-0 opacity-70 hover:opacity-100"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+            {/* Upload Guidelines */}
+            <div className="text-xs text-gray-500 space-y-1 mt-4">
+              <p>• Formats acceptés : JPEG, PNG, WebP, GIF</p>
+              <p>• Taille maximale : 50MB avant optimisation</p>
+            </div>
           </div>
-          <button
-            onClick={clearMessages}
-            className="flex-shrink-0 opacity-70 hover:opacity-100"
-          >
-            <X className="h-4 w-4" />
-          </button>
         </div>
       )}
-
-      {/* Upload Guidelines */}
-      <div className="text-xs text-gray-500 space-y-1">
-        <p>• Formats acceptés : JPEG, PNG, WebP, GIF</p>
-        <p>• Taille maximale : 50MB avant optimisation</p>
-      </div>
+      {/* Confirmation Pop-up for Delete */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50" onClick={e => { if (e.target === e.currentTarget) setShowDeleteConfirm(false) }}>
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs mx-auto relative flex flex-col items-center">
+            <AlertCircle className="h-10 w-10 text-yellow-500 mb-2" />
+            <p className="text-base font-semibold text-gray-800 mb-1">Confirmer la suppression</p>
+            <p className="text-sm text-gray-600 mb-4 text-center">Voulez-vous vraiment supprimer ce logo&nbsp;? Cette action est irréversible.</p>
+            <div className="flex gap-3 w-full">
+              <button
+                type="button"
+                className="flex-1 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+                onClick={() => setShowDeleteConfirm(false)}
+              >Annuler</button>
+              <button
+                type="button"
+                className="flex-1 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                onClick={() => {
+                  setShowDeleteConfirm(false)
+                  setShowPopup(false)
+                  if (onDeleteLogo) onDeleteLogo()
+                }}
+              >Supprimer</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Si pas de logo, bouton direct */}
+      {!currentImageUrl && (
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700"
+          onClick={() => setShowPopup(true)}
+        >
+          <Upload className="h-5 w-5" />
+          Ajouter un logo
+        </button>
+      )}
     </div>
   )
 }

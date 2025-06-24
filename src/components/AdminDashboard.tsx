@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { Pencil, Plus, Trash2, AlertTriangle } from "lucide-react"
 import ImageUpload from "@/components/ImageUpload"
 
 const DISPLAY_STYLES = [
@@ -34,6 +34,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     }))
   )
   const [editingItem, setEditingItem] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{ type: 'category' | 'item', catId: string, itemId?: string } | null>(null)
 
   const addCategory = () => {
     const newCat = {
@@ -124,6 +125,16 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     } else {
       toast.error("Erreur", { description: "Échec de la sauvegarde." })
     }
+  }
+
+  const handleConfirmDelete = () => {
+    if (!confirmDelete) return
+    if (confirmDelete.type === 'item' && confirmDelete.itemId) {
+      deleteMenuItem(confirmDelete.catId, confirmDelete.itemId)
+    } else if (confirmDelete.type === 'category') {
+      deleteCategory(confirmDelete.catId)
+    }
+    setConfirmDelete(null)
   }
 
   function renderMenuItem(item: any, cat: any) {
@@ -230,7 +241,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             size="icon"
             variant="ghost"
             className="opacity-70 hover:opacity-100"
-            onClick={() => deleteMenuItem(cat.id, item.id)}
+            onClick={() => setConfirmDelete({ type: 'item', catId: cat.id, itemId: item.id })}
             title="Supprimer l'élément"
           >
             <Trash2 className="w-4 h-4 text-red-500" />
@@ -249,7 +260,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         {item.description && (
           <p className="text-sm text-gray-500 mt-1">{item.description}</p>
         )}
-        <div className="text-right font-bold text-green-600 mt-2">
+        <div className="text-right font-bold mt-2">
           {item.price?.toFixed(2)}€
         </div>
       </div>
@@ -260,8 +271,8 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   function renderCardStyle(cat: any) {
     return (
       <section key={cat.id} className="max-w-4xl mx-auto px-4 py-6">
-        <div className="flex items-center gap-4 mb-4">
-          <h2 className="text-2xl font-bold">{cat.name}</h2>
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <h2 className="text-2xl font-bold mr-2 mb-2 sm:mb-0">{cat.name}</h2>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" variant="outline">Style: {cat.display_style || 'Carte'}</Button>
@@ -291,7 +302,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => deleteCategory(cat.id)}
+            onClick={() => setConfirmDelete({ type: 'category', catId: cat.id })}
             title="Supprimer la catégorie"
           >
             <Trash2 className="w-5 h-5 text-red-500" />
@@ -306,7 +317,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     )
   }
 
-function renderListStyle(cat: any) {
+  function renderListStyle(cat: any) {
     return (
       <section key={cat.id} className="max-w-4xl mx-auto px-4 py-6">
         <h2 className="text-2xl font-bold mb-4">{cat.name}</h2>
@@ -322,7 +333,7 @@ function renderListStyle(cat: any) {
                       <p className="text-sm text-gray-500 mt-1">{item.description}</p>
                     )}
                   </div>
-                  <div className="text-right font-bold text-green-600">
+                  <div className="text-right font-bold mt-2">
                     {item.price?.toFixed(2)}€
                   </div>
                 </div>
@@ -346,7 +357,7 @@ function renderListStyle(cat: any) {
                 {item.description && (
                   <p className="text-sm text-gray-500 mt-1">{item.description}</p>
                 )}
-                <div className="text-right font-bold text-green-600 mt-2">
+                <div className="text-right font-bold">
                   {item.price?.toFixed(2)}€
                 </div>
               </div>
@@ -375,7 +386,7 @@ function renderListStyle(cat: any) {
                 <tr key={item.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4">{item.name}</td>
                   <td className="px-6 py-4">{item.description || '-'}</td>
-                  <td className="px-6 py-4 text-right font-bold text-green-600">
+                  <td className="px-6 py-4 text-right font-bold mt-2">
                     {item.price?.toFixed(2)}€
                   </td>
                 </tr>
@@ -440,6 +451,37 @@ function renderListStyle(cat: any) {
           ?.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
           .map(renderCategoryByStyle)}
       </div>
+      {/* Confirmation Dialog for Delete Action */}
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setConfirmDelete(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs mx-auto text-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <AlertTriangle className="mx-auto h-10 w-10 text-yellow-500 mb-3" />
+            <p className="mb-6 text-base text-gray-800 font-semibold">
+              {confirmDelete.type === 'category'
+                ? "Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible."
+                : "Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible."}
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button
+                variant="outline"
+                className="min-w-[100px]"
+                onClick={() => setConfirmDelete(null)}
+              >Annuler</Button>
+              <Button
+                variant="destructive"
+                className="min-w-[100px] transition-colors duration-150 hover:bg-red-700 hover:border-red-700 focus:ring-2 focus:ring-red-300"
+                onClick={handleConfirmDelete}
+              >Supprimer</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

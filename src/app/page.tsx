@@ -107,7 +107,7 @@ export default function HomePage() {
                 href="#contact"
                 className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700"
               >
-                Me faire une offre
+              Je veux le Premium
               </Link>
             </div>
           </div>
