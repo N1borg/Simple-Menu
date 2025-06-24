@@ -464,8 +464,8 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             <AlertTriangle className="mx-auto h-10 w-10 text-yellow-500 mb-3" />
             <p className="mb-6 text-base text-gray-800 font-semibold">
               {confirmDelete.type === 'category'
-                ? "Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible."
-                : "Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible."}
+                ? "Supprimer cette catégorie ? Cette action est irréversible."
+                : "Supprimer cet élément ? Cette action est irréversible."}
             </p>
             <div className="flex justify-center gap-4">
               <Button

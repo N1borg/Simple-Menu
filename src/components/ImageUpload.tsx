@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { Button } from '@/components/ui/button'
 import { Upload, X, AlertCircle, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -189,23 +190,18 @@ export default function ImageUpload({
             priority
           />
           <div className="absolute top-2 right-1 flex gap-2">
-            <button
-              type="button"
-              className="p-2 rounded-full bg-white border border-gray-200 shadow hover:bg-gray-100 focus:outline-none transition"
-              aria-label="Changer le logo"
-              onClick={() => setShowPopup(true)}
-              style={{ color }}
-            >
-              <Pencil className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              className="p-2 rounded-full bg-white border border-red-200 shadow hover:bg-red-50 focus:outline-none text-red-600 transition"
-              aria-label="Supprimer le logo"
+            
+            <Button size="icon" variant="ghost" className="opacity-70 hover:opacity-100" title="Modifier">
+              <Pencil className="w-4 h-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
               onClick={() => setShowDeleteConfirm(true)}
+              title="Supprimer la catégorie"
             >
-              <Trash2 className="w-5 h-5" />
-            </button>
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </Button>
           </div>
         </div>
       )}
@@ -314,7 +310,7 @@ export default function ImageUpload({
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs mx-auto relative flex flex-col items-center">
             <AlertCircle className="h-10 w-10 text-yellow-500 mb-2" />
             <p className="text-base font-semibold text-gray-800 mb-1">Confirmer la suppression</p>
-            <p className="text-sm text-gray-600 mb-4 text-center">Voulez-vous vraiment supprimer ce logo&nbsp;? Cette action est irréversible.</p>
+            <p className="text-sm text-gray-600 mb-4 text-center">Supprimer le logo&nbsp;? Cette action est irréversible.</p>
             <div className="flex gap-3 w-full">
               <button
                 type="button"
