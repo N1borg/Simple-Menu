@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import { auditLog } from '@/lib/security'
+import { sanitizeString, isValidUUID, isDemoSlug } from '@/lib/validate'
 
 export async function POST(req: NextRequest) {
   const { id } = await req.json()
+  // Advanced demo mode protection
+  if (isDemoSlug(req.nextUrl.searchParams.get('slug'))) {
+    return NextResponse.json({ success: false, error: 'Suppression interdite en mode démo.' }, { status: 403 })
+  }
+  // Input validation
+  if (!isValidUUID(id)) {
+    return NextResponse.json({ success: false, error: 'ID invalide' }, { status: 400 })
+  }
   const supabase = await getServerSupabase()
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
 

@@ -1,29 +1,29 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from '@/lib/supabase'
 import { auditLog } from '@/lib/security'
+import { sanitizeString, isDemoSlug } from '@/lib/validate'
 
 export async function POST(req: NextRequest) {
   try {
-    const { id, logo_url } = await req.json()
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+    const { id, logo_url, slug } = await req.json()
+    // Advanced demo mode protection
+    if (isDemoSlug(slug)) {
+      return NextResponse.json({ error: 'Modification du logo interdite en mode démo.' }, { status: 403 })
+    }
     if (!id) {
-      auditLog({ action: 'update_logo_failed', ip, details: { error: 'ID manquant' } })
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
     }
+    const safeLogoUrl = sanitizeString(logo_url, 500)
     const supabase = await getServerSupabase()
     const { error } = await supabase
       .from('establishments')
-      .update({ logo_url })
+      .update({ logo_url: safeLogoUrl })
       .eq('id', id)
     if (error) {
-      auditLog({ action: 'update_logo_failed', ip, details: { id, error: error.message } })
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
-    auditLog({ action: 'update_logo', ip, details: { id, logo_url } })
     return NextResponse.json({ success: true })
   } catch (e: any) {
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
-    auditLog({ action: 'update_logo_failed', ip, details: { error: e.message } })
     return NextResponse.json({ error: e.message || 'Erreur serveur' }, { status: 500 })
   }
 }

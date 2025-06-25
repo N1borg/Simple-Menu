@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import { auditLog } from '@/lib/security'
+import { sanitizeString, sanitizeNumber, isValidUUID, isDemoSlug } from '@/lib/validate'
 
 export async function POST(req: NextRequest) {
-  const { id, name, display_style, display_order } = await req.json()
+  const { id, name, display_style, display_order, slug } = await req.json()
+  // Advanced demo mode protection
+  if (isDemoSlug(slug)) {
+    return NextResponse.json({ success: false, error: 'Modification interdite en mode démo.' }, { status: 403 })
+  }
+  // Input validation & sanitization
+  if (!isValidUUID(id)) {
+    return NextResponse.json({ success: false, error: 'ID requis' }, { status: 400 })
+  }
+  const safeName = sanitizeString(name, 100)
+  const safeStyle = sanitizeString(display_style, 20)
+  const safeOrder = sanitizeNumber(display_order, 0, 1000)
   const supabase = await getServerSupabase()
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
 
@@ -14,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   const { error } = await supabase
     .from('categories')
-    .update({ name, display_style, display_order })
+    .update({ name: safeName, display_style: safeStyle, display_order: safeOrder })
     .eq('id', id)
 
   if (error) {

@@ -3,6 +3,7 @@ import cloudinary from "cloudinary"
 import sharp from "sharp"
 import { jwtVerify } from 'jose'
 import { auditLog } from '@/lib/security'
+import { sanitizeString, isDemoSlug } from '@/lib/validate'
 
 cloudinary.v2.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -35,7 +36,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Content-Type doit être application/json" }, { status: 400 })
     }
 
-    const { file, folder = "logos" } = await req.json()
+    const body = await req.json()
+    const { file, folder = "logos" } = body
+
+    // Advanced demo mode protection
+    if (isDemoSlug(slug)) {
+      return NextResponse.json({ error: 'Upload interdit en mode démo.' }, { status: 403 })
+    }
+
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
 
     // Validate file presence
