@@ -1,7 +1,9 @@
 'use client'
+
 import Link from 'next/link'
 import { useState } from 'react'
 import { FaWhatsapp } from 'react-icons/fa'
+import { Analytics } from "@vercel/analytics/next"
 
 export default function HomePage() {
   const [showContactPopup, setShowContactPopup] = useState(false)
@@ -177,7 +179,8 @@ export default function HomePage() {
       {/* FOOTER */}
       <footer className="text-center text-sm text-gray-500 py-6 border-t">
         © {new Date().getFullYear()} Simple Menu — Conçu avec passion 🧑‍🍳
-      </footer>
+      </foote>r>
+      <Analytics />
     </main>
   )
 }
