@@ -84,7 +84,7 @@ export default async function AdminPage({ params }: PageProps) {
 
   return (
     <div>
-      {isAuthenticated || slug === 'demo' && <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />}
+      {(isAuthenticated || slug === 'demo') && <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />}
       <AdminDashboard
         establishment={establishment as EstablishmentWithCategories}
       />

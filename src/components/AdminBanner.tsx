@@ -30,7 +30,7 @@ export default function AdminBanner({ slug, isDashboard = false, color = '#3a4ff
   return (
     <div
       className="w-full border-b shadow-sm py-2 px-0 flex justify-center items-center z-10 sticky top-0 left-0"
-      style={{ backgroundColor: color + '10', borderColor: color + '40' }}
+      style={{ backgroundColor: `#f3f6fd`, borderColor: color + '40' }}
     >
       <Link
         href={linkHref}

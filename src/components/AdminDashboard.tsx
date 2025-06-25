@@ -55,37 +55,98 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     setCategories([...categories, newCat])
   }
 
-  const addMenuItem = (catId: string) => {
+  // Add a new menu item (API call if not demo)
+  const addMenuItem = async (catId: string) => {
+    if (isDemo) {
+      setCategories(cats =>
+        cats.map(cat =>
+          cat.id === catId
+            ? {
+                ...cat,
+                menu_items: [
+                  ...cat.menu_items,
+                  {
+                    id: `new-${Date.now()}`,
+                    name: "Nouvel élément",
+                    description: "",
+                    price: 0,
+                    is_available: true,
+                    display_order: cat.menu_items.length,
+                    category_id: catId,
+                    created_at: new Date().toISOString(),
+                    display_style: null,
+                    image_url: null,
+                    order: null,
+                  },
+                ],
+              }
+            : cat
+        )
+      )
+      return
+    }
+    const tempId = `temp-${Date.now()}`;
+    const tempItem = {
+      id: tempId,
+      name: "Nouvel élément",
+      description: "",
+      price: 0,
+      is_available: true,
+      display_order: categories.find(cat => cat.id === catId)?.menu_items.length ?? 0,
+      category_id: catId,
+      created_at: new Date().toISOString(),
+      display_style: null,
+      image_url: null,
+      order: null,
+    };
     setCategories(cats =>
       cats.map(cat =>
         cat.id === catId
-          ? {
-              ...cat,
-              menu_items: [
-                ...cat.menu_items,
-                {
-                  id: `new-${Date.now()}`,
-                  name: "Nouvel élément",
-                  description: "",
-                  price: 0,
-                  is_available: true,
-                  display_order: cat.menu_items.length,
-                  category_id: catId,
-                  created_at: new Date().toISOString(),
-                  display_style: null,
-                  image_url: null,
-                  order: null,
-                },
-              ],
-            }
+          ? { ...cat, menu_items: [...cat.menu_items, tempItem] }
           : cat
       )
-    )
-  }
+    );
+    // API call
+    const res = await fetch('/api/admin/menu-item/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tempItem),
+    });
+    const data = await res.json();
+    if (res.ok && data && data.item) {
+      // Replace temp item with real item
+      setCategories(cats =>
+        cats.map(cat =>
+          cat.id === catId
+            ? {
+                ...cat,
+                menu_items: cat.menu_items.map(item =>
+                  item.id === tempId ? data.item : item
+                ),
+              }
+            : cat
+        )
+      );
+      toast.success("Élément créé");
+    } else {
+      // Remove temp item on error
+      setCategories(cats =>
+        cats.map(cat =>
+          cat.id === catId
+            ? {
+                ...cat,
+                menu_items: cat.menu_items.filter(item => item.id !== tempId),
+              }
+            : cat
+        )
+      );
+      toast.error("Erreur lors de la création");
+    }
+  };
 
-  const deleteMenuItem = (catId: string, itemId: string) => {
+  // Delete a menu item (API call if not demo)
+  const deleteMenuItem = async (catId: string, itemId: string) => {
     if (isDemo) {
-      // Suppression purement client-side en mode démo
       setCategories(cats =>
         cats.map(cat =>
           cat.id === catId
@@ -99,6 +160,8 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       toast.info("Élément supprimé (démo, non sauvegardé)")
       return
     }
+    const prevItems = categories.find(cat => cat.id === catId)?.menu_items || [];
+    const removedItem = prevItems.find(item => item.id === itemId);
     setCategories(cats =>
       cats.map(cat =>
         cat.id === catId
@@ -108,8 +171,33 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             }
           : cat
       )
-    )
-  }
+    );
+    // API call
+    const res = await fetch('/api/admin/menu-item/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: itemId }),
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      toast.success("Élément supprimé");
+    } else {
+      // Revert on error
+      if (removedItem) {
+        setCategories(cats =>
+          cats.map(cat =>
+            cat.id === catId
+              ? {
+                  ...cat,
+                  menu_items: [...cat.menu_items, removedItem],
+                }
+              : cat
+          )
+        );
+      }
+      toast.error("Erreur lors de la suppression");
+    }
+  };
 
   const deleteCategory = (catId: string) => {
     if (isDemo) {
@@ -138,10 +226,19 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
 
   const saveItem = async (item: any) => {
     if (isDemo) {
-      toast.error("Modification interdite sur la page de démonstration.")
+      setEditingItem(null)
+      toast.info("Modification enregistrée (démo, non sauvegardé)")
       return
     }
     setSavingItemId(item.id)
+
+    // 1. Store previous state
+    const prevCategories = JSON.parse(JSON.stringify(categories))
+
+    // 2. Optimistically update UI (already done by handleItemChange)
+    setEditingItem(null)
+
+    // 3. API call
     const res = await fetch('/api/admin/menu-item/update', {
       method: 'POST',
       body: JSON.stringify(item),
@@ -149,11 +246,13 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     })
     const ok = await res.json()
     setSavingItemId(null)
-    setEditingItem(null)
+
     if (ok === true) {
       toast.success("Sauvegardé", { description: "Les modifications ont été enregistrées." })
     } else {
-      toast.error("Erreur", { description: "Échec de la sauvegarde." })
+      // 4. Rollback on error
+      setCategories(prevCategories)
+      toast.error("Erreur", { description: "Échec de la sauvegarde. Modifications annulées." })
     }
   }
 
