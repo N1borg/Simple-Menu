@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
 import { SignJWT } from 'jose'
+import { auditLog } from '@/lib/security'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -11,8 +12,10 @@ if (!JWT_SECRET) {
 
 export async function POST(req: NextRequest) {
   const { slug, password } = await req.json()
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
   // Block login for demo page
   if (slug === 'demo') {
+    auditLog({ action: 'login_attempt_demo_blocked', ip, user: slug, details: { slug } })
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 403 })
   }
   const supabase = await getServerSupabase()
@@ -24,11 +27,13 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error || !establishment || typeof establishment.admin_hash !== 'string') {
+    auditLog({ action: 'login_failed', ip, user: slug, details: { error } })
     return NextResponse.json({ error: 'Erreur interne serveur' }, { status: 404 })
   }
 
   const valid = await bcrypt.compare(password, establishment.admin_hash)
   if (!valid) {
+    auditLog({ action: 'login_failed', ip, user: slug, details: { reason: 'Mot de passe invalide' } })
     return NextResponse.json({ error: 'Mot de passe invalide' }, { status: 401 })
   }
 
@@ -46,5 +51,6 @@ export async function POST(req: NextRequest) {
     path: '/',
     maxAge: 60 * 60 * 2,
   })
+  auditLog({ action: 'login_success', ip, user: slug })
   return res
 }

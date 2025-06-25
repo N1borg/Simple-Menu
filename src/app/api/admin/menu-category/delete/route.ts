@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
+import { auditLog } from '@/lib/security'
 
 export async function POST(req: NextRequest) {
   const { id } = await req.json()
   const supabase = await getServerSupabase()
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
 
   if (!id) {
+    auditLog({ action: 'category_delete_failed', ip, details: { error: 'ID requis' } })
     return NextResponse.json({ success: false, error: 'ID requis' }, { status: 400 })
   }
 
@@ -18,9 +21,10 @@ export async function POST(req: NextRequest) {
     .eq('id', id)
 
   if (error) {
+    auditLog({ action: 'category_delete_failed', ip, details: { id, error } })
     console.error('Erreur suppression catégorie:', error)
     return NextResponse.json({ success: false, error }, { status: 500 })
   }
-
+  auditLog({ action: 'category_delete', ip, details: { id } })
   return NextResponse.json({ success: true }, { status: 200 })
 }

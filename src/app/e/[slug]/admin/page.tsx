@@ -4,9 +4,9 @@ import { jwtVerify } from 'jose'
 import AdminDashboard from '@/components/AdminDashboard'
 import AdminLoginForm from '@/components/AdminLoginForm'
 import { EstablishmentWithCategories } from '@/types/supabase'
-import Link from 'next/link'
 import AdminBanner from '@/components/AdminBanner'
 import Image from 'next/image'
+import NotFound from '@/app/not-found'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -36,7 +36,7 @@ export default async function AdminPage({ params }: PageProps) {
     .single()
 
   if (error || !establishment) {
-    return <div className="p-8 text-center">Établissement non trouvé</div>
+    return NotFound()
   }
 
   // Check single session cookie
