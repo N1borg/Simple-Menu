@@ -35,15 +35,33 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   )
   const [editingItem, setEditingItem] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'category' | 'item', catId: string, itemId?: string } | null>(null)
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
+  const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null)
+  const [originalCategory, setOriginalCategory] = useState<any | null>(null)
 
   const isDemo = establishment.slug === 'demo'
 
   // For demo: allow client-side visual changes only (no API call)
   const [demoLogoUrl, setDemoLogoUrl] = useState<string | undefined>(isDemo ? (establishment.logo_url ?? undefined) : undefined)
 
-  const addCategory = () => {
-    const newCat = {
-      id: `new-${Date.now()}`,
+  const addCategory = async () => {
+    if (isDemo) {
+      const newCat = {
+        id: `new-${Date.now()}`,
+        name: "Nouvelle catégorie",
+        display_style: "card",
+        order: categories.length,
+        created_at: new Date().toISOString(),
+        display_order: categories.length,
+        establishment_id: establishment.id,
+        menu_items: [],
+      }
+      setCategories([newCat, ...categories])
+      return
+    }
+    const tempId = `temp-${Date.now()}`;
+    const tempCat = {
+      id: tempId,
       name: "Nouvelle catégorie",
       display_style: "card",
       order: categories.length,
@@ -52,7 +70,25 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       establishment_id: establishment.id,
       menu_items: [],
     }
-    setCategories([...categories, newCat])
+    setCategories([tempCat, ...categories])
+    const res = await fetch('/api/admin/menu-category/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: tempCat.name,
+        display_style: tempCat.display_style,
+        display_order: tempCat.display_order,
+        establishment_id: tempCat.establishment_id,
+      }),
+    })
+    const data = await res.json()
+    if (res.ok && data && data.category) {
+      setCategories(cats => cats.map(cat => cat.id === tempId ? { ...data.category, menu_items: [] } : cat))
+      toast.success("Catégorie créée")
+    } else {
+      setCategories(cats => cats.filter(cat => cat.id !== tempId))
+      toast.error("Erreur lors de la création de la catégorie")
+    }
   }
 
   // Add a new menu item (API call if not demo)
@@ -199,14 +235,26 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     }
   };
 
-  const deleteCategory = (catId: string) => {
+  const deleteCategory = async (catId: string) => {
     if (isDemo) {
-      // Suppression purement client-side en mode démo
       setCategories(cats => cats.filter(cat => cat.id !== catId))
       toast.info("Catégorie supprimée (démo, non sauvegardé)")
       return
     }
+    const prevCategories = [...categories]
     setCategories(cats => cats.filter(cat => cat.id !== catId))
+    const res = await fetch('/api/admin/menu-category/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: catId }),
+    })
+    const data = await res.json()
+    if (res.ok && data.success) {
+      toast.success("Catégorie supprimée")
+    } else {
+      setCategories(prevCategories)
+      toast.error("Erreur lors de la suppression de la catégorie")
+    }
   }
 
   const handleItemChange = (catId: string, itemId: string, field: string, value: any) => {
@@ -253,6 +301,36 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       // 4. Rollback on error
       setCategories(prevCategories)
       toast.error("Erreur", { description: "Échec de la sauvegarde. Modifications annulées." })
+    }
+  }
+
+  // Update a category (optimistic UI, demo-friendly)
+  const saveCategory = async (cat: any) => {
+    if (isDemo) {
+      setEditingCategoryId(null)
+      toast.info("Modification enregistrée (démo, non sauvegardé)")
+      return
+    }
+    setSavingCategoryId(cat.id)
+    const prevCategories = JSON.parse(JSON.stringify(categories))
+    setEditingCategoryId(null)
+    const res = await fetch('/api/admin/menu-category/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: cat.id,
+        name: cat.name,
+        display_style: cat.display_style,
+        display_order: cat.display_order,
+      }),
+    })
+    const data = await res.json()
+    setSavingCategoryId(null)
+    if (res.ok && data && data.success) {
+      toast.success("Catégorie sauvegardée")
+    } else {
+      setCategories(prevCategories)
+      toast.error("Erreur lors de la sauvegarde. Modifications annulées.")
     }
   }
 
@@ -401,41 +479,90 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     return (
       <section key={cat.id} className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          <h2 className="text-2xl font-bold mr-2 mb-2 sm:mb-0">{cat.name}</h2>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline">Style: {cat.display_style || 'Carte'}</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {DISPLAY_STYLES.map(style => (
-                <DropdownMenuItem
-                  key={style.value}
-                  onClick={() => setCategories(cats =>
-                    cats.map(c =>
-                      c.id === cat.id ? { ...c, display_style: style.value } : c
-                    )
-                  )}
-                >
-                  {style.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => addMenuItem(cat.id)}
-          >
-            <Plus className="w-4 h-4 mr-1" /> Ajouter un élément
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => setConfirmDelete({ type: 'category', catId: cat.id })}
-            title="Supprimer la catégorie"
-          >
-            <Trash2 className="w-5 h-5 text-red-500" />
-          </Button>
+          {editingCategoryId === cat.id ? (
+            <form
+              onSubmit={e => {
+                e.preventDefault()
+                // Only call saveCategory if something changed
+                if (
+                  originalCategory &&
+                  cat.name === originalCategory.name &&
+                  cat.display_style === originalCategory.display_style
+                ) {
+                  setEditingCategoryId(null)
+                  return
+                }
+                saveCategory(cat)
+              }}
+              className="flex items-center gap-2 flex-wrap"
+            >
+              <Input
+                value={cat.name}
+                onChange={e => setCategories(cats =>
+                  cats.map(c => c.id === cat.id ? { ...c, name: e.target.value } : c)
+                )}
+                className="w-40"
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="outline">Style: {cat.display_style || 'Carte'}</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {DISPLAY_STYLES.map(style => (
+                    <DropdownMenuItem
+                      key={style.value}
+                      onClick={() => setCategories(cats =>
+                        cats.map(c => c.id === cat.id ? { ...c, display_style: style.value } : c)
+                      )}
+                    >
+                      {style.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button type="submit" size="sm" disabled={savingCategoryId === cat.id}>
+                {savingCategoryId === cat.id ? (
+                  <svg className="animate-spin h-4 w-4 mr-2 inline" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                  </svg>
+                ) : "Enregistrer"}
+              </Button>
+              <Button type="button" size="sm" variant="secondary" onClick={() => setEditingCategoryId(null)}>
+                Annuler
+              </Button>
+            </form>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold mr-2 mb-2 sm:mb-0">{cat.name}</h2>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="outline">Style: {cat.display_style || 'Carte'}</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {DISPLAY_STYLES.map(style => (
+                    <DropdownMenuItem
+                      key={style.value}
+                      onClick={() => setCategories(cats =>
+                        cats.map(c => c.id === cat.id ? { ...c, display_style: style.value } : c)
+                      )}
+                    >
+                      {style.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button size="sm" variant="secondary" onClick={() => addMenuItem(cat.id)} disabled={cat.id.startsWith('temp-')}>
+                <Plus className="w-4 h-4 mr-1" /> Ajouter un élément
+              </Button>
+              <Button size="icon" variant="ghost" onClick={() => { setEditingCategoryId(cat.id); setOriginalCategory({ name: cat.name, display_style: cat.display_style }); }} title="Modifier la catégorie">
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button size="icon" variant="ghost" onClick={() => setConfirmDelete({ type: 'category', catId: cat.id })} title="Supprimer la catégorie">
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </Button>
+            </>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {cat.menu_items
