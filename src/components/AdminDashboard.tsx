@@ -399,20 +399,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <Label>Catégorie</Label>
-                <Select
-                  value={item.category_id || cat.id}
-                  onValueChange={val => handleItemChange(cat.id, item.id, 'category_id', val)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {establishment.categories.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <Label>Ordre d'affichage</Label>
                 <Input
                   type="number"
