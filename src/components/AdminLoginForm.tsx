@@ -57,11 +57,10 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
         style={color ? { backgroundColor: color, borderColor: color, color: '#fff' } : {}}
       >
         {loading ? (
-          <>
-            <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
-            Connexion...
-          </>
-        ) : 'Se connecter'}
+          <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Connexion...</span>
+        ) : (
+          'Connexion'
+        )}
       </Button>
     </form>
   )

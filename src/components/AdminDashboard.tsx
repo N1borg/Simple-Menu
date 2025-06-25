@@ -26,6 +26,8 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const [savingItemId, setSavingItemId] = useState<string | null>(null)
+  const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null)
+  const [loadingAction, setLoadingAction] = useState<string | null>(null) // action key for global disables
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [categories, setCategories] = useState(
     establishment.categories.map(cat => ({
@@ -36,7 +38,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const [editingItem, setEditingItem] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'category' | 'item', catId: string, itemId?: string } | null>(null)
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
-  const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null)
   const [originalCategory, setOriginalCategory] = useState<any | null>(null)
 
   const isDemo = establishment.slug === 'demo'
@@ -57,8 +58,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         menu_items: [],
       }
       setCategories([newCat, ...categories])
+      toast.info("Catégorie ajoutée (démo, non sauvegardé)")
       return
     }
+    setLoadingAction('addCategory')
     const tempId = `temp-${Date.now()}`;
     const tempCat = {
       id: tempId,
@@ -82,6 +85,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       }),
     })
     const data = await res.json()
+    setLoadingAction(null)
     if (res.ok && data && data.category) {
       setCategories(cats => cats.map(cat => cat.id === tempId ? { ...data.category, menu_items: [] } : cat))
       toast.success("Catégorie créée")
@@ -142,6 +146,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           : cat
       )
     );
+    setSavingItemId(catId)
     // API call
     const res = await fetch('/api/admin/menu-item/create', {
       method: 'POST',
@@ -149,6 +154,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       body: JSON.stringify(tempItem),
     });
     const data = await res.json();
+    setSavingItemId(null)
     if (res.ok && data && data.item) {
       // Replace temp item with real item
       setCategories(cats =>
@@ -415,7 +421,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   Disponible
                 </Label>
                 <div className="flex justify-end gap-2 pt-2">
-                  <Button type="submit" size="sm" disabled={savingItemId === item.id}>
+                  <Button type="submit" size="sm" disabled={savingItemId === item.id || loadingAction !== null}>
                     {savingItemId === item.id ? (
                       <svg className="animate-spin h-4 w-4 mr-2 inline" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
@@ -506,7 +512,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button type="submit" size="sm" disabled={savingCategoryId === cat.id}>
+              <Button type="submit" size="sm" disabled={savingCategoryId === cat.id || loadingAction !== null}>
                 {savingCategoryId === cat.id ? (
                   <svg className="animate-spin h-4 w-4 mr-2 inline" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>

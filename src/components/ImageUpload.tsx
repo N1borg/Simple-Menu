@@ -180,29 +180,17 @@ export default function ImageUpload({
     <div className={`space-y-4 ${className}`}>
       {/* Centered Logo Preview (same as menu page) + Edit/Trash Buttons */}
       {currentImageUrl && (
-        <div className="flex flex-col items-center justify-center mb-2 relative">
+        <div className="flex flex-col items-center mb-4">
           <Image
             src={currentImageUrl}
             alt="Logo actuel"
-            width={100}
-            height={100}
-            className="mx-auto w-25 h-25 rounded-full mb-2 shadow"
+            width={120}
+            height={120}
+            className="rounded-full object-contain bg-white border mb-2"
+            quality={90}
+            sizes="(max-width: 600px) 100vw, 120px"
             priority
           />
-          <div className="absolute top-2 right-1 flex gap-2">
-            
-            <Button size="icon" variant="ghost" className="opacity-70 hover:opacity-100" title="Modifier">
-              <Pencil className="w-4 h-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => setShowDeleteConfirm(true)}
-              title="Supprimer la catégorie"
-            >
-              <Trash2 className="w-5 h-5 text-red-500" />
-            </Button>
-          </div>
         </div>
       )}
       {/* Current Image Preview (legacy, can be removed if not needed) */}

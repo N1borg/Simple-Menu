@@ -145,9 +145,12 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
           <Image
             src={establishment.logo_url}
             alt="Logo"
-            width={100}
-            height={100}
-            className="mx-auto w-25 h-25 rounded-full mb-2"
+            width={160}
+            height={160}
+            className="mx-auto w-32 h-32 rounded-full mb-2 object-contain bg-white"
+            priority
+            quality={90}
+            sizes="(max-width: 600px) 100vw, 160px"
           />
         )}
         <h1 className="text-3xl font-bold">{establishment.name}</h1>

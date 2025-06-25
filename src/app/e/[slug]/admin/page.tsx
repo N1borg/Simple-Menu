@@ -63,10 +63,12 @@ export default async function AdminPage({ params }: PageProps) {
               <Image
                 src={establishment.logo_url}
                 alt={`Logo de ${establishment.name}`}
-                width={100}
-                height={100}
-                className="mb-4 w-24 h-24 object-contain rounded-full"
+                width={120}
+                height={120}
+                className="mb-4 w-28 h-28 object-contain rounded-full bg-white"
                 priority
+                quality={90}
+                sizes="(max-width: 600px) 100vw, 120px"
               />
             )}
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
