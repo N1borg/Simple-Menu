@@ -179,7 +179,7 @@ export default function HomePage() {
       {/* FOOTER */}
       <footer className="text-center text-sm text-gray-500 py-6 border-t">
         © {new Date().getFullYear()} Simple Menu — Conçu avec passion 🧑‍🍳
-      </foote>r>
+      </footer>
       <Analytics />
     </main>
   )
