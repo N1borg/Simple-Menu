@@ -11,8 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { Pencil, Plus, Trash2, GripVertical } from "lucide-react"
 import ImageUpload from "@/components/ImageUpload"
+import { DndKitWrapper } from './DndKitWrapper'
+import { SortableItem } from './SortableItem'
+import { SortableHandle } from './SortableHandle'
+import { restrictToParentElement } from '@dnd-kit/modifiers'
 
 const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
@@ -356,6 +360,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       <div key={item.id} className="relative group">
         {/* Button group: Edit and Delete */}
         <div className="absolute top-2 right-2 z-10 flex gap-2">
+          {/* Drag handle for DnD (mobile/desktop) */}
+          <SortableHandle id={item.id}>
+            <GripVertical className="w-4 h-4 text-gray-400" />
+          </SortableHandle>
           <Popover open={editingItem === item.id} onOpenChange={open => setEditingItem(open ? item.id : null)}>
             <PopoverTrigger asChild>
               <Button size="icon" variant="ghost" className="opacity-70 hover:opacity-100" title="Modifier">
@@ -406,13 +414,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                     ))}
                   </SelectContent>
                 </Select>
-                <Label>Ordre d'affichage</Label>
-                <Input
-                  type="number"
-                  value={item.display_order ?? 0}
-                  min={0}
-                  onChange={e => handleItemChange(cat.id, item.id, 'display_order', parseInt(e.target.value, 10))}
-                />
                 <Label className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -557,11 +558,42 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             </>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cat.menu_items
-            ?.sort((a: MenuItem, b: MenuItem) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map((item: MenuItem) => renderMenuItem(item, cat))}
-        </div>
+        <DndKitWrapper
+          items={cat.menu_items}
+          modifiers={getDnDModifier()}
+          onDragEnd={(oldIndex, newIndex) => {
+            if (oldIndex === newIndex) return;
+            // Reorder in the sorted array, not the original
+            const sorted = [...cat.menu_items].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+            const [moved] = sorted.splice(oldIndex, 1);
+            sorted.splice(newIndex, 0, moved);
+            // Update display_order locally
+            sorted.forEach((item, idx) => (item.display_order = idx));
+            setCategories(cats =>
+              cats.map(c =>
+                c.id === cat.id ? { ...c, menu_items: sorted } : c
+              )
+            );
+            // Persist order to API (optional: batch update)
+            sorted.forEach((item, idx) => {
+              fetch('/api/admin/menu-item/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...item, display_order: idx }),
+              });
+            });
+          }}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...cat.menu_items]
+              .sort((a: MenuItem, b: MenuItem) => (a.display_order ?? 0) - (b.display_order ?? 0))
+              .map((item: MenuItem) => (
+                <SortableItem key={item.id} id={item.id}>
+                  {renderMenuItem(item, cat)}
+                </SortableItem>
+              ))}
+          </div>
+        </DndKitWrapper>
       </section>
     )
   }
@@ -661,6 +693,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       default:
         return renderCardStyle(cat)
     }
+  }
+
+  function getDnDModifier() {
+    return [restrictToParentElement];
   }
 
   return (
