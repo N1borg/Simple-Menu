@@ -9,8 +9,9 @@ import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Pencil, Plus, Trash2, AlertTriangle } from "lucide-react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 import ImageUpload from "@/components/ImageUpload"
 
 const DISPLAY_STYLES = [
@@ -667,6 +668,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       {/* Logo upload */}
       <div className="mb-4">
         <ImageUpload
+          establishmentId={establishment.id}
           currentImageUrl={establishment.logo_url ?? undefined}
           color={establishment.primary_color ?? undefined}
           slug={establishment.slug}
@@ -690,7 +692,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
               toast.error(data.error || "Erreur lors de la mise à jour du logo");
             }
           }}
-          onDeleteLogo={isDemo ? () => { setDemoLogoUrl(undefined); toast.info("Logo supprimé (démo, non sauvegardé)") } : undefined}
+          onDeleteLogo={() => {
+            establishment.logo_url = null
+          }}
+          isDemo={isDemo}
         />
       </div>
       {/* Add new category button */}
@@ -705,36 +710,15 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           .map(renderCategoryByStyle)}
       </div>
       {/* Confirmation Dialog for Delete Action */}
-      {confirmDelete && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setConfirmDelete(null)}
-        >
-          <div
-            className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs mx-auto text-center"
-            onClick={e => e.stopPropagation()}
-          >
-            <AlertTriangle className="mx-auto h-10 w-10 text-yellow-500 mb-3" />
-            <p className="mb-6 text-base text-gray-800 font-semibold">
-              {confirmDelete.type === 'category'
-                ? "Supprimer cette catégorie ? Cette action est irréversible."
-                : "Supprimer cet élément ? Cette action est irréversible."}
-            </p>
-            <div className="flex justify-center gap-4">
-              <Button
-                variant="outline"
-                className="min-w-[100px]"
-                onClick={() => setConfirmDelete(null)}
-              >Annuler</Button>
-              <Button
-                variant="destructive"
-                className="min-w-[100px] transition-colors duration-150 hover:bg-red-700 hover:border-red-700 focus:ring-2 focus:ring-red-300"
-                onClick={handleConfirmDelete}
-              >Supprimer</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteDialog
+        open={!!confirmDelete}
+        title={confirmDelete?.type === 'category' ? 'Supprimer la catégorie' : 'Supprimer l\'élément'}
+        message={confirmDelete?.type === 'category'
+          ? 'Supprimer cette catégorie ? Cette action est irréversible.'
+          : 'Supprimer cet élément ? Cette action est irréversible.'}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   )
 }
