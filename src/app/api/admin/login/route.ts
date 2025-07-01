@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   // Create JWT with slug in payload
   const jwt = await new SignJWT({ slug })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('2h')
+    .setExpirationTime('30d')
     .sign(new TextEncoder().encode(JWT_SECRET))
 
   const res = NextResponse.json({ success: true })
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 2,
+    maxAge: 60 * 60 * 24 * 30,
   })
   auditLog({ action: 'login_success', ip, user: slug })
   return res

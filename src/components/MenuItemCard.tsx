@@ -38,8 +38,28 @@ export default function MenuItemCard({
 
   return (
     <div className="relative group">
-      {/* Action Buttons */}
-      <div className="absolute top-2 right-2 z-10 flex gap-2">
+      {/* Menu Item Content */}
+      <div className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 ring-blue-400 transition">
+        <div className="flex justify-between items-start">
+          <h3
+            className="text-lg font-semibold truncate max-w-[70%]"
+            title={item.name}
+          >
+            {item.name}
+          </h3>
+        </div>
+        
+        {item.description && (
+          <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+        )}
+        
+        <div className="text-right font-bold mt-2">
+          {item.price?.toFixed(2)}€
+        </div>
+      </div>
+
+      {/* Action Buttons - overlayed, only visible on hover */}
+      <div className="absolute top-2 right-2 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         {/* Drag Handle */}
         <SortableHandle id={item.id}>
           <GripVertical className="w-4 h-4 text-gray-400" />
@@ -135,26 +155,6 @@ export default function MenuItemCard({
         >
           <Trash2 className="w-4 h-4 text-red-500" />
         </Button>
-      </div>
-
-      {/* Menu Item Content */}
-      <div className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 ring-blue-400 transition">
-        <div className="flex justify-between items-start">
-          <h3
-            className="text-lg font-semibold truncate max-w-[70%]"
-            title={item.name}
-          >
-            {item.name}
-          </h3>
-        </div>
-        
-        {item.description && (
-          <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-        )}
-        
-        <div className="text-right font-bold mt-2">
-          {item.price?.toFixed(2)}€
-        </div>
       </div>
     </div>
   )

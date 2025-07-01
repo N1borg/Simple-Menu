@@ -127,19 +127,6 @@ function renderCategoryByStyle(category: Category) {
 export default function MenuDisplay({ establishment }: MenuDisplayProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-
-      <div className="bg-yellow-100 text-yellow-900 text-sm px-4 py-2 text-center font-semibold shadow-sm">
-        🍹 Happy Hour : -50% sur les cocktails de 17h à 19h, tous les jours !
-      </div>
-
-      <div className="bg-red-100 text-red-800 text-sm px-4 py-2 text-center font-bold shadow-md animate-pulse">
-        🚨 Fermeture exceptionnelle ce samedi 15 pour privatisation. Merci de votre compréhension !
-      </div>
-
-      <div className="fixed bottom-4 right-4 bg-green-100 border border-green-300 text-green-900 px-4 py-2 rounded-lg shadow-md text-sm">
-        ✅ Offre &quot;Apéro Duo&quot; activée jusqu&apos;à 20h.
-      </div>
-
       <div className="text-center mb-6">
         {establishment.logo_url && (
           <Image
@@ -154,7 +141,6 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
           />
         )}
         <h1 className="text-3xl font-bold">{establishment.name}</h1>
-        <p className="text-red-600 mt-2 font-semibold">🍹 Happy Hour : -50% sur les cocktails de 17h à 19h</p>
       </div>
 
       <div className="space-y-8">
