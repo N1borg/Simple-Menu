@@ -18,6 +18,7 @@ import { SortableItem } from './SortableItem'
 import { SortableHandle } from './SortableHandle'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
 import { SortableCategory } from './SortableCategory'
+import { Switch } from "@/components/ui/switch"
 
 const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
@@ -284,6 +285,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     )
   }
 
+  // Save or create a menu item
   const saveItem = async (item: any) => {
     if (isDemo) {
       setEditingItem(null)
@@ -291,30 +293,44 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       return
     }
     setSavingItemId(item.id)
-
-    // 1. Store previous state
     const prevCategories = JSON.parse(JSON.stringify(categories))
-
-    // 2. Check if something changed
     const cat = categories.find(c => c.id === item.category_id)
     const originalItem = cat?.menu_items.find((i: any) => i.id === item.id)
-    if (originalItem &&
-      item.name === originalItem.name &&
-      item.description === originalItem.description &&
-      item.price === originalItem.price &&
-      item.display_style === originalItem.display_style &&
-      item.display_order === originalItem.display_order &&
-      item.is_available === originalItem.is_available
-    ) {
-      setEditingItem(null)
+    // If it's a temp item, call create API
+    if (item.id.startsWith('temp-')) {
+      const res = await fetch('/api/admin/menu-item/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...item,
+          id: undefined, // Let backend assign real ID
+        }),
+      });
+      const data = await res.json();
       setSavingItemId(null)
-      return
+      setEditingItem(null)
+      if (res.ok && data && data.item) {
+        setCategories(cats =>
+          cats.map(cat =>
+            cat.id === item.category_id
+              ? {
+                  ...cat,
+                  menu_items: cat.menu_items.map(i =>
+                    i.id === item.id ? data.item : i
+                  ),
+                }
+              : cat
+          )
+        );
+        toast.success("Élément créé");
+      } else {
+        setCategories(prevCategories)
+        toast.error("Erreur lors de la création");
+      }
+      return;
     }
-
-    // 3. Optimistically update UI (already done by handleItemChange)
+    // Always call update API for non-temp items
     setEditingItem(null)
-
-    // 4. API call
     const res = await fetch('/api/admin/menu-item/update', {
       method: 'POST',
       body: JSON.stringify(item),
@@ -322,11 +338,9 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     })
     const ok = await res.json()
     setSavingItemId(null)
-
     if (ok === true) {
       toast.success("Sauvegardé", { description: "Les modifications ont été enregistrées." })
     } else {
-      // 5. Rollback on error
       setCategories(prevCategories)
       toast.error("Erreur", { description: "Échec de la sauvegarde. Modifications annulées." })
     }
@@ -414,28 +428,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   step={0.01}
                   onChange={e => handleItemChange(cat.id, item.id, 'price', parseFloat(e.target.value))}
                 />
-                {/* <Label>Style d'affichage</Label>
-                <Select
-                  value={item.display_style || "__inherit__"}
-                  onValueChange={val =>
-                    handleItemChange(cat.id, item.id, 'display_style', val === "__inherit__" ? null : val)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="(catégorie)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__inherit__">(catégorie)</SelectItem>
-                    {DISPLAY_STYLES.map(style => (
-                      <SelectItem key={style.value} value={style.value}>{style.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select> */}
                 <Label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
+                  <Switch
                     checked={!!item.is_available}
-                    onChange={e => handleItemChange(cat.id, item.id, 'is_available', e.target.checked)}
+                    onCheckedChange={val => handleItemChange(cat.id, item.id, 'is_available', val)}
                   />
                   Disponible
                 </Label>
