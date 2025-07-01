@@ -295,10 +295,26 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     // 1. Store previous state
     const prevCategories = JSON.parse(JSON.stringify(categories))
 
-    // 2. Optimistically update UI (already done by handleItemChange)
+    // 2. Check if something changed
+    const cat = categories.find(c => c.id === item.category_id)
+    const originalItem = cat?.menu_items.find((i: any) => i.id === item.id)
+    if (originalItem &&
+      item.name === originalItem.name &&
+      item.description === originalItem.description &&
+      item.price === originalItem.price &&
+      item.display_style === originalItem.display_style &&
+      item.display_order === originalItem.display_order &&
+      item.is_available === originalItem.is_available
+    ) {
+      setEditingItem(null)
+      setSavingItemId(null)
+      return
+    }
+
+    // 3. Optimistically update UI (already done by handleItemChange)
     setEditingItem(null)
 
-    // 3. API call
+    // 4. API call
     const res = await fetch('/api/admin/menu-item/update', {
       method: 'POST',
       body: JSON.stringify(item),
@@ -310,7 +326,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     if (ok === true) {
       toast.success("Sauvegardé", { description: "Les modifications ont été enregistrées." })
     } else {
-      // 4. Rollback on error
+      // 5. Rollback on error
       setCategories(prevCategories)
       toast.error("Erreur", { description: "Échec de la sauvegarde. Modifications annulées." })
     }
@@ -398,7 +414,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   step={0.01}
                   onChange={e => handleItemChange(cat.id, item.id, 'price', parseFloat(e.target.value))}
                 />
-                <Label>Style d'affichage</Label>
+                {/* <Label>Style d'affichage</Label>
                 <Select
                   value={item.display_style || "__inherit__"}
                   onValueChange={val =>
@@ -414,7 +430,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                       <SelectItem key={style.value} value={style.value}>{style.label}</SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </Select> */}
                 <Label className="flex items-center gap-2">
                   <input
                     type="checkbox"
