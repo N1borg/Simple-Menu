@@ -13,6 +13,17 @@ import { restrictToParentElement } from '@dnd-kit/modifiers'
 import CategorySection from '@/components/CategorySection'
 import { useCategories } from '@/components/hooks/useCategories'
 import { useMenuItems } from '@/components/hooks/useMenuItems'
+import AdminPasswordForm from '@/components/AdminPasswordForm'
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
@@ -23,6 +34,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const [demoLogoUrl, setDemoLogoUrl] = useState<string | undefined>(
     isDemo ? (establishment.logo_url ?? undefined) : undefined
   )
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const {
     categories,
@@ -112,7 +124,33 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-2xl mx-auto px-4 py-6 relative">
+      {/* Settings Button */}
+      <div className="absolute top-4 right-4 z-20">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm">Paramètres</Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="max-w-md w-full">
+            <SheetHeader>
+              <SheetTitle>Paramètres administrateur</SheetTitle>
+            </SheetHeader>
+            <div className="grid flex-1 auto-rows-min gap-6 px-1">
+              <AdminPasswordForm 
+                establishmentId={establishment.id}
+                slug={establishment.slug}
+                isDemo={isDemo}
+              />
+            </div>
+            <SheetFooter className="mt-4">
+              <SheetClose asChild>
+                <Button variant="outline" type="button">Fermer</Button>
+              </SheetClose>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      </div>
+
       {/* Logo Upload Section */}
       <div className="mb-4">
         <ImageUpload
