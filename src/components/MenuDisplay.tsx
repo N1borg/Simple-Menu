@@ -159,8 +159,15 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
 
       <div className="space-y-8">
         {establishment.categories
-          ?.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-          .map(renderCategoryByStyle)}
+          ?.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+          .map(category => {
+            // Ensure items are sorted by display_order before rendering
+            const sortedCategory = {
+              ...category,
+              menu_items: category.menu_items?.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) || []
+            };
+            return renderCategoryByStyle(sortedCategory);
+          })}
       </div>
     </div>
   )
