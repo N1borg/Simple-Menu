@@ -563,8 +563,15 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button size="sm" variant="secondary" onClick={() => addMenuItem(cat.id)} disabled={cat.id.startsWith('temp-')}>
-                <Plus className="w-4 h-4 mr-1" /> Ajouter un élément
+              <Button
+                onClick={() => addMenuItem(cat.id)}
+                variant="ghost"
+                size="icon"
+                title="Nouvel élément"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-600"
+                disabled={cat.id.startsWith('temp-')}
+              >
+                <Plus className="w-5 h-5" />
               </Button>
               <Button size="icon" variant="ghost" onClick={() => { setEditingCategoryId(cat.id); setOriginalCategory({ name: cat.name, display_style: cat.display_style }); }} title="Modifier la catégorie">
                 <Pencil className="w-4 h-4" />
@@ -826,8 +833,15 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                               ))}
                             </DropdownMenuContent>
                           </DropdownMenu>
-                          <Button size="sm" variant="secondary" onClick={() => addMenuItem(cat.id)} disabled={cat.id.startsWith('temp-')}>
-                            <Plus className="w-4 h-4 mr-1" /> Ajouter un élément
+                          <Button
+                            onClick={() => addMenuItem(cat.id)}
+                            variant="ghost"
+                            size="icon"
+                            title="Nouvel élément"
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-600"
+                            disabled={cat.id.startsWith('temp-')}
+                          >
+                            <Plus className="w-5 h-5" />
                           </Button>
                           <Button size="icon" variant="ghost" onClick={() => { setEditingCategoryId(cat.id); setOriginalCategory({ name: cat.name, display_style: cat.display_style }); }} title="Modifier la catégorie">
                             <Pencil className="w-4 h-4" />
@@ -921,9 +935,9 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         />
       </div>
       {/* Add new category button */}
-      <div className="flex justify-end mb-4">
-        <Button onClick={addCategory} variant="default">
-          <Plus className="w-4 h-4 mr-1" /> Nouvelle catégorie
+      <div className="flex justify-center mb-4">
+        <Button onClick={addCategory} variant="ghost" size="icon" title="Nouvelle catégorie" className="bg-gray-100 hover:bg-gray-200 text-gray-600">
+          <Plus className="w-6 h-6" />
         </Button>
       </div>
       {/* DnD des catégories + items */}
