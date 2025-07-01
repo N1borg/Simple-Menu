@@ -2,943 +2,184 @@
 
 import { useState } from 'react'
 import type { EstablishmentWithCategories } from '@/types/supabase'
-import type { Category, MenuItem } from '@/types/supabase_types'
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Pencil, Plus, Trash2, GripVertical } from "lucide-react"
+import { Plus } from "lucide-react"
 import ImageUpload from "@/components/ImageUpload"
-import { DndKitWrapper } from './DndKitWrapper'
-import { SortableItem } from './SortableItem'
-import { SortableHandle } from './SortableHandle'
+import { DndKitWrapper } from '@/components/DndKitWrapper'
+import { SortableCategory } from '@/components/SortableCategory'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
-import { SortableCategory } from './SortableCategory'
-import { Switch } from "@/components/ui/switch"
-
-const DISPLAY_STYLES = [
-  { value: 'card', label: 'Carte' },
-  { value: 'list', label: 'Liste' },
-  { value: 'compact', label: 'Compact' },
-  { value: 'table', label: 'Tableau' },
-]
+import CategorySection from '@/components/CategorySection'
+import { useCategories } from '@/components/hooks/useCategories'
+import { useMenuItems } from '@/components/hooks/useMenuItems'
 
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
 }
 
 export default function AdminDashboard({ establishment }: AdminDashboardProps) {
-  const [savingItemId, setSavingItemId] = useState<string | null>(null)
-  const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null)
-  const [loadingAction, setLoadingAction] = useState<string | null>(null) // action key for global disables
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [categories, setCategories] = useState(
-    establishment.categories.map(cat => ({
-      ...cat,
-      menu_items: cat.menu_items.map(item => ({ ...item }))
-    }))
-  )
-  const [editingItem, setEditingItem] = useState<string | null>(null)
-  const [confirmDelete, setConfirmDelete] = useState<{ type: 'category' | 'item', catId: string, itemId?: string } | null>(null)
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
-  const [originalCategory, setOriginalCategory] = useState<any | null>(null)
-
   const isDemo = establishment.slug === 'demo'
+  const [demoLogoUrl, setDemoLogoUrl] = useState<string | undefined>(
+    isDemo ? (establishment.logo_url ?? undefined) : undefined
+  )
 
-  // For demo: allow client-side visual changes only (no API call)
-  const [demoLogoUrl, setDemoLogoUrl] = useState<string | undefined>(isDemo ? (establishment.logo_url ?? undefined) : undefined)
+  const {
+    categories,
+    setCategories,
+    addCategory,
+    deleteCategory,
+    saveCategory,
+    savingCategoryId,
+    loadingAction,
+    editingCategoryId,
+    setEditingCategoryId,
+    originalCategory,
+    setOriginalCategory
+  } = useCategories(establishment, isDemo)
 
-  const addCategory = async () => {
-    if (isDemo) {
-      const newCat = {
-        id: `new-${Date.now()}`,
-        name: "Nouvelle catégorie",
-        display_style: "card",
-        order: categories.length,
-        created_at: new Date().toISOString(),
-        display_order: categories.length,
-        establishment_id: establishment.id,
-        menu_items: [],
-      }
-      setCategories([newCat, ...categories])
-      toast.info("Catégorie ajoutée (démo, non sauvegardé)")
-      return
-    }
-    setLoadingAction('addCategory')
-    const tempId = `temp-${Date.now()}`;
-    const tempCat = {
-      id: tempId,
-      name: "Nouvelle catégorie",
-      display_style: "card",
-      order: categories.length,
-      created_at: new Date().toISOString(),
-      display_order: categories.length,
-      establishment_id: establishment.id,
-      menu_items: [],
-    }
-    setCategories([tempCat, ...categories])
-    const res = await fetch('/api/admin/menu-category/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: tempCat.name,
-        display_style: tempCat.display_style,
-        display_order: tempCat.display_order,
-        establishment_id: tempCat.establishment_id,
-      }),
-    })
-    const data = await res.json()
-    setLoadingAction(null)
-    if (res.ok && data && data.category) {
-      setCategories(cats => cats.map(cat => cat.id === tempId ? { ...data.category, menu_items: [] } : cat))
-      toast.success("Catégorie créée")
-    } else {
-      setCategories(cats => cats.filter(cat => cat.id !== tempId))
-      toast.error("Erreur lors de la création de la catégorie")
-    }
-  }
+  const {
+    addMenuItem,
+    deleteMenuItem,
+    saveItem,
+    handleItemChange,
+    savingItemId,
+    editingItem,
+    setEditingItem
+  } = useMenuItems(categories, setCategories, isDemo)
 
-  // Add a new menu item (API call if not demo)
-  const addMenuItem = async (catId: string) => {
-    if (isDemo) {
-      setCategories(cats =>
-        cats.map(cat =>
-          cat.id === catId
-            ? {
-                ...cat,
-                menu_items: [
-                  ...cat.menu_items,
-                  {
-                    id: `new-${Date.now()}`,
-                    name: "Nouvel élément",
-                    description: "",
-                    price: 0,
-                    is_available: true,
-                    display_order: cat.menu_items.length,
-                    category_id: catId,
-                    created_at: new Date().toISOString(),
-                    display_style: null,
-                    image_url: null,
-                    order: null,
-                  },
-                ],
-              }
-            : cat
-        )
-      )
-      return
-    }
-    const tempId = `temp-${Date.now()}`;
-    const tempItem = {
-      id: tempId,
-      name: "Nouvel élément",
-      description: "",
-      price: 0,
-      is_available: true,
-      display_order: categories.find(cat => cat.id === catId)?.menu_items.length ?? 0,
-      category_id: catId,
-      created_at: new Date().toISOString(),
-      display_style: null,
-      image_url: null,
-      order: null,
-    };
-    setCategories(cats =>
-      cats.map(cat =>
-        cat.id === catId
-          ? { ...cat, menu_items: [...cat.menu_items, tempItem] }
-          : cat
-      )
-    );
-    setSavingItemId(catId)
-    // API call
-    const res = await fetch('/api/admin/menu-item/create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(tempItem),
-    });
-    const data = await res.json();
-    setSavingItemId(null)
-    if (res.ok && data && data.item) {
-      // Replace temp item with real item
-      setCategories(cats =>
-        cats.map(cat =>
-          cat.id === catId
-            ? {
-                ...cat,
-                menu_items: cat.menu_items.map(item =>
-                  item.id === tempId ? data.item : item
-                ),
-              }
-            : cat
-        )
-      );
-      toast.success("Élément créé");
-    } else {
-      // Remove temp item on error
-      setCategories(cats =>
-        cats.map(cat =>
-          cat.id === catId
-            ? {
-                ...cat,
-                menu_items: cat.menu_items.filter(item => item.id !== tempId),
-              }
-            : cat
-        )
-      );
-      toast.error("Erreur lors de la création");
-    }
-  };
-
-  // Delete a menu item (API call if not demo)
-  const deleteMenuItem = async (catId: string, itemId: string) => {
-    if (isDemo) {
-      setCategories(cats =>
-        cats.map(cat =>
-          cat.id === catId
-            ? {
-                ...cat,
-                menu_items: cat.menu_items.filter(item => item.id !== itemId),
-              }
-            : cat
-        )
-      )
-      toast.info("Élément supprimé (démo, non sauvegardé)")
-      return
-    }
-    const prevItems = categories.find(cat => cat.id === catId)?.menu_items || [];
-    const removedItem = prevItems.find(item => item.id === itemId);
-    setCategories(cats =>
-      cats.map(cat =>
-        cat.id === catId
-          ? {
-              ...cat,
-              menu_items: cat.menu_items.filter(item => item.id !== itemId),
-            }
-          : cat
-      )
-    );
-    // API call
-    const res = await fetch('/api/admin/menu-item/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: itemId }),
-    });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      toast.success("Élément supprimé");
-    } else {
-      // Revert on error
-      if (removedItem) {
-        setCategories(cats =>
-          cats.map(cat =>
-            cat.id === catId
-              ? {
-                  ...cat,
-                  menu_items: [...cat.menu_items, removedItem],
-                }
-              : cat
-          )
-        );
-      }
-      toast.error("Erreur lors de la suppression");
-    }
-  };
-
-  const deleteCategory = async (catId: string) => {
-    if (isDemo) {
-      setCategories(cats => cats.filter(cat => cat.id !== catId))
-      toast.info("Catégorie supprimée (démo, non sauvegardé)")
-      return
-    }
-    const prevCategories = [...categories]
-    setCategories(cats => cats.filter(cat => cat.id !== catId))
-    const res = await fetch('/api/admin/menu-category/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: catId }),
-    })
-    const data = await res.json()
-    if (res.ok && data.success) {
-      toast.success("Catégorie supprimée")
-    } else {
-      setCategories(prevCategories)
-      toast.error("Erreur lors de la suppression de la catégorie")
-    }
-  }
-
-  const handleItemChange = (catId: string, itemId: string, field: string, value: any) => {
-    setCategories(cats =>
-      cats.map(cat =>
-        cat.id === catId
-          ? {
-              ...cat,
-              menu_items: cat.menu_items.map(item =>
-                item.id === itemId ? { ...item, [field]: value } : item
-              ),
-            }
-          : cat
-      )
-    )
-  }
-
-  // Save or create a menu item
-  const saveItem = async (item: any) => {
-    if (isDemo) {
-      setEditingItem(null)
-      toast.info("Modification enregistrée (démo, non sauvegardé)")
-      return
-    }
-    setSavingItemId(item.id)
-    const prevCategories = JSON.parse(JSON.stringify(categories))
-    const cat = categories.find(c => c.id === item.category_id)
-    const originalItem = cat?.menu_items.find((i: any) => i.id === item.id)
-    // If it's a temp item, call create API
-    if (item.id.startsWith('temp-')) {
-      const res = await fetch('/api/admin/menu-item/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...item,
-          id: undefined, // Let backend assign real ID
-        }),
-      });
-      const data = await res.json();
-      setSavingItemId(null)
-      setEditingItem(null)
-      if (res.ok && data && data.item) {
-        setCategories(cats =>
-          cats.map(cat =>
-            cat.id === item.category_id
-              ? {
-                  ...cat,
-                  menu_items: cat.menu_items.map(i =>
-                    i.id === item.id ? data.item : i
-                  ),
-                }
-              : cat
-          )
-        );
-        toast.success("Élément créé");
-      } else {
-        setCategories(prevCategories)
-        toast.error("Erreur lors de la création");
-      }
-      return;
-    }
-    // Always call update API for non-temp items
-    setEditingItem(null)
-    const res = await fetch('/api/admin/menu-item/update', {
-      method: 'POST',
-      body: JSON.stringify(item),
-      headers: { 'Content-Type': 'application/json' },
-    })
-    const ok = await res.json()
-    setSavingItemId(null)
-    if (ok === true) {
-      toast.success("Sauvegardé", { description: "Les modifications ont été enregistrées." })
-    } else {
-      setCategories(prevCategories)
-      toast.error("Erreur", { description: "Échec de la sauvegarde. Modifications annulées." })
-    }
-  }
-
-  // Update a category (optimistic UI, demo-friendly)
-  const saveCategory = async (cat: any) => {
-    if (isDemo) {
-      setEditingCategoryId(null)
-      toast.info("Modification enregistrée (démo, non sauvegardé)")
-      return
-    }
-    setSavingCategoryId(cat.id)
-    const prevCategories = JSON.parse(JSON.stringify(categories))
-    setEditingCategoryId(null)
-    const res = await fetch('/api/admin/menu-category/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: cat.id,
-        name: cat.name,
-        display_style: cat.display_style,
-        display_order: cat.display_order,
-      }),
-    })
-    const data = await res.json()
-    setSavingCategoryId(null)
-    if (res.ok && data && data.success) {
-      toast.success("Catégorie sauvegardée")
-    } else {
-      setCategories(prevCategories)
-      toast.error("Erreur lors de la sauvegarde. Modifications annulées.")
-    }
-  }
+  const [confirmDelete, setConfirmDelete] = useState<{
+    type: 'category' | 'item'
+    catId: string
+    itemId?: string
+  } | null>(null)
 
   const handleConfirmDelete = () => {
     if (!confirmDelete) return
+    
     if (confirmDelete.type === 'item' && confirmDelete.itemId) {
       deleteMenuItem(confirmDelete.catId, confirmDelete.itemId)
     } else if (confirmDelete.type === 'category') {
       deleteCategory(confirmDelete.catId)
     }
+    
     setConfirmDelete(null)
   }
 
-  function renderMenuItem(item: any, cat: any) {
-    return (
-      <div key={item.id} className="relative group">
-        {/* Button group: Edit and Delete */}
-        <div className="absolute top-2 right-2 z-10 flex gap-2">
-          {/* Drag handle for DnD (mobile/desktop) */}
-          <SortableHandle id={item.id}>
-            <GripVertical className="w-4 h-4 text-gray-400" />
-          </SortableHandle>
-          <Popover open={editingItem === item.id} onOpenChange={open => setEditingItem(open ? item.id : null)}>
-            <PopoverTrigger asChild>
-              <Button size="icon" variant="ghost" className="opacity-70 hover:opacity-100" title="Modifier">
-                <Pencil className="w-4 h-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-              <form
-                onSubmit={e => {
-                  e.preventDefault()
-                  saveItem(item)
-                }}
-                className="space-y-3"
-              >
-                {/* ...form fields... */}
-                <Label>Nom</Label>
-                <Input
-                  value={item.name}
-                  onChange={e => handleItemChange(cat.id, item.id, 'name', e.target.value)}
-                />
-                <Label>Description</Label>
-                <Input
-                  value={item.description || ''}
-                  onChange={e => handleItemChange(cat.id, item.id, 'description', e.target.value)}
-                />
-                <Label>Prix</Label>
-                <Input
-                  type="number"
-                  value={item.price?.toFixed(2) ?? ''}
-                  min={0}
-                  step={0.01}
-                  onChange={e => handleItemChange(cat.id, item.id, 'price', parseFloat(e.target.value))}
-                />
-                <Label className="flex items-center gap-2">
-                  <Switch
-                    checked={!!item.is_available}
-                    onCheckedChange={val => handleItemChange(cat.id, item.id, 'is_available', val)}
-                  />
-                  Disponible
-                </Label>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button type="submit" size="sm" disabled={savingItemId === item.id || loadingAction !== null}>
-                    {savingItemId === item.id ? (
-                      <svg className="animate-spin h-4 w-4 mr-2 inline" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
-                      </svg>
-                    ) : "Enregistrer"}
-                  </Button>
-                  <Button type="button" size="sm" variant="secondary" onClick={() => setEditingItem(null)}>
-                    Annuler
-                  </Button>
-                </div>
-              </form>
-            </PopoverContent>
-          </Popover>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="opacity-70 hover:opacity-100"
-            onClick={() => setConfirmDelete({ type: 'item', catId: cat.id, itemId: item.id })}
-            title="Supprimer l'élément"
-          >
-            <Trash2 className="w-4 h-4 text-red-500" />
-          </Button>
-        </div>
-        {/* Card style */}
-        <div className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 ring-blue-400 transition">
-        <div className="flex justify-between items-start">
-          <h3
-            className="text-lg font-semibold truncate max-w-[70%]"
-            title={item.name}
-          >
-            {item.name}
-          </h3>
-        </div>
-        {item.description && (
-          <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-        )}
-        <div className="text-right font-bold mt-2">
-          {item.price?.toFixed(2)}€
-        </div>
-      </div>
-    </div>
-    )
-  }
+  const handleLogoUpload = async (url: string) => {
+    if (isDemo) {
+      setDemoLogoUrl(url)
+      toast.info("Aperçu du logo modifié (démo, non sauvegardé)")
+      return
+    }
 
-  function renderCardStyle(cat: any) {
-    return (
-      <section key={cat.id} className="max-w-4xl mx-auto px-4 py-6">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {editingCategoryId === cat.id ? (
-            <form
-              onSubmit={e => {
-                e.preventDefault()
-                // Only call saveCategory if something changed
-                if (
-                  originalCategory &&
-                  cat.name === originalCategory.name &&
-                  cat.display_style === originalCategory.display_style
-                ) {
-                  setEditingCategoryId(null)
-                  return
-                }
-                saveCategory(cat)
-              }}
-              className="flex items-center gap-2 flex-wrap"
-            >
-              <Input
-                value={cat.name}
-                onChange={e => setCategories(cats =>
-                  cats.map(c => c.id === cat.id ? { ...c, name: e.target.value } : c)
-                )}
-                className="w-40"
-              />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="outline">Style: {cat.display_style || 'Carte'}</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {DISPLAY_STYLES.map(style => (
-                    <DropdownMenuItem
-                      key={style.value}
-                      onClick={() => setCategories(cats =>
-                        cats.map(c => c.id === cat.id ? { ...c, display_style: style.value } : c)
-                      )}
-                    >
-                      {style.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button type="submit" size="sm" disabled={savingCategoryId === cat.id || loadingAction !== null}>
-                {savingCategoryId === cat.id ? (
-                  <svg className="animate-spin h-4 w-4 mr-2 inline" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
-                  </svg>
-                ) : "Enregistrer"}
-              </Button>
-              <Button type="button" size="sm" variant="secondary" onClick={() => setEditingCategoryId(null)}>
-                Annuler
-              </Button>
-            </form>
-          ) : (
-            <>
-              <h2 className="text-2xl font-bold mr-2 mb-2 sm:mb-0">{cat.name}</h2>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="outline">Style: {cat.display_style || 'Carte'}</Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {DISPLAY_STYLES.map(style => (
-                    <DropdownMenuItem
-                      key={style.value}
-                      onClick={() => setCategories(cats =>
-                        cats.map(c => c.id === cat.id ? { ...c, display_style: style.value } : c)
-                      )}
-                    >
-                      {style.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                onClick={() => addMenuItem(cat.id)}
-                variant="ghost"
-                size="icon"
-                title="Nouvel élément"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-600"
-                disabled={cat.id.startsWith('temp-')}
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => { setEditingCategoryId(cat.id); setOriginalCategory({ name: cat.name, display_style: cat.display_style }); }} title="Modifier la catégorie">
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={() => setConfirmDelete({ type: 'category', catId: cat.id })} title="Supprimer la catégorie">
-                <Trash2 className="w-5 h-5 text-red-500" />
-              </Button>
-            </>
-          )}
-        </div>
-        {/* Items de la catégorie (inchangés) */}
-        <DndKitWrapper
-          items={cat.menu_items}
-          modifiers={getDnDModifier()}
-          onDragEnd={(oldIndex, newIndex) => {
-            if (oldIndex === newIndex) return;
-            const sorted = [...cat.menu_items].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-            const [moved] = sorted.splice(oldIndex, 1);
-            sorted.splice(newIndex, 0, moved);
-            sorted.forEach((item, idx) => (item.display_order = idx));
-            setCategories(cats =>
-              cats.map(c =>
-                c.id === cat.id ? { ...c, menu_items: sorted } : c
-              )
-            );
-            sorted.forEach((item, idx) => {
-              fetch('/api/admin/menu-item/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...item, display_order: idx }),
-              });
-            });
-          }}
-          renderOverlay={activeId => {
-            const item: MenuItem | undefined = (cat.menu_items as MenuItem[]).find((i: MenuItem) => i.id === activeId);
-            return item ? renderMenuItem(item, cat) : null;
-          }}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...cat.menu_items]
-              .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-              .map((item) => (
-                <SortableItem key={item.id} id={item.id}>
-                  {renderMenuItem(item, cat)}
-                </SortableItem>
-              ))}
-          </div>
-        </DndKitWrapper>
-      </section>
-    )
-  }
-
-  function renderListStyle(cat: any) {
-    return (
-      <section key={cat.id} className="max-w-4xl mx-auto px-4 py-6">
-        <h2 className="text-2xl font-bold mb-4">{cat.name}</h2>
-        <ul className="space-y-4">
-          {cat.menu_items
-            ?.sort((a: MenuItem, b: MenuItem) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map((item: MenuItem) => (
-              <li key={item.id} className="p-4 bg-white rounded-lg shadow hover:bg-gray-50 transition">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold">{item.name}</h3>
-                    {item.description && (
-                      <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-                    )}
-                  </div>
-                  <div className="text-right font-bold mt-2">
-                    {item.price?.toFixed(2)}€
-                  </div>
-                </div>
-              </li>
-            ))}
-        </ul>
-      </section>
-    )
-  }
-
-  function renderCompactStyle(cat: any) {
-    return (
-      <section key={cat.id} className="max-w-4xl mx-auto px-4 py-6">
-        <h2 className="text-2xl font-bold mb-4">{cat.name}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cat.menu_items
-            ?.sort((a: MenuItem, b: MenuItem) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map((item: MenuItem) => (
-              <div key={item.id} className="p-3 bg-white rounded-lg shadow hover:bg-gray-50 transition">
-                <h3 className="text-lg font-semibold">{item.name}</h3>
-                {item.description && (
-                  <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-                )}
-                <div className="text-right font-bold">
-                  {item.price?.toFixed(2)}€
-                </div>
-              </div>
-            ))}
-        </div>
-      </section>
-    )
-  }
-
-  function renderTableStyle(cat: any) {
-    return (
-      <section key={cat.id} className="max-w-4xl mx-auto px-4 py-6">
-        <h2 className="text-2xl font-bold mb-4">{cat.name}</h2>
-        <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Nom</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Description</th>
-              <th className="px-6 py-3 text-right text-sm font-medium text-gray-700">Prix</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cat.menu_items
-              ?.sort((a: MenuItem, b: MenuItem) => (a.display_order ?? 0) - (b.display_order ?? 0))
-              .map((item: MenuItem) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4">{item.name}</td>
-                  <td className="px-6 py-4">{item.description || '-'}</td>
-                  <td className="px-6 py-4 text-right font-bold mt-2">
-                    {item.price?.toFixed(2)}€
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </section>
-    )
-  }
-
-  function renderCategoryByStyle(cat: any) {
-    switch (cat.display_style) {
-      case 'list':
-        return renderCardStyle(cat)
-        // return renderListStyle(cat)
-      case 'compact':
-        return renderCardStyle(cat)
-        // return renderCompactStyle(cat)
-      case 'table':
-        return renderCardStyle(cat)
-        // return renderTableStyle(cat)
-      case 'card':
-      default:
-        return renderCardStyle(cat)
+    const res = await fetch("/api/admin/update-logo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: establishment.id, logo_url: url }),
+    })
+    
+    const data = await res.json()
+    
+    if (res.ok && data.success) {
+      toast.success("Logo mis à jour !")
+      establishment.logo_url = url
+    } else {
+      toast.error(data.error || "Erreur lors de la mise à jour du logo")
     }
   }
 
-  function getDnDModifier() {
-    return [restrictToParentElement];
-  }
+  const handleCategoryDragEnd = (oldIndex: number, newIndex: number) => {
+    if (oldIndex === newIndex) return
 
-  // Nouvelle fonction pour gérer le DnD des catégories
-  function renderCategoriesDnD() {
-    return (
-      <DndKitWrapper
-        items={categories}
-        modifiers={getDnDModifier()}
-        onDragEnd={(oldIndex, newIndex) => {
-          if (oldIndex === newIndex) return;
-          const sorted = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-          const [moved] = sorted.splice(oldIndex, 1);
-          sorted.splice(newIndex, 0, moved);
-          sorted.forEach((cat, idx) => (cat.display_order = idx));
-          setCategories(sorted);
-          // Persist order to API (batch update)
-          sorted.forEach((cat, idx) => {
-            fetch('/api/admin/menu-category/update', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...cat, display_order: idx }),
-            });
-          });
-        }}
-      >
-        <div className="space-y-8">
-          {[...categories]
-            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map(cat => (
-              <SortableCategory key={cat.id} id={cat.id}>
-                <div>
-                  <section className="max-w-4xl mx-auto px-4 py-6">
-                    <div className="flex flex-wrap items-center gap-2 mb-4">
-                      {/* Drag handle for category */}
-                      <button type="button" className="dnd-handle-cat cursor-grab p-1 rounded hover:bg-gray-200 focus:outline-none" title="Déplacer la catégorie">
-                        <GripVertical className="w-5 h-5 text-gray-400" />
-                      </button>
-                      {/* Le reste du header de catégorie (titre, actions, etc.) */}
-                      {editingCategoryId === cat.id ? (
-                        <form
-                          onSubmit={e => {
-                            e.preventDefault()
-                            if (
-                              originalCategory &&
-                              cat.name === originalCategory.name &&
-                              cat.display_style === originalCategory.display_style
-                            ) {
-                              setEditingCategoryId(null)
-                              return
-                            }
-                            saveCategory(cat)
-                          }}
-                          className="flex items-center gap-2 flex-wrap"
-                        >
-                          <Input
-                            value={cat.name}
-                            onChange={e => setCategories(cats =>
-                              cats.map(c => c.id === cat.id ? { ...c, name: e.target.value } : c)
-                            )}
-                            className="w-40"
-                          />
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="outline">Style: {cat.display_style || 'Carte'}</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              {DISPLAY_STYLES.map(style => (
-                                <DropdownMenuItem
-                                  key={style.value}
-                                  onClick={() => setCategories(cats =>
-                                    cats.map(c => c.id === cat.id ? { ...c, display_style: style.value } : c)
-                                  )}
-                                >
-                                  {style.label}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          <Button type="submit" size="sm" disabled={savingCategoryId === cat.id || loadingAction !== null}>
-                            {savingCategoryId === cat.id ? (
-                              <svg className="animate-spin h-4 w-4 mr-2 inline" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
-                              </svg>
-                            ) : "Enregistrer"}
-                          </Button>
-                          <Button type="button" size="sm" variant="secondary" onClick={() => setEditingCategoryId(null)}>
-                            Annuler
-                          </Button>
-                        </form>
-                      ) : (
-                        <>
-                          <h2 className="text-2xl font-bold mr-2 mb-2 sm:mb-0">{cat.name}</h2>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="outline">Style: {cat.display_style || 'Carte'}</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              {DISPLAY_STYLES.map(style => (
-                                <DropdownMenuItem
-                                  key={style.value}
-                                  onClick={() => setCategories(cats =>
-                                    cats.map(c => c.id === cat.id ? { ...c, display_style: style.value } : c)
-                                  )}
-                                >
-                                  {style.label}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          <Button
-                            onClick={() => addMenuItem(cat.id)}
-                            variant="ghost"
-                            size="icon"
-                            title="Nouvel élément"
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-600"
-                            disabled={cat.id.startsWith('temp-')}
-                          >
-                            <Plus className="w-5 h-5" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => { setEditingCategoryId(cat.id); setOriginalCategory({ name: cat.name, display_style: cat.display_style }); }} title="Modifier la catégorie">
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => setConfirmDelete({ type: 'category', catId: cat.id })} title="Supprimer la catégorie">
-                            <Trash2 className="w-5 h-5 text-red-500" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                    {/* Items de la catégorie (inchangés) */}
-                    <DndKitWrapper
-                      items={cat.menu_items}
-                      modifiers={getDnDModifier()}
-                      onDragEnd={(oldIndex, newIndex) => {
-                        if (oldIndex === newIndex) return;
-                        const sorted = [...cat.menu_items].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-                        const [moved] = sorted.splice(oldIndex, 1);
-                        sorted.splice(newIndex, 0, moved);
-                        sorted.forEach((item, idx) => (item.display_order = idx));
-                        setCategories(cats =>
-                          cats.map(c =>
-                            c.id === cat.id ? { ...c, menu_items: sorted } : c
-                          )
-                        );
-                        sorted.forEach((item, idx) => {
-                          fetch('/api/admin/menu-item/update', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ ...item, display_order: idx }),
-                          });
-                        });
-                      }}
-                      renderOverlay={activeId => {
-                        const item = cat.menu_items.find(i => i.id === activeId);
-                        return item ? renderMenuItem(item, cat) : null;
-                      }}
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[...cat.menu_items]
-                          .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-                          .map((item) => (
-                            <SortableItem key={item.id} id={item.id}>
-                              {renderMenuItem(item, cat)}
-                            </SortableItem>
-                          ))}
-                      </div>
-                    </DndKitWrapper>
-                  </section>
-                </div>
-              </SortableCategory>
-            ))}
-        </div>
-      </DndKitWrapper>
-    );
+    const sorted = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+    const [moved] = sorted.splice(oldIndex, 1)
+    sorted.splice(newIndex, 0, moved)
+    sorted.forEach((cat, idx) => (cat.display_order = idx))
+    
+    setCategories(sorted)
+
+    // Persist order to API
+    if (!isDemo) {
+      sorted.forEach((cat, idx) => {
+        fetch('/api/admin/menu-category/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...cat, display_order: idx }),
+        })
+      })
+    }
   }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-      {/* Logo upload */}
+      {/* Logo Upload Section */}
       <div className="mb-4">
         <ImageUpload
           establishmentId={establishment.id}
           currentImageUrl={establishment.logo_url ?? undefined}
           color={establishment.primary_color ?? undefined}
           slug={establishment.slug}
-          onImageUploaded={async (url: string) => {
-            if (isDemo) {
-              setDemoLogoUrl(url)
-              toast.info("Aperçu du logo modifié (démo, non sauvegardé)")
-              return
-            }
-            // Update logo_url in DB
-            const res = await fetch("/api/admin/update-logo", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: establishment.id, logo_url: url }),
-            });
-            const data = await res.json();
-            if (res.ok && data.success) {
-              toast.success("Logo mis à jour !");
-              establishment.logo_url = url;
-            } else {
-              toast.error(data.error || "Erreur lors de la mise à jour du logo");
-            }
-          }}
+          onImageUploaded={handleLogoUpload}
           onDeleteLogo={() => {
             establishment.logo_url = null
           }}
           isDemo={isDemo}
         />
       </div>
-      {/* Add new category button */}
+
+      {/* Add Category Button */}
       <div className="flex justify-center mb-4">
-        <Button onClick={addCategory} variant="ghost" size="icon" title="Nouvelle catégorie" className="bg-gray-100 hover:bg-gray-200 text-gray-600">
+        <Button
+          onClick={addCategory}
+          variant="ghost"
+          size="icon"
+          title="Nouvelle catégorie"
+          className="bg-gray-100 hover:bg-gray-200 text-gray-600"
+          disabled={loadingAction !== null}
+        >
           <Plus className="w-6 h-6" />
         </Button>
       </div>
-      {/* DnD des catégories + items */}
-      {renderCategoriesDnD()}
-      {/* Confirmation Dialog for Delete Action */}
+
+      {/* Categories with Drag & Drop */}
+      <DndKitWrapper
+        items={categories}
+        modifiers={[restrictToParentElement]}
+        onDragEnd={handleCategoryDragEnd}
+      >
+        <div className="space-y-8">
+          {[...categories]
+            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+            .map(cat => (
+              <SortableCategory key={cat.id} id={cat.id}>
+                <CategorySection
+                  category={cat}
+                  isDemo={isDemo}
+                  editingCategoryId={editingCategoryId}
+                  setEditingCategoryId={setEditingCategoryId}
+                  originalCategory={originalCategory}
+                  setOriginalCategory={setOriginalCategory}
+                  savingCategoryId={savingCategoryId}
+                  loadingAction={loadingAction}
+                  categories={categories}
+                  setCategories={setCategories}
+                  saveCategory={saveCategory}
+                  addMenuItem={addMenuItem}
+                  deleteMenuItem={deleteMenuItem}
+                  saveItem={saveItem}
+                  handleItemChange={handleItemChange}
+                  savingItemId={savingItemId}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  setConfirmDelete={setConfirmDelete}
+                />
+              </SortableCategory>
+            ))}
+        </div>
+      </DndKitWrapper>
+
+      {/* Delete Confirmation Dialog */}
       <ConfirmDeleteDialog
         open={!!confirmDelete}
         title={confirmDelete?.type === 'category' ? 'Supprimer la catégorie' : 'Supprimer l\'élément'}
