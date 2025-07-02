@@ -13,6 +13,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { Loader2Icon } from "lucide-react";
+import QrCodeDialog from "@/components/QrCodeDialog";
 
 interface ParameterSheetProps {
   establishment: {
@@ -24,6 +25,11 @@ interface ParameterSheetProps {
 
 const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }) => {
   const [loggingOut, setLoggingOut] = useState(false);
+
+  // Compute the public menu URL safely (SSR compatible)
+  const publicMenuUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/e/${establishment.slug}`
+    : `/e/${establishment.slug}`;
 
   return (
     <Sheet>
@@ -42,6 +48,10 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
               slug={establishment.slug}
               isDemo={isDemo}
             />
+          </div>
+          <div className="px-4">
+            {/* QR Code Button and Dialog */}
+            <QrCodeDialog url={publicMenuUrl} />
           </div>
           <div className="px-4">
             <Button
