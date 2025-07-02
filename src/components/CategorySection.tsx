@@ -8,6 +8,7 @@ import { restrictToParentElement } from '@dnd-kit/modifiers'
 import MenuItemCard from '@/components/MenuItemCard'
 import type { Category, MenuItem } from '@/types/supabase_types'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useRef, useEffect, useState } from 'react'
 
 const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
@@ -17,12 +18,12 @@ const DISPLAY_STYLES = [
 ]
 
 interface CategorySectionProps {
-  category: any // Replace with proper Category type
+  category: Category
   isDemo: boolean
   editingCategoryId: string | null
   setEditingCategoryId: (id: string | null) => void
-  originalCategory: any | null
-  setOriginalCategory: (cat: any | null) => void
+  originalCategory: Category | null
+  setOriginalCategory: (cat: Category | null) => void
   savingCategoryId: string | null
   loadingAction: string | null
   categories: any[]
@@ -36,6 +37,7 @@ interface CategorySectionProps {
   editingItem: string | null
   setEditingItem: (id: string | null) => void
   setConfirmDelete: (data: { type: 'category' | 'item', catId: string, itemId?: string } | null) => void
+  establishmentColor?: string
 }
 
 export default function CategorySection({
@@ -57,7 +59,8 @@ export default function CategorySection({
   savingItemId,
   editingItem,
   setEditingItem,
-  setConfirmDelete
+  setConfirmDelete,
+  establishmentColor,
 }: CategorySectionProps) {
   
   const handleItemDragEnd = (oldIndex: number, newIndex: number) => {
@@ -84,6 +87,21 @@ export default function CategorySection({
       })
     }
   }
+
+  // Fade logic for category title
+  const catTitleRef = useRef<HTMLHeadingElement>(null)
+  const [showCatTitleFade, setShowCatTitleFade] = useState(false)
+  useEffect(() => {
+    const el = catTitleRef.current
+    if (!el) return
+    const checkOverflow = () => {
+      setShowCatTitleFade(el.scrollWidth > el.clientWidth)
+    }
+    checkOverflow()
+    const resizeObserver = new window.ResizeObserver(checkOverflow)
+    resizeObserver.observe(el)
+    return () => resizeObserver.disconnect()
+  }, [category.name])
 
   const renderCategoryHeader = () => {
     if (editingCategoryId === category.id) {
@@ -157,7 +175,30 @@ export default function CategorySection({
 
     return (
       <>
-        <h2 className="text-2xl font-bold mr-2 mb-2 sm:mb-0">{category.name}</h2>
+        <h2
+          ref={catTitleRef}
+          className="text-2xl font-bold mr-2 mb-2 sm:mb-0 overflow-hidden whitespace-nowrap relative"
+          style={{ textOverflow: 'clip', maxWidth: '100%' }}
+          title={category.name}
+        >
+          <span style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+            {category.name}
+            {showCatTitleFade && (
+              <span
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 0,
+                  width: '3em',
+                  height: '100%',
+                  background: 'linear-gradient(to right, transparent, #fff 80%)',
+                  pointerEvents: 'none',
+                  display: 'block',
+                }}
+              />
+            )}
+          </span>
+        </h2>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="sm" variant="outline">
@@ -202,7 +243,7 @@ export default function CategorySection({
               variant="ghost" 
               onClick={() => {
                 setEditingCategoryId(category.id)
-                setOriginalCategory({ name: category.name, display_style: category.display_style })
+                setOriginalCategory({ ...category })
               }} 
               title="Modifier la catégorie"
             >
@@ -265,6 +306,7 @@ export default function CategorySection({
               savingItemId={savingItemId}
               loadingAction={loadingAction}
               setConfirmDelete={setConfirmDelete}
+              establishmentColor={establishmentColor}
             />
           ) : null
         }}
@@ -284,6 +326,7 @@ export default function CategorySection({
                   savingItemId={savingItemId}
                   loadingAction={loadingAction}
                   setConfirmDelete={setConfirmDelete}
+                  establishmentColor={establishmentColor}
                 />
               </SortableItem>
             ))}

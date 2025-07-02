@@ -1,12 +1,9 @@
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Pencil, Trash2, GripVertical } from "lucide-react"
 import { SortableHandle } from './SortableHandle'
 import type { Category, MenuItem } from '@/types/supabase_types'
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   Dialog,
   DialogClose,
@@ -17,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { useEffect, useRef, useState } from 'react'
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -28,6 +26,7 @@ interface MenuItemCardProps {
   savingItemId: string | null
   loadingAction: string | null
   setConfirmDelete: (data: { type: 'category' | 'item', catId: string, itemId?: string } | null) => void
+  establishmentColor?: string // <-- add this prop
 }
 
 export default function MenuItemCard({
@@ -39,16 +38,54 @@ export default function MenuItemCard({
   saveItem,
   savingItemId,
   loadingAction,
-  setConfirmDelete
+  setConfirmDelete,
+  establishmentColor
 }: MenuItemCardProps) {
   
-  // Get the color from category or fallback to establishment color if available
-  const ringColor = (category as any).primary_color || '#000000'
+  // Use the establishment color if provided, fallback to blue
+  const ringColor = establishmentColor || '#3a4fff'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     saveItem(item)
   }
+
+  // Title fade logic (unchanged)
+  const titleSpanRef = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    const el = titleSpanRef.current
+    if (!el) return
+    const fade = el.querySelector('.fade-title') as HTMLElement | null
+    if (!fade) return
+    const updateFade = () => {
+      if (el.scrollWidth > el.clientWidth) {
+        fade.style.display = 'block'
+      } else {
+        fade.style.display = 'none'
+      }
+    }
+    updateFade()
+    const resizeObserver = new window.ResizeObserver(updateFade)
+    resizeObserver.observe(el)
+    return () => resizeObserver.disconnect()
+  }, [item.name])
+
+  // Description fade logic: only show fade if more than one line
+  const descRef = useRef<HTMLParagraphElement>(null)
+  const [showDescFade, setShowDescFade] = useState(false)
+  useEffect(() => {
+    const el = descRef.current
+    if (!el) return
+    const checkOverflow = () => {
+      const lineHeight = parseFloat(getComputedStyle(el).lineHeight)
+      // Only show fade if more than one line
+      setShowDescFade(el.scrollHeight > lineHeight * 1.5 + 2)
+    }
+    checkOverflow()
+    const resizeObserver = new window.ResizeObserver(checkOverflow)
+    resizeObserver.observe(el)
+    return () => resizeObserver.disconnect()
+  }, [item.description])
 
   return (
     <Dialog open={editingItem === item.id} onOpenChange={open => setEditingItem(open ? item.id : null)}>
@@ -76,14 +113,57 @@ export default function MenuItemCard({
         >
           <div className="flex justify-between items-start">
             <h3
-              className="text-lg font-semibold truncate max-w-[70%]"
+              className="text-lg font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative"
               title={item.name}
+              style={{ textOverflow: 'clip' }}
             >
-              {item.name}
+              <span ref={titleSpanRef} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                {item.name}
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: 0,
+                    width: '4em',
+                    height: '100%',
+                    background: 'linear-gradient(to right, transparent, #fff 80%)',
+                    pointerEvents: 'none',
+                    display: 'none',
+                  }}
+                  className="fade-title"
+                />
+              </span>
             </h3>
           </div>
           {item.description && (
-            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+            <p
+              ref={descRef}
+              className="text-sm text-gray-500 mt-1 overflow-hidden"
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                position: 'relative',
+              }}
+            >
+              {item.description}
+              {showDescFade && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    bottom: 0,
+                    width: '25%',
+                    height: '1.2em',
+                    background: 'linear-gradient(to right, transparent, #fff 70%)',
+                    pointerEvents: 'none',
+                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 70%)',
+                    maskImage: 'linear-gradient(to right, transparent, black 70%)',
+                    display: 'block',
+                  }}
+                />
+              )}
+            </p>
           )}
           <div className="text-right font-bold mt-2">
             {item.price?.toFixed(2)}€

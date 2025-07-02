@@ -186,6 +186,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   editingItem={editingItem}
                   setEditingItem={setEditingItem}
                   setConfirmDelete={setConfirmDelete}
+                  establishmentColor={establishment.primary_color ?? undefined}
                 />
               </SortableCategory>
             ))}
