@@ -132,7 +132,7 @@ export default function CategorySection({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" variant="outline">
-                Style: {category.display_style || 'Carte'}
+                Style: {DISPLAY_STYLES.find(style => style.value === category.display_style)?.label || 'Carte'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -202,16 +202,18 @@ export default function CategorySection({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button size="sm" variant="outline">
-              Style: {category.display_style || 'Carte'}
+              Style: {DISPLAY_STYLES.find(style => style.value === category.display_style)?.label || 'Carte'}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             {DISPLAY_STYLES.map(style => (
               <DropdownMenuItem
                 key={style.value}
-                onClick={() => {
+                onClick={async () => {
                   const newCategories = categories.map(c => c.id === category.id ? { ...c, display_style: style.value } : c)
                   setCategories(newCategories)
+                  // Save to DB immediately
+                  await saveCategory({ ...category, display_style: style.value })
                 }}
               >
                 {style.label}
