@@ -66,6 +66,13 @@ export default function MenuItemCard({
     }
   }, [editingItem, item])
 
+  // When dialog closes without saving, reset instantAvailable to DB value
+  useEffect(() => {
+    if (editingItem !== item.id) {
+      setInstantAvailable(!!item.is_available)
+    }
+  }, [editingItem, item.is_available, item.id])
+
   // When the switch is toggled, update both local and instant state
   const handleAvailableChange = (val: boolean) => {
     setLocalAvailable(val)
@@ -86,6 +93,8 @@ export default function MenuItemCard({
       is_available: localAvailable,
     }
     await saveItem(updatedItem)
+    // After save, keep instantAvailable in sync with DB value
+    setInstantAvailable(!!localAvailable)
   }
 
   // Title fade logic (unchanged)
