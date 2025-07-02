@@ -248,29 +248,31 @@ export default function MenuItemCard({
               </Label>
             </div>
             <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline" onClick={() => setEditingItem(null)}>
-                  Annuler
+              <div className="flex w-full gap-2">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="mr-auto"
+                  onClick={() => {
+                    setEditingItem(null)
+                    setConfirmDelete({ type: 'item', catId: category.id, itemId: item.id })
+                  }}
+                >
+                  Supprimer
                 </Button>
-              </DialogClose>
-              <Button type="submit" disabled={savingItemId === item.id || loadingAction !== null}>
-                {savingItemId === item.id ? (
-                  <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Enregistrement...</span>
-                ) : (
-                  'Enregistrer'
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                className="ml-auto"
-                onClick={() => {
-                  setEditingItem(null)
-                  setConfirmDelete({ type: 'item', catId: category.id, itemId: item.id })
-                }}
-              >
-                Supprimer
-              </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline" onClick={() => setEditingItem(null)}>
+                    Annuler
+                  </Button>
+                </DialogClose>
+                <Button type="submit" disabled={savingItemId === item.id || loadingAction !== null}>
+                  {savingItemId === item.id ? (
+                    <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Enregistrement...</span>
+                  ) : (
+                    'Enregistrer'
+                  )}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </DialogContent>
