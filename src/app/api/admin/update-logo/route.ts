@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const { id, logo_url, slug } = await req.json()
     // Advanced demo mode protection
     if (isDemoSlug(slug)) {
-      return NextResponse.json({ error: 'Modification du logo interdite en mode démo.' }, { status: 403 })
+      return NextResponse.json({ error: 'Modification du logo désactivée en mode démo.' }, { status: 403 })
     }
     if (!id) {
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 })

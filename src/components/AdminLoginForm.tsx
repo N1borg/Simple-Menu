@@ -23,12 +23,15 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slug, password }),
     })
-    setLoading(false)
     if (res.ok) {
-      window.location.reload()
+      // Wait a tick to ensure loading state is visible before redirect
+      setTimeout(() => {
+        window.location.reload()
+      }, 100)
     } else {
       const data = await res.json()
       setFormError(data.error || 'Erreur inconnue')
+      setLoading(false)
     }
   }
 

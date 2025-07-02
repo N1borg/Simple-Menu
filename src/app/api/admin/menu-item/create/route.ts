@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const item = await req.json()
   // Advanced demo mode protection
   if (isDemoSlug(item.slug)) {
-    return NextResponse.json({ success: false, error: 'Modification interdite en mode démo.' }, { status: 403 })
+    return NextResponse.json({ success: false, error: 'Modification désactivée en mode démo.' }, { status: 403 })
   }
   // Input validation & sanitization
   const name = sanitizeString(item.name, 100)
