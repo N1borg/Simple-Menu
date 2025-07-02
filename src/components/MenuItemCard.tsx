@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useEffect, useRef, useState } from 'react'
+import { Loader2Icon } from "lucide-react"
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -26,7 +27,7 @@ interface MenuItemCardProps {
   savingItemId: string | null
   loadingAction: string | null
   setConfirmDelete: (data: { type: 'category' | 'item', catId: string, itemId?: string } | null) => void
-  establishmentColor?: string // <-- add this prop
+  establishmentColor?: string
 }
 
 export default function MenuItemCard({
@@ -254,11 +255,10 @@ export default function MenuItemCard({
               </DialogClose>
               <Button type="submit" disabled={savingItemId === item.id || loadingAction !== null}>
                 {savingItemId === item.id ? (
-                  <svg className="animate-spin h-4 w-4 mr-2 inline" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                  </svg>
-                ) : "Enregistrer"}
+                  <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Enregistrement...</span>
+                ) : (
+                  'Enregistrer'
+                )}
               </Button>
               <Button
                 type="button"

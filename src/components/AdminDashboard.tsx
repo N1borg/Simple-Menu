@@ -31,7 +31,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const {
     categories,
     setCategories,
-    addCategory,
     deleteCategory,
     saveCategory,
     savingCategoryId,
@@ -39,7 +38,8 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     editingCategoryId,
     setEditingCategoryId,
     originalCategory,
-    setOriginalCategory
+    setOriginalCategory,
+    setLoadingAction
   } = useCategories(establishment, isDemo)
 
   const {
@@ -115,6 +115,82 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     }
   }
 
+  // Add category at a specific position (top or bottom)
+  const addCategory = async (position: 'top' | 'bottom') => {
+    const display_order = position === 'top' ? 0 : categories.length
+    if (position === 'top') {
+      // Increment display_order for all existing categories
+      setCategories(cats => cats.map(cat => ({ ...cat, display_order: (cat.display_order ?? 0) + 1 })))
+    }
+    await addCategoryWithOrder(display_order)
+  }
+
+  // Helper to add category with a specific display_order
+  const addCategoryWithOrder = async (display_order: number) => {
+    if (isDemo) {
+      const newCat = {
+        id: `new-${Date.now()}`,
+        name: "Nouvelle catégorie",
+        display_style: "card",
+        order: display_order,
+        created_at: new Date().toISOString(),
+        display_order,
+        establishment_id: establishment.id,
+        menu_items: [],
+      }
+      setCategories(cats => {
+        const arr = [...cats]
+        arr.splice(display_order, 0, newCat)
+        return arr
+      })
+      toast.info("Catégorie ajoutée (démo, non sauvegardé)")
+      return
+    }
+    setLoadingAction('addCategory')
+    const tempId = `temp-${Date.now()}`
+    const tempCat = {
+      id: tempId,
+      name: "Nouvelle catégorie",
+      display_style: "card",
+      order: display_order,
+      created_at: new Date().toISOString(),
+      display_order,
+      establishment_id: establishment.id,
+      menu_items: [],
+    }
+    setCategories(cats => {
+      const arr = [...cats]
+      arr.splice(display_order, 0, tempCat)
+      return arr
+    })
+    try {
+      const res = await fetch('/api/admin/menu-category/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: tempCat.name,
+          display_style: tempCat.display_style,
+          display_order: tempCat.display_order,
+          establishment_id: tempCat.establishment_id,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data?.category) {
+        setCategories(cats => cats.map(cat =>
+          cat.id === tempId ? { ...data.category, menu_items: [] } : cat
+        ))
+        toast.success("Catégorie créée")
+      } else {
+        throw new Error('Failed to create category')
+      }
+    } catch (error) {
+      setCategories(cats => cats.filter(cat => cat.id !== tempId))
+      toast.error("Erreur lors de la création de la catégorie")
+    } finally {
+      setLoadingAction(null)
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 relative flex flex-col">
       <div className="flex justify-end mb-4">
@@ -140,7 +216,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              onClick={addCategory}
+              onClick={() => addCategory('top')}
               variant="ghost"
               size="icon"
               title="Nouvelle catégorie"
@@ -192,13 +268,11 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             ))}
         </div>
       </DndKitWrapper>
-
-      {/* Add category button at the bottom */}
       <div className="flex justify-center mt-8 mb-4">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              onClick={addCategory}
+              onClick={() => addCategory('bottom')}
               variant="ghost"
               size="icon"
               title="Nouvelle catégorie"
