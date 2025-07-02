@@ -1,51 +1,73 @@
+'use client'
+import { useState } from 'react'
 import Image from 'next/image'
 import type { MenuDisplayProps, Category, MenuItem } from '@/types/supabase_types'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
-function renderMenuItem(item: MenuItem, category: Category) {
-  const style = item.display_style || category.display_style || 'card'
-  switch (style) {
-    case 'list':
-      return (
-        <li key={item.id} className="flex justify-between border-b pb-1">
-          <span>{item.name}</span>
-          <span>{item.price.toFixed(2)}€</span>
-        </li>
-      )
-    case 'compact':
-      return (
-        <span
-          key={item.id}
-          className="bg-gray-100 rounded px-2 py-1 text-sm font-medium"
-          title={item.description || ''}
-        >
-          {item.name} <span>{item.price.toFixed(2)}€</span>
-        </span>
-      )
-    case 'table':
-      return (
-        <tr key={item.id}>
-          <td className="border-b p-2">{item.name}</td>
-          <td className="border-b p-2">{item.description}</td>
-          <td className="border-b p-2 text-right">{item.price.toFixed(2)}€</td>
-        </tr>
-      )
-    case 'card':
-    default:
-      return (
-        <div key={item.id} className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
-          <h3 className="text-lg font-semibold">{item.name}</h3>
-          {item.description && (
-            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-          )}
-          <div className="text-right font-bold mt-2">
-            {item.price.toFixed(2)}€
-          </div>
-        </div>
-      )
-  }
+function MenuItemDialog({ item, open, onOpenChange }: { item: MenuItem, open: boolean, onOpenChange: (open: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{item.name}</DialogTitle>
+          <DialogDescription>
+            {item.description || 'Aucune description.'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4 text-right font-bold text-lg">{item.price?.toFixed(2)}€</div>
+        <DialogClose asChild>
+          <Button variant="outline" className="mt-4 w-full">Fermer</Button>
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
-function renderCardStyle(category: Category) {
+function renderMenuItem(item: MenuItem, category: Category, establishmentColor?: string) {
+  const [open, setOpen] = useState(false)
+  const ringColor = establishmentColor || '#3a4fff'
+  return (
+    <>
+      <div
+        key={item.id}
+        className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group transition cursor-pointer"
+        style={{
+          boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
+          borderColor: 'transparent',
+          outline: 'none',
+        }}
+        tabIndex={0}
+        role="button"
+        aria-label={`Voir l'élément ${item.name}`}
+        onClick={() => setOpen(true)}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setOpen(true) }}
+        onMouseEnter={e => {
+          e.currentTarget.style.boxShadow = `0 0 0 2px ${ringColor}`
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)'
+        }}
+      >
+        <h3 className="text-lg font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative" title={item.name} style={{ textOverflow: 'clip' }}>{item.name}</h3>
+        {item.description && (
+          <p className="text-sm text-gray-500 mt-1 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', position: 'relative' }}>{item.description}</p>
+        )}
+        <div className="text-right font-bold mt-2">{item.price.toFixed(2)}€</div>
+      </div>
+      <MenuItemDialog item={item} open={open} onOpenChange={setOpen} />
+    </>
+  )
+}
+
+function renderCardStyle(category: Category, establishmentColor?: string) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-2xl font-bold mb-4">{category.name}</h2>
@@ -53,13 +75,13 @@ function renderCardStyle(category: Category) {
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => renderMenuItem(item, category))}
+          .map(item => renderMenuItem(item, category, establishmentColor))}
       </div>
     </section>
   )
 }
 
-function renderListStyle(category: Category) {
+function renderListStyle(category: Category, establishmentColor?: string) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-xl font-bold mb-2">{category.name}</h2>
@@ -67,13 +89,17 @@ function renderListStyle(category: Category) {
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => renderMenuItem(item, category))}
+          .map(item => (
+            <li key={item.id} className="list-none">
+              {renderMenuItem(item, category, establishmentColor)}
+            </li>
+          ))}
       </ul>
     </section>
   )
 }
 
-function renderCompactStyle(category: Category) {
+function renderCompactStyle(category: Category, establishmentColor?: string) {
   return (
     <section key={category.id} className="max-w-2xl mx-auto px-2 py-4">
       <h2 className="text-lg font-semibold mb-2">{category.name}</h2>
@@ -81,13 +107,13 @@ function renderCompactStyle(category: Category) {
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => renderMenuItem(item, category))}
+          .map(item => renderMenuItem(item, category, establishmentColor))}
       </div>
     </section>
   )
 }
 
-function renderTableStyle(category: Category) {
+function renderTableStyle(category: Category, establishmentColor?: string) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-xl font-bold mb-2">{category.name}</h2>
@@ -103,14 +129,14 @@ function renderTableStyle(category: Category) {
           {category.menu_items
             ?.filter((item: MenuItem) => item.is_available)
             .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map(item => renderMenuItem(item, category))}
+            .map(item => renderMenuItem(item, category, establishmentColor))}
         </tbody>
       </table>
     </section>
   )
 }
 
-function renderCategoryByStyle(category: Category) {
+function renderCategoryByStyle(category: Category, establishmentColor?: string) {
   switch (category.display_style) {
     case 'list':
       return renderListStyle(category)
@@ -120,11 +146,12 @@ function renderCategoryByStyle(category: Category) {
       return renderTableStyle(category)
     case 'card':
     default:
-      return renderCardStyle(category)
+      return renderCardStyle(category, establishmentColor)
   }
 }
 
 export default function MenuDisplay({ establishment }: MenuDisplayProps) {
+  const establishmentColor = establishment.primary_color || '#3a4fff'
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
       <div className="text-center mb-6">
@@ -142,17 +169,15 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
         )}
         <h1 className="text-3xl font-bold">{establishment.name}</h1>
       </div>
-
       <div className="space-y-8">
         {establishment.categories
           ?.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
           .map(category => {
-            // Ensure items are sorted by display_order before rendering
             const sortedCategory = {
               ...category,
               menu_items: category.menu_items?.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) || []
             };
-            return renderCategoryByStyle(sortedCategory);
+            return renderCategoryByStyle(sortedCategory, establishmentColor);
           })}
       </div>
     </div>
