@@ -121,23 +121,26 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         <ParameterSheet establishment={establishment} isDemo={isDemo} />
       </div>
 
-      {/* Logo Upload Section */}
-      <div className="mb-4">
-        <ImageUpload
-          establishmentId={establishment.id}
-          currentImageUrl={establishment.logo_url ?? undefined}
-          color={establishment.primary_color ?? undefined}
-          slug={establishment.slug}
-          onImageUploaded={handleLogoUpload}
-          onDeleteLogo={() => {
-            establishment.logo_url = null
-          }}
-          isDemo={isDemo}
-        />
+      <div className="text-center mb-6">
+        {/* Logo Upload Section */}
+        <div className="mb-4 mt-7">
+          <ImageUpload
+            establishmentId={establishment.id}
+            currentImageUrl={establishment.logo_url ?? undefined}
+            color={establishment.primary_color ?? undefined}
+            slug={establishment.slug}
+            onImageUploaded={handleLogoUpload}
+            onDeleteLogo={() => {
+              establishment.logo_url = null
+            }}
+            isDemo={isDemo}
+          />
+          <h1 className="text-3xl font-bold text-center mt-2">{establishment.name}</h1>
+        </div>
       </div>
 
       {/* Add Category Button */}
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center mt-4">
         <Button
           onClick={addCategory}
           variant="ghost"

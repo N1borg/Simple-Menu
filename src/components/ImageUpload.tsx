@@ -195,29 +195,37 @@ export default function ImageUpload({
     <div className={`space-y-4 ${className}`}>
       {/* Centered Logo Preview (same as menu page) + Edit/Trash Buttons */}
       {displayedImageUrl && (
-        <div className="flex flex-col items-center justify-center mb-2 relative">
-          <Image
-            src={displayedImageUrl}
-            alt="Logo actuel"
-            width={160}
-            height={160}
-            className="mx-auto w-32 h-32 rounded-full mb-2 object-contain bg-white"
-            priority
-            quality={90}
-            sizes="(max-width: 600px) 100vw, 160px"
-          />
-          <div className="absolute top-2 right-1 flex gap-2">
-            <Button size="icon" variant="ghost" className="opacity-70 hover:opacity-100" title="Modifier" onClick={() => setShowPopup(true)}>
-              <Pencil className="w-4 h-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => setShowDeleteConfirm(true)}
-              title="Supprimer la catégorie"
-            >
-              <Trash2 className="w-5 h-5 text-red-500" />
-            </Button>
+        <div className="relative flex justify-center mb-4"> {/* Make this relative for absolute positioning of buttons */}
+          <div className="relative"> {/* This will contain both image and buttons */}
+            <Image
+              src={displayedImageUrl}
+              alt="Logo actuel"
+              width={160}
+              height={160}
+              className="w-32 h-32 rounded-full object-contain bg-white"
+              priority
+              quality={90}
+              sizes="(max-width: 600px) 100vw, 160px"
+            />
+            <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-full flex flex-col gap-2 pl-2">
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="opacity-70 hover:opacity-100" 
+                title="Modifier" 
+                onClick={() => setShowPopup(true)}
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowDeleteConfirm(true)}
+                title="Supprimer la catégorie"
+              >
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </Button>
+            </div>
           </div>
         </div>
       )}
