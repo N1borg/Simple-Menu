@@ -3,8 +3,8 @@ import { cookies } from 'next/headers'
 import MenuDisplay from '@/components/MenuDisplay'
 import NotFound from '@/app/not-found'
 import { jwtVerify } from 'jose'
-import Footer from '@/components/Footer'
 import AdminBanner from '@/components/AdminBanner'
+import MenuFooter from '@/components/MenuFooter'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,7 +59,7 @@ export default async function MenuPage({ params }: PageProps) {
       <main className="flex-grow">
         <MenuDisplay establishment={establishment} />
       </main>
-      <Footer />
+      <MenuFooter color={establishment.primary_color ?? undefined} />
     </div>
   )
 }

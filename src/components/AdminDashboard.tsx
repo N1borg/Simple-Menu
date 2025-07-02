@@ -14,6 +14,7 @@ import CategorySection from '@/components/CategorySection'
 import { useCategories } from '@/components/hooks/useCategories'
 import { useMenuItems } from '@/components/hooks/useMenuItems'
 import ParameterSheet from '@/components/ParameterSheet'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
@@ -65,7 +66,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     } else if (confirmDelete.type === 'category') {
       deleteCategory(confirmDelete.catId)
     }
-    
+
     setConfirmDelete(null)
   }
 
@@ -81,9 +82,9 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: establishment.id, logo_url: url }),
     })
-    
+
     const data = await res.json()
-    
+
     if (res.ok && data.success) {
       toast.success("Logo mis à jour !")
       establishment.logo_url = url
@@ -99,7 +100,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     const [moved] = sorted.splice(oldIndex, 1)
     sorted.splice(newIndex, 0, moved)
     sorted.forEach((cat, idx) => (cat.display_order = idx))
-    
+
     setCategories(sorted)
 
     // Persist order to API
@@ -115,45 +116,46 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 relative">
-      {/* Settings Button */}
-      <div className="absolute top-4 right-4 z-20">
+    <div className="max-w-2xl mx-auto px-4 py-6 relative flex flex-col">
+      <div className="flex justify-end mb-4">
         <ParameterSheet establishment={establishment} isDemo={isDemo} />
       </div>
 
-      <div className="text-center mb-6">
-        {/* Logo Upload Section */}
-        <div className="mb-4 mt-7">
-          <ImageUpload
-            establishmentId={establishment.id}
-            currentImageUrl={establishment.logo_url ?? undefined}
-            color={establishment.primary_color ?? undefined}
-            slug={establishment.slug}
-            onImageUploaded={handleLogoUpload}
-            onDeleteLogo={() => {
-              establishment.logo_url = null
-            }}
-            isDemo={isDemo}
-          />
-          <h1 className="text-3xl font-bold text-center mt-2">{establishment.name}</h1>
-        </div>
+      <div className="mb-4 mt-7">
+        <ImageUpload
+          establishmentId={establishment.id}
+          currentImageUrl={establishment.logo_url ?? undefined}
+          color={establishment.primary_color ?? undefined}
+          slug={establishment.slug}
+          onImageUploaded={handleLogoUpload}
+          onDeleteLogo={() => {
+            establishment.logo_url = null
+          }}
+          isDemo={isDemo}
+        />
+        <h1 className="text-3xl font-bold text-center mt-2">{establishment.name}</h1>
       </div>
 
-      {/* Add Category Button */}
       <div className="flex justify-center mt-4">
-        <Button
-          onClick={addCategory}
-          variant="ghost"
-          size="icon"
-          title="Nouvelle catégorie"
-          className="bg-gray-100 hover:bg-gray-200 text-gray-600"
-          disabled={loadingAction !== null}
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={addCategory}
+              variant="ghost"
+              size="icon"
+              title="Nouvelle catégorie"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600"
+              disabled={loadingAction !== null}
+            >
+              <Plus className="w-6 h-6" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Ajouter une catégorie</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
-      {/* Categories with Drag & Drop */}
       <DndKitWrapper
         items={categories}
         modifiers={[restrictToParentElement]}
@@ -190,7 +192,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         </div>
       </DndKitWrapper>
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDeleteDialog
         open={!!confirmDelete}
         title={confirmDelete?.type === 'category' ? 'Supprimer la catégorie' : 'Supprimer l\'élément'}

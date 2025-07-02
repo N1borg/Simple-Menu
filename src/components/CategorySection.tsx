@@ -7,6 +7,7 @@ import { SortableItem } from '@/components/SortableItem'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
 import MenuItemCard from '@/components/MenuItemCard'
 import type { Category, MenuItem } from '@/types/supabase_types'
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
@@ -177,35 +178,56 @@ export default function CategorySection({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button
-          onClick={() => addMenuItem(category.id)}
-          variant="ghost"
-          size="icon"
-          title="Nouvel élément"
-          className="bg-gray-100 hover:bg-gray-200 text-gray-600"
-          disabled={category.id.startsWith('temp-')}
-        >
-          <Plus className="w-5 h-5" />
-        </Button>
-        <Button 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => {
-            setEditingCategoryId(category.id)
-            setOriginalCategory({ name: category.name, display_style: category.display_style })
-          }} 
-          title="Modifier la catégorie"
-        >
-          <Pencil className="w-4 h-4" />
-        </Button>
-        <Button 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => setConfirmDelete({ type: 'category', catId: category.id })} 
-          title="Supprimer la catégorie"
-        >
-          <Trash2 className="w-5 h-5 text-red-500" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={() => addMenuItem(category.id)}
+              variant="ghost"
+              size="icon"
+              title="Nouvel élément"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600"
+              disabled={category.id.startsWith('temp-')}
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Ajouter un élément</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              onClick={() => {
+                setEditingCategoryId(category.id)
+                setOriginalCategory({ name: category.name, display_style: category.display_style })
+              }} 
+              title="Modifier la catégorie"
+            >
+              <Pencil className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Modifier la catégorie</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              onClick={() => setConfirmDelete({ type: 'category', catId: category.id })} 
+              title="Supprimer la catégorie"
+            >
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Supprimer la catégorie</p>
+          </TooltipContent>
+        </Tooltip>
       </>
     )
   }

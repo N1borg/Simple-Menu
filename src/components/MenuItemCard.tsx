@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch"
 import { Pencil, Trash2, GripVertical } from "lucide-react"
 import { SortableHandle } from './SortableHandle'
 import type { Category, MenuItem } from '@/types/supabase_types'
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -70,16 +71,23 @@ export default function MenuItemCard({
           open={editingItem === item.id} 
           onOpenChange={open => setEditingItem(open ? item.id : null)}
         >
-          <PopoverTrigger asChild>
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              className="opacity-70 hover:opacity-100" 
-              title="Modifier"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-          </PopoverTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="opacity-70 hover:opacity-100" 
+                  title="Modifier"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Modifier l'élément</p>
+            </TooltipContent>
+          </Tooltip>
           <PopoverContent className="w-80">
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
@@ -146,15 +154,22 @@ export default function MenuItemCard({
         </Popover>
 
         {/* Delete Button */}
-        <Button
-          size="icon"
-          variant="ghost"
-          className="opacity-70 hover:opacity-100"
-          onClick={() => setConfirmDelete({ type: 'item', catId: category.id, itemId: item.id })}
-          title="Supprimer l'élément"
-        >
-          <Trash2 className="w-4 h-4 text-red-500" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="opacity-70 hover:opacity-100"
+              onClick={() => setConfirmDelete({ type: 'item', catId: category.id, itemId: item.id })}
+              title="Supprimer l'élément"
+            >
+              <Trash2 className="w-4 h-4 text-red-500" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Supprimer l'élément</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
   )

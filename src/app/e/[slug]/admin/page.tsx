@@ -5,6 +5,7 @@ import AdminDashboard from '@/components/AdminDashboard'
 import AdminLoginForm from '@/components/AdminLoginForm'
 import { EstablishmentWithCategories } from '@/types/supabase'
 import AdminBanner from '@/components/AdminBanner'
+import MenuFooter from '@/components/MenuFooter'
 import Image from 'next/image'
 import NotFound from '@/app/not-found'
 
@@ -39,7 +40,6 @@ export default async function AdminPage({ params }: PageProps) {
     return NotFound()
   }
 
-  // Check single session cookie
   const token = (await cookieStore).get('admin-session')?.value
   let isAuthenticated = false
   let tokenSlug: string | undefined
@@ -85,11 +85,16 @@ export default async function AdminPage({ params }: PageProps) {
   }
 
   return (
-    <div>
-      {(isAuthenticated || slug === 'demo') && <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />}
-      <AdminDashboard
-        establishment={establishment as EstablishmentWithCategories}
-      />
+    <div className="min-h-screen flex flex-col">
+      {(isAuthenticated || slug === 'demo') && (
+        <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />
+      )}
+      <div className="flex-grow">
+        <AdminDashboard
+          establishment={establishment as EstablishmentWithCategories}
+        />
+      </div>
+      <MenuFooter color={establishment.primary_color ?? undefined} />
     </div>
   )
 }

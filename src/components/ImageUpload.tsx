@@ -6,6 +6,7 @@ import { Upload, X, AlertCircle, CheckCircle2, Pencil, Trash2 } from 'lucide-rea
 import Image from 'next/image'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 import { toast } from "sonner"
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface ImageUploadProps {
   onImageUploaded: (url: string) => void
@@ -195,8 +196,8 @@ export default function ImageUpload({
     <div className={`space-y-4 ${className}`}>
       {/* Centered Logo Preview (same as menu page) + Edit/Trash Buttons */}
       {displayedImageUrl && (
-        <div className="relative flex justify-center mb-4"> {/* Make this relative for absolute positioning of buttons */}
-          <div className="relative"> {/* This will contain both image and buttons */}
+        <div className="relative flex justify-center mb-4">
+          <div className="relative">
             <Image
               src={displayedImageUrl}
               alt="Logo actuel"
@@ -208,23 +209,37 @@ export default function ImageUpload({
               sizes="(max-width: 600px) 100vw, 160px"
             />
             <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-full flex flex-col gap-2 pl-2">
-              <Button 
-                size="icon" 
-                variant="ghost" 
-                className="opacity-70 hover:opacity-100" 
-                title="Modifier" 
-                onClick={() => setShowPopup(true)}
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setShowDeleteConfirm(true)}
-                title="Supprimer la catégorie"
-              >
-                <Trash2 className="w-5 h-5 text-red-500" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="opacity-70 hover:opacity-100" 
+                    title="Modifier" 
+                    onClick={() => setShowPopup(true)}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Modifier le logo</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    title="Supprimer le logo"
+                  >
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Supprimer le logo</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -375,14 +390,21 @@ export default function ImageUpload({
       />
       {/* Si pas de logo, bouton direct */}
       {!displayedImageUrl && (
-        <button
-          type="button"
-          className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700"
-          onClick={() => setShowPopup(true)}
-        >
-          <Upload className="h-5 w-5" />
-          Ajouter un logo
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700"
+              onClick={() => setShowPopup(true)}
+            >
+              <Upload className="h-5 w-5" />
+              Ajouter un logo
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Ajouter un logo</p>
+          </TooltipContent>
+        </Tooltip>
       )}
     </div>
   )
