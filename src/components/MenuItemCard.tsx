@@ -51,6 +51,10 @@ export default function MenuItemCard({
   const [localPrice, setLocalPrice] = useState(item.price?.toFixed(2) ?? '')
   const [localAvailable, setLocalAvailable] = useState(!!item.is_available)
 
+  // --- NEW: Track availability for instant UI update on card ---
+  // This state is synced with the dialog switch, so the card updates instantly
+  const [instantAvailable, setInstantAvailable] = useState(!!item.is_available)
+
   // Reset local state when dialog opens
   useEffect(() => {
     if (editingItem === item.id) {
@@ -58,8 +62,15 @@ export default function MenuItemCard({
       setLocalDescription(item.description || '')
       setLocalPrice(item.price?.toFixed(2) ?? '')
       setLocalAvailable(!!item.is_available)
+      setInstantAvailable(!!item.is_available)
     }
   }, [editingItem, item])
+
+  // When the switch is toggled, update both local and instant state
+  const handleAvailableChange = (val: boolean) => {
+    setLocalAvailable(val)
+    setInstantAvailable(val)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -122,7 +133,9 @@ export default function MenuItemCard({
       <div className="relative group">
         {/* Menu Item Content - clickable to open dialog */}
         <div
-          className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 transition cursor-pointer"
+          className={
+            `bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 transition cursor-pointer ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through border border-gray-200' : ''}`
+          }
           style={{
             boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
             borderColor: 'transparent',
@@ -168,7 +181,7 @@ export default function MenuItemCard({
           {item.description && (
             <p
               ref={descRef}
-              className="text-sm text-gray-500 mt-1 overflow-hidden"
+              className={`text-sm mt-1 overflow-hidden ${!instantAvailable ? 'italic' : 'text-gray-500'}`}
               style={{
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
@@ -177,7 +190,7 @@ export default function MenuItemCard({
               }}
             >
               {item.description}
-              {showDescFade && (
+              {showDescFade && instantAvailable && (
                 <span
                   style={{
                     position: 'absolute',
@@ -242,7 +255,7 @@ export default function MenuItemCard({
               <Label className="flex items-center gap-2">
                 <Switch
                   checked={localAvailable}
-                  onCheckedChange={val => setLocalAvailable(val)}
+                  onCheckedChange={handleAvailableChange}
                 />
                 Disponible
               </Label>
