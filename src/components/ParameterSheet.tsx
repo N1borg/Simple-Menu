@@ -12,6 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { Loader2Icon } from "lucide-react";
 
 interface ParameterSheetProps {
   establishment: {
@@ -61,7 +62,11 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
                 window.location.href = `/e/${establishment.slug}/admin`;
               }}
             >
-              {loggingOut ? "Déconnexion..." : "Se déconnecter"}
+              {loggingOut ? (
+                <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Déconnexion...</span>
+              ) : (
+                "Se déconnecter"
+              )}
             </Button>
           </div>
         </div>
