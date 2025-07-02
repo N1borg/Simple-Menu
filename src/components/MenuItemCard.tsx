@@ -62,12 +62,15 @@ export default function MenuItemCard({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Parse price, allow comma or dot
+    let parsedPrice = parseFloat(localPrice.replace(',', '.'))
+    if (isNaN(parsedPrice)) parsedPrice = 0
     // Prepare updated item
     const updatedItem = {
       ...item,
       name: localName,
       description: localDescription,
-      price: parseFloat(localPrice) || 0,
+      price: parsedPrice,
       is_available: localAvailable,
     }
     await saveItem(updatedItem)
@@ -222,11 +225,16 @@ export default function MenuItemCard({
             <div>
               <Label>Prix</Label>
               <Input
-                type="number"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
                 value={localPrice}
-                min={0}
-                step={0.01}
-                onChange={e => setLocalPrice(e.target.value)}
+                placeholder="0.00"
+                onChange={e => {
+                  // Allow only numbers and one dot or comma
+                  const val = e.target.value.replace(/[^0-9.,]/g, '')
+                  setLocalPrice(val)
+                }}
               />
             </div>
             <div>
