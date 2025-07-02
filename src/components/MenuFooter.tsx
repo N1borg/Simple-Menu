@@ -6,15 +6,15 @@ interface MenuFooterProps {
 
 const MenuFooter: React.FC<MenuFooterProps> = ({ color }) => (
   <footer
-    className="text-white py-6 w-full"
-    style={{ backgroundColor: color || '#1e293b' }}
+    className="text-white py-6 w-full border-t"
+    style={{ backgroundColor: `#f3f6fd`, borderColor: (color || '#3a4fff') + '40', color: color || '#3a4fff' }}
   >
     <div className="max-w-2xl mx-auto px-4 text-center">
       <p className="text-xs mt-2">
         Menu digital créé avec ❤️ par{" "}
         <a
           href="https://simple-menu.niborgpro.fr"
-          className="underline transition-colors duration-200 hover:text-blue-300 focus:text-blue-400"
+          className="underline"
           target="_blank"
           rel="noopener"
         >
