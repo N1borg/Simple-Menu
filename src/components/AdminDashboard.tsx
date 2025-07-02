@@ -193,6 +193,27 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         </div>
       </DndKitWrapper>
 
+      {/* Add category button at the bottom */}
+      <div className="flex justify-center mt-8 mb-4">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={addCategory}
+              variant="ghost"
+              size="icon"
+              title="Nouvelle catégorie"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600"
+              disabled={loadingAction !== null}
+            >
+              <Plus className="w-6 h-6" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Ajouter une catégorie</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+
       <ConfirmDeleteDialog
         open={!!confirmDelete}
         title={confirmDelete?.type === 'category' ? 'Supprimer la catégorie' : 'Supprimer l\'élément'}

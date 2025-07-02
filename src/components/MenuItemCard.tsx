@@ -41,13 +41,36 @@ export default function MenuItemCard({
   setConfirmDelete,
   establishmentColor
 }: MenuItemCardProps) {
-  
   // Use the establishment color if provided, fallback to blue
   const ringColor = establishmentColor || '#3a4fff'
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Local state for dialog editing
+  const [localName, setLocalName] = useState(item.name)
+  const [localDescription, setLocalDescription] = useState(item.description || '')
+  const [localPrice, setLocalPrice] = useState(item.price?.toFixed(2) ?? '')
+  const [localAvailable, setLocalAvailable] = useState(!!item.is_available)
+
+  // Reset local state when dialog opens
+  useEffect(() => {
+    if (editingItem === item.id) {
+      setLocalName(item.name)
+      setLocalDescription(item.description || '')
+      setLocalPrice(item.price?.toFixed(2) ?? '')
+      setLocalAvailable(!!item.is_available)
+    }
+  }, [editingItem, item])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    saveItem(item)
+    // Prepare updated item
+    const updatedItem = {
+      ...item,
+      name: localName,
+      description: localDescription,
+      price: parseFloat(localPrice) || 0,
+      is_available: localAvailable,
+    }
+    await saveItem(updatedItem)
   }
 
   // Title fade logic (unchanged)
@@ -88,7 +111,10 @@ export default function MenuItemCard({
   }, [item.description])
 
   return (
-    <Dialog open={editingItem === item.id} onOpenChange={open => setEditingItem(open ? item.id : null)}>
+    <Dialog open={editingItem === item.id} onOpenChange={open => {
+      if (!open && editingItem === item.id) setEditingItem(null)
+      if (open) setEditingItem(item.id)
+    }}>
       <div className="relative group">
         {/* Menu Item Content - clickable to open dialog */}
         <div
@@ -182,32 +208,32 @@ export default function MenuItemCard({
             <div>
               <Label>Nom</Label>
               <Input
-                value={item.name}
-                onChange={e => handleItemChange(category.id, item.id, 'name', e.target.value)}
+                value={localName}
+                onChange={e => setLocalName(e.target.value)}
               />
             </div>
             <div>
               <Label>Description</Label>
               <Input
-                value={item.description || ''}
-                onChange={e => handleItemChange(category.id, item.id, 'description', e.target.value)}
+                value={localDescription}
+                onChange={e => setLocalDescription(e.target.value)}
               />
             </div>
             <div>
               <Label>Prix</Label>
               <Input
                 type="number"
-                value={item.price?.toFixed(2) ?? ''}
+                value={localPrice}
                 min={0}
                 step={0.01}
-                onChange={e => handleItemChange(category.id, item.id, 'price', parseFloat(e.target.value))}
+                onChange={e => setLocalPrice(e.target.value)}
               />
             </div>
             <div>
               <Label className="flex items-center gap-2">
                 <Switch
-                  checked={!!item.is_available}
-                  onCheckedChange={val => handleItemChange(category.id, item.id, 'is_available', val)}
+                  checked={localAvailable}
+                  onCheckedChange={val => setLocalAvailable(val)}
                 />
                 Disponible
               </Label>

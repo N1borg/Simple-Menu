@@ -275,6 +275,22 @@ export default function CategorySection({
     )
   }
 
+  // Wrap saveItem to update local categories state after saving
+  const handleSaveItem = async (updatedItem: MenuItem) => {
+    await saveItem(updatedItem)
+    // Update the item in local categories state using categories prop
+    setCategories(categories.map((cat: Category) =>
+      cat.id === category.id
+        ? {
+            ...cat,
+            menu_items: cat.menu_items.map((item: MenuItem) =>
+              item.id === updatedItem.id ? { ...item, ...updatedItem } : item
+            )
+          }
+        : cat
+    ))
+  }
+
   return (
     <section className="max-w-4xl mx-auto px-4 py-6">
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -304,7 +320,7 @@ export default function CategorySection({
               editingItem={editingItem}
               setEditingItem={setEditingItem}
               handleItemChange={handleItemChange}
-              saveItem={saveItem}
+              saveItem={handleSaveItem}
               savingItemId={savingItemId}
               loadingAction={loadingAction}
               setConfirmDelete={setConfirmDelete}
@@ -324,7 +340,7 @@ export default function CategorySection({
                   editingItem={editingItem}
                   setEditingItem={setEditingItem}
                   handleItemChange={handleItemChange}
-                  saveItem={saveItem}
+                  saveItem={handleSaveItem}
                   savingItemId={savingItemId}
                   loadingAction={loadingAction}
                   setConfirmDelete={setConfirmDelete}
