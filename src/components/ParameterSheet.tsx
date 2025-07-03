@@ -40,7 +40,11 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
         <SheetHeader>
             <SheetTitle>Paramètres administrateur</SheetTitle>
         </SheetHeader>
-        <div className="grid flex-1 auto-rows-min gap-6 px-1">
+        <div className="grid flex-1 auto-rows-min gap-6 px-1 mt-6">
+          <div className="px-4">
+            {/* QR Code Button and Dialog */}
+            <QrCodeDialog url={publicMenuUrl} />
+          </div>
           <div>
             <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Changer de mot de passe</Label>
             <AdminPasswordForm
@@ -49,41 +53,30 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
               isDemo={isDemo}
             />
           </div>
-          <div className="px-4">
-            {/* QR Code Button and Dialog */}
-            <QrCodeDialog url={publicMenuUrl} />
-          </div>
-          <div className="px-4">
-            <Button
-              type="button"
-              variant="destructive"
-              className="w-full"
-              disabled={loggingOut}
-              onClick={async () => {
-                setLoggingOut(true);
-                // Call the API first to clear the cookie server-side
-                await fetch("/api/admin/logout", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ slug: establishment.slug })
-                });
-                // Then clear the cookie client-side for instant effect
-                document.cookie = "admin-session=; path=/; max-age=0;";
-                window.location.href = `/e/${establishment.slug}/admin`;
-              }}
-            >
-              {loggingOut ? (
-                <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Déconnexion...</span>
-              ) : (
-                "Se déconnecter"
-              )}
-            </Button>
-          </div>
         </div>
         <SheetFooter className="mt-4">
-          <SheetClose asChild>
-            <Button variant="outline" type="button">Fermer</Button>
-          </SheetClose>
+          <Button
+            type="button"
+            variant="destructive"
+            className="w-full"
+            disabled={loggingOut}
+            onClick={async () => {
+              setLoggingOut(true);
+              await fetch("/api/admin/logout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ slug: establishment.slug })
+              });
+              document.cookie = "admin-session=; path=/; max-age=0;";
+              window.location.href = `/e/${establishment.slug}/admin`;
+            }}
+          >
+            {loggingOut ? (
+              <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Déconnexion...</span>
+            ) : (
+              "Se déconnecter"
+            )}
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

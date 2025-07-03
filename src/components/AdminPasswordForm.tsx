@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Eye, EyeOff } from 'lucide-react'
 
 interface AdminPasswordFormProps {
   establishmentId: string
@@ -33,6 +34,9 @@ const FormSchema = z.object({
 
 export default function AdminPasswordForm({ establishmentId, slug, isDemo }: AdminPasswordFormProps) {
   const [loading, setLoading] = useState(false)
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -79,7 +83,18 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
               <FormItem>
                 <FormLabel>Mot de passe actuel</FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="current-password" placeholder="Mot de passe actuel" {...field} />
+                  <div className="relative">
+                    <Input type={showCurrent ? "text" : "password"} autoComplete="current-password" placeholder="Mot de passe actuel" {...field} autoFocus={false} />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                      onClick={() => setShowCurrent(v => !v)}
+                      aria-label={showCurrent ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    >
+                      {showCurrent ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -92,7 +107,18 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
               <FormItem>
                 <FormLabel>Nouveau mot de passe</FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="new-password" placeholder="Nouveau mot de passe" {...field} />
+                  <div className="relative">
+                    <Input type={showNew ? "text" : "password"} autoComplete="new-password" placeholder="Nouveau mot de passe" {...field} />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                      onClick={() => setShowNew(v => !v)}
+                      aria-label={showNew ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    >
+                      {showNew ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -105,7 +131,18 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
               <FormItem>
                 <FormLabel>Confirmer le nouveau mot de passe</FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="new-password" placeholder="Confirmer le mot de passe" {...field} />
+                  <div className="relative">
+                    <Input type={showConfirm ? "text" : "password"} autoComplete="new-password" placeholder="Confirmer le mot de passe" {...field} />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                      onClick={() => setShowConfirm(v => !v)}
+                      aria-label={showConfirm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    >
+                      {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

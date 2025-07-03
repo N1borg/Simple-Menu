@@ -10,12 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
+import { QrCode } from "lucide-react";
 
 interface QrCodeDialogProps {
   url: string;
+  triggerButton?: React.ReactNode;
 }
 
-const QrCodeDialog = ({ url }: QrCodeDialogProps) => {
+const QrCodeDialog = ({ url, triggerButton }: QrCodeDialogProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const handleDownload = () => {
@@ -51,7 +53,11 @@ const QrCodeDialog = ({ url }: QrCodeDialogProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">Générer un QR Code</Button>
+        {triggerButton ? triggerButton : (
+          <Button variant="outline" className="w-full flex items-center gap-2">
+            <QrCode className="w-4 h-4" /> Générer un QR Code
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-xs w-full flex flex-col items-center">
         <DialogHeader>
@@ -67,10 +73,10 @@ const QrCodeDialog = ({ url }: QrCodeDialogProps) => {
         <DialogFooter>
           <Button
             type="button"
-            className="w-full mt-2"
+            className="w-full mt-2 flex items-center gap-2"
             onClick={handleDownload}
           >
-            Télécharger le QR Code
+            <QrCode className="w-4 h-4" /> Télécharger le QR Code
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Eye, EyeOff } from "lucide-react"
 
 interface AdminLoginFormProps {
   slug: string
@@ -30,6 +31,7 @@ const FormSchema = z.object({
 export default function AdminLoginForm({ slug, color, error }: AdminLoginFormProps) {
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState<string | undefined>(error)
+  const [showPassword, setShowPassword] = useState(false)
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -66,13 +68,24 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
               <FormItem>
                 <FormLabel>Mot de passe administrateur</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    autoComplete="current-password"
-                    placeholder="Mot de passe"
-                    {...field}
-                    disabled={loading}
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      placeholder="Mot de passe"
+                      {...field}
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                      onClick={() => setShowPassword(v => !v)}
+                      aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -90,7 +103,7 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
             {loading ? (
               <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Connexion...</span>
             ) : (
-              'Connexion'
+              'Se connecter'
             )}
           </Button>
         </form>
