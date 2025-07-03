@@ -4,7 +4,6 @@ import { useState } from 'react'
 import type { EstablishmentWithCategories } from '@/types/supabase'
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog"
 import { Plus } from "lucide-react"
 import ImageUpload from "@/components/ImageUpload"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
@@ -51,24 +50,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     editingItem,
     setEditingItem
   } = useMenuItems(categories, setCategories, isDemo)
-
-  const [confirmDelete, setConfirmDelete] = useState<{
-    type: 'category' | 'item'
-    catId: string
-    itemId?: string
-  } | null>(null)
-
-  const handleConfirmDelete = () => {
-    if (!confirmDelete) return
-    
-    if (confirmDelete.type === 'item' && confirmDelete.itemId) {
-      deleteMenuItem(confirmDelete.catId, confirmDelete.itemId)
-    } else if (confirmDelete.type === 'category') {
-      deleteCategory(confirmDelete.catId)
-    }
-
-    setConfirmDelete(null)
-  }
 
   const handleLogoUpload = async (url: string) => {
     if (isDemo) {
@@ -254,6 +235,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   categories={categories}
                   setCategories={setCategories}
                   saveCategory={saveCategory}
+                  deleteCategory={deleteCategory}
                   addMenuItem={addMenuItem}
                   deleteMenuItem={deleteMenuItem}
                   saveItem={saveItem}
@@ -261,7 +243,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   savingItemId={savingItemId}
                   editingItem={editingItem}
                   setEditingItem={setEditingItem}
-                  setConfirmDelete={setConfirmDelete}
                   establishmentColor={establishment.primary_color ?? undefined}
                 />
               </SortableCategory>
@@ -287,16 +268,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           </TooltipContent>
         </Tooltip>
       </div>
-
-      <ConfirmDeleteDialog
-        open={!!confirmDelete}
-        title={confirmDelete?.type === 'category' ? 'Supprimer la catégorie' : 'Supprimer l\'élément'}
-        message={confirmDelete?.type === 'category'
-          ? 'Supprimer cette catégorie ? Cette action est irréversible.'
-          : 'Supprimer cet élément ? Cette action est irréversible.'}
-        onCancel={() => setConfirmDelete(null)}
-        onConfirm={handleConfirmDelete}
-      />
     </div>
   )
 }

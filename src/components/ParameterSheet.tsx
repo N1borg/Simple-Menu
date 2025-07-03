@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/sheet'
 import { Loader2Icon } from "lucide-react";
 import QrCodeDialog from "@/components/QrCodeDialog";
+import { LogOut, Trash2, Download, Settings } from "lucide-react";
 
 interface ParameterSheetProps {
   establishment: {
@@ -34,7 +35,9 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm">Paramètres</Button>
+        <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Settings className="w-4 h-4" /> Paramètres
+        </Button>
       </SheetTrigger>
       <SheetContent side="right" className="max-w-md w-full">
         <SheetHeader>
@@ -58,7 +61,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
           <Button
             type="button"
             variant="destructive"
-            className="w-full"
+            className="w-full flex items-center gap-2"
             disabled={loggingOut}
             onClick={async () => {
               setLoggingOut(true);
@@ -74,7 +77,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
             {loggingOut ? (
               <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Déconnexion...</span>
             ) : (
-              "Se déconnecter"
+              <><LogOut className="w-4 h-4" /> Se déconnecter</>
             )}
           </Button>
         </SheetFooter>

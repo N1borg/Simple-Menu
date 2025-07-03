@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode } from "lucide-react";
+import { QrCode, Download } from "lucide-react";
 
 interface QrCodeDialogProps {
   url: string;
@@ -76,7 +76,7 @@ const QrCodeDialog = ({ url, triggerButton }: QrCodeDialogProps) => {
             className="w-full mt-2 flex items-center gap-2"
             onClick={handleDownload}
           >
-            <QrCode className="w-4 h-4" /> Télécharger le QR Code
+            <Download className="w-4 h-4" /> Télécharger le QR Code
           </Button>
         </DialogFooter>
       </DialogContent>

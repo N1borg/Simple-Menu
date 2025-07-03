@@ -9,6 +9,7 @@ import MenuItemCard from '@/components/MenuItemCard'
 import type { Category, MenuItem } from '@/types/supabase_types'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useRef, useEffect, useState } from 'react'
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 
 const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
@@ -36,8 +37,8 @@ interface CategorySectionProps {
   savingItemId: string | null
   editingItem: string | null
   setEditingItem: (id: string | null) => void
-  setConfirmDelete: (data: { type: 'category' | 'item', catId: string, itemId?: string } | null) => void
   establishmentColor?: string
+  deleteCategory: (catId: string) => Promise<void>
 }
 
 export default function CategorySection({
@@ -59,8 +60,8 @@ export default function CategorySection({
   savingItemId,
   editingItem,
   setEditingItem,
-  setConfirmDelete,
   establishmentColor,
+  deleteCategory,
 }: CategorySectionProps) {
   
   const handleItemDragEnd = (oldIndex: number, newIndex: number) => {
@@ -212,7 +213,6 @@ export default function CategorySection({
                 onClick={async () => {
                   const newCategories = categories.map(c => c.id === category.id ? { ...c, display_style: style.value } : c)
                   setCategories(newCategories)
-                  // Save to DB immediately
                   await saveCategory({ ...category, display_style: style.value })
                 }}
               >
@@ -258,14 +258,14 @@ export default function CategorySection({
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              onClick={() => setConfirmDelete({ type: 'category', catId: category.id })} 
-              title="Supprimer la catégorie"
-            >
-              <Trash2 className="w-5 h-5 text-red-500" />
-            </Button>
+            <ConfirmDeleteDialog
+              onConfirm={async () => {
+                await deleteCategory(category.id)
+              }}
+              title="Supprimer la catégorie ?"
+              description="Cette action supprimera la catégorie et tous ses éléments. Voulez-vous continuer ?"
+              triggerButtonClassName="size-icon variant-ghost"
+            />
           </TooltipTrigger>
           <TooltipContent>
             <p>Supprimer la catégorie</p>
@@ -323,7 +323,7 @@ export default function CategorySection({
               saveItem={handleSaveItem}
               savingItemId={savingItemId}
               loadingAction={loadingAction}
-              setConfirmDelete={setConfirmDelete}
+              deleteMenuItem={deleteMenuItem}
               establishmentColor={establishmentColor}
             />
           ) : null
@@ -343,7 +343,7 @@ export default function CategorySection({
                   saveItem={handleSaveItem}
                   savingItemId={savingItemId}
                   loadingAction={loadingAction}
-                  setConfirmDelete={setConfirmDelete}
+                  deleteMenuItem={deleteMenuItem}
                   establishmentColor={establishmentColor}
                 />
               </SortableItem>

@@ -15,7 +15,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useEffect, useRef, useState } from 'react'
-import { Loader2Icon } from "lucide-react"
+import { Loader2Icon, Trash2 } from "lucide-react"
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -26,7 +27,7 @@ interface MenuItemCardProps {
   saveItem: (item: MenuItem) => Promise<void>
   savingItemId: string | null
   loadingAction: string | null
-  setConfirmDelete: (data: { type: 'category' | 'item', catId: string, itemId?: string } | null) => void
+  deleteMenuItem: (catId: string, itemId: string) => Promise<void>
   establishmentColor?: string
 }
 
@@ -39,7 +40,7 @@ export default function MenuItemCard({
   saveItem,
   savingItemId,
   loadingAction,
-  setConfirmDelete,
+  deleteMenuItem,
   establishmentColor
 }: MenuItemCardProps) {
   // Use the establishment color if provided, fallback to blue
@@ -271,17 +272,15 @@ export default function MenuItemCard({
             </div>
             <DialogFooter>
               <div className="flex w-full gap-2">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="mr-auto"
-                  onClick={() => {
+                <ConfirmDeleteDialog
+                  onConfirm={async () => {
+                    await deleteMenuItem(category.id, item.id)
                     setEditingItem(null)
-                    setConfirmDelete({ type: 'item', catId: category.id, itemId: item.id })
                   }}
-                >
-                  Supprimer
-                </Button>
+                  title="Supprimer l'élément ?"
+                  description="Cette action supprimera cet élément du menu. Voulez-vous continuer ?"
+                  triggerButtonClassName="mr-auto flex items-center justify-center"
+                />
                 <DialogClose asChild>
                   <Button type="button" variant="outline" onClick={() => setEditingItem(null)}>
                     Annuler

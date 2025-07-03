@@ -1,51 +1,69 @@
-import { AlertCircle } from 'lucide-react'
-import React from 'react'
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 interface ConfirmDeleteDialogProps {
-  open: boolean
-  title?: string
-  message?: string
-  onCancel: () => void
-  onConfirm: () => void
-  confirmLabel?: string
-  cancelLabel?: string
-  loading?: boolean
+  onConfirm: () => void;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  triggerButtonClassName?: string;
 }
 
-const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
-  open,
-  title = 'Confirmer la suppression',
-  message = 'Supprimer cet élément ? Cette action est irréversible.',
-  onCancel,
+const ConfirmDeleteDialog = ({
   onConfirm,
-  confirmLabel = 'Supprimer',
-  cancelLabel = 'Annuler',
-  loading = false,
-}) => {
-  if (!open) return null
-  return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50" onClick={e => { if (e.target === e.currentTarget) onCancel() }}>
-      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs mx-auto relative flex flex-col items-center">
-        <AlertCircle className="h-10 w-10 text-yellow-500 mb-2" />
-        <p className="text-base font-semibold text-gray-800 mb-1">{title}</p>
-        <p className="text-sm text-gray-600 mb-4 text-center">{message}</p>
-        <div className="flex gap-3 w-full">
-          <button
-            type="button"
-            className="flex-1 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
-            onClick={onCancel}
-            disabled={loading}
-          >{cancelLabel}</button>
-          <button
-            type="button"
-            className="flex-1 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
-            onClick={onConfirm}
-            disabled={loading}
-          >{confirmLabel}</button>
-        </div>
-      </div>
-    </div>
-  )
-}
+  title = "Supprimer ?",
+  description = "Cette action est irréversible. Voulez-vous vraiment continuer ?",
+  confirmLabel = "Supprimer",
+  cancelLabel = "Annuler",
+  triggerButtonClassName = "mr-auto flex items-center justify-center text-red-600 hover:text-red-800",
+}: ConfirmDeleteDialogProps) => {
+  const [open, setOpen] = React.useState(false);
 
-export default ConfirmDeleteDialog
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="destructive"
+          className={triggerButtonClassName}
+          aria-label="Supprimer"
+        >
+          <Trash2 className="w-5 h-5" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            {cancelLabel}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setOpen(false);
+              onConfirm();
+            }}
+          >
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default ConfirmDeleteDialog;

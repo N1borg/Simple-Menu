@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Upload, X, AlertCircle, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
 import Image from 'next/image'
-import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 import { toast } from "sonner"
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog'
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 
 interface ImageUploadProps {
   onImageUploaded: (url: string) => void
@@ -42,7 +42,6 @@ export default function ImageUpload({
   const [success, setSuccess] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const [showPopup, setShowPopup] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Add a local state for the displayed image
@@ -136,6 +135,7 @@ export default function ImageUpload({
       toast.success('Logo mis à jour !')
       setDisplayedImageUrl(data.url) // update local display immediately
       onImageUploaded(data.url)
+      setShowPopup(false) // Close the dialog after successful upload
       
       // Clear file input
       if (fileInputRef.current) {
@@ -228,14 +228,39 @@ export default function ImageUpload({
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setShowDeleteConfirm(true)}
-                    title="Supprimer le logo"
-                  >
-                    <Trash2 className="w-5 h-5 text-red-500" />
-                  </Button>
+                  <ConfirmDeleteDialog
+                    onConfirm={async () => {
+                      setShowPopup(false)
+                      if (isDemo) {
+                        setDisplayedImageUrl(undefined)
+                        if (onDeleteLogo) onDeleteLogo()
+                        toast.success('Logo supprimé !')
+                        return
+                      }
+                      try {
+                        const res = await fetch('/api/admin/update-logo', {
+                          method: 'DELETE',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ slug: slug, id: establishmentId }),
+                        })
+                        const data = await res.json()
+                        if (res.ok && data.success) {
+                          setDisplayedImageUrl(undefined)
+                          if (onDeleteLogo) onDeleteLogo()
+                          toast.success('Logo supprimé !')
+                        } else {
+                          setError({ message: data.error || "Erreur lors de la suppression du logo", type: 'server' })
+                          toast.error(data.error || "Erreur lors de la suppression du logo")
+                        }
+                      } catch (err) {
+                        setError({ message: "Erreur réseau lors de la suppression du logo", type: 'network' })
+                        toast.error("Erreur réseau lors de la suppression du logo")
+                      }
+                    }}
+                    title="Confirmer la suppression"
+                    description="Supprimer le logo ? Cette action est irréversible."
+                    triggerButtonClassName="opacity-70 hover:opacity-100"
+                  />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Supprimer le logo</p>
@@ -253,146 +278,85 @@ export default function ImageUpload({
             <DialogDescription>Optimisez et mettez à jour votre logo d'établissement.</DialogDescription>
           </DialogHeader>
           {/* Upload Area or Demo Message */}
-          {isDemo ? (
-            <div className="flex items-center justify-center border-2 border-dashed rounded-lg p-6 text-center min-h-[180px] text-blue-700 bg-blue-50 w-full" style={{height: '180px'}}>
+            {isDemo ? (
+            <div
+              className="flex items-center justify-center border-2 border-dashed rounded-lg p-6 text-center min-h-[180px] bg-blue-50 w-full"
+              style={{ height: '180px', color: color }}
+            >
               Vous changez votre logo ici
             </div>
-          ) : (
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              className={
-                `relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragActive ? '' : ''} ${isUploading ? 'opacity-50 pointer-events-none' : ''}`
-              }
-              style={{
-                borderColor: dragActive ? color : '#d1d5db',
-                backgroundColor: dragActive ? color + '20' : undefined,
-              }}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                onChange={handleInputChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                disabled={isUploading}
-              />
-              <div className="space-y-3">
-                <Upload className={`mx-auto h-12 w-12`} style={{ color: dragActive ? color : '#9ca3af' }} />
-                {isUploading ? (
-                  <div className="space-y-2">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderColor: color }}></div>
-                    <p className="text-sm text-gray-600">Optimisation et upload...</p>
-                    <p className="text-xs text-gray-500">L'image est automatiquement optimisée</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium hover:underline" style={{ color }}>{'Cliquez pour sélectionner'}</span>
-                      {' '}ou glissez-déposez votre image
-                    </p>
-                    <p className="text-xs text-gray-500">Tous formats acceptés • Optimisation automatique</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {/* Error Message */}
-          {!isDemo && error && (
-            <div className={`p-3 rounded-lg border flex items-start space-x-3 mt-4 ${getErrorColor(error.type)}`}>
-              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">Erreur d'upload</p>
-                <p className="text-xs mt-1">{error.message}</p>
-              </div>
-              <button
-                onClick={clearMessages}
-                className="flex-shrink-0 opacity-70 hover:opacity-100"
+            ) : (
+            <div>
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                className={
+                  `relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragActive ? '' : ''} ${isUploading ? 'opacity-50 pointer-events-none' : ''}`
+                }
+                style={{
+                  borderColor: dragActive ? color : '#d1d5db',
+                  backgroundColor: dragActive ? color + '20' : undefined,
+                }}
               >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-          {/* Success Message */}
-          {!isDemo && success && (
-            <div className="p-3 rounded-lg border border-green-200 bg-green-50 text-green-700 flex items-start space-x-3 mt-4">
-              <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">Succès</p>
-                <p className="text-xs mt-1">{success}</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                  onChange={handleInputChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={isUploading}
+                />
+                <div className="space-y-3">
+                  <Upload className={`mx-auto h-12 w-12`} style={{ color: dragActive ? color : '#9ca3af' }} />
+                  {isUploading ? (
+                    <div className="space-y-2">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderColor: color }}></div>
+                      <p className="text-sm text-gray-600">Optimisation et upload...</p>
+                      <p className="text-xs text-gray-500">L'image est automatiquement optimisée</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium hover:underline" style={{ color }}>{'Cliquez pour sélectionner'}</span>
+                        {' '}ou glissez-déposez votre image
+                      </p>
+                      <p className="text-xs text-gray-500">Tous formats acceptés • Optimisation automatique</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <button
-                onClick={clearMessages}
-                className="flex-shrink-0 opacity-70 hover:opacity-100"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-          {/* Upload Guidelines */}
-          {!isDemo && (
-            <div className="text-xs text-gray-500 space-y-1 mt-4">
-              <p>• Formats acceptés : JPEG, PNG, WebP, GIF</p>
-              <p>• Taille maximale : 50MB avant optimisation</p>
+
+              {/* Upload Guidelines */}
+              <div className="text-xs text-gray-500 space-y-1 mt-4">
+                <p>• Formats acceptés : JPEG, PNG, WebP, GIF</p>
+                <p>• Taille maximale : 50MB avant optimisation</p>
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
       {/* Confirmation Pop-up for Delete */}
-      <ConfirmDeleteDialog
-        open={showDeleteConfirm}
-        title="Confirmer la suppression"
-        message="Supprimer le logo ? Cette action est irréversible."
-        onCancel={() => setShowDeleteConfirm(false)}
-        onConfirm={async () => {
-          setShowDeleteConfirm(false)
-          setShowPopup(false)
-          if (isDemo) {
-            setDisplayedImageUrl(undefined)
-            if (onDeleteLogo) onDeleteLogo()
-            toast.success('Logo supprimé !')
-            return
-          }
-          // API call to remove logo in DB (now using DELETE method)
-          try {
-            const res = await fetch('/api/admin/update-logo', {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ slug: slug, id: establishmentId }),
-            })
-            const data = await res.json()
-            if (res.ok && data.success) {
-              setDisplayedImageUrl(undefined)
-              if (onDeleteLogo) onDeleteLogo()
-              toast.success('Logo supprimé !')
-            } else {
-              setError({ message: data.error || "Erreur lors de la suppression du logo", type: 'server' })
-              toast.error(data.error || "Erreur lors de la suppression du logo")
-            }
-          } catch (err) {
-            setError({ message: "Erreur réseau lors de la suppression du logo", type: 'network' })
-            toast.error("Erreur réseau lors de la suppression du logo")
-          }
-        }}
-      />
       {/* Si pas de logo, bouton direct */}
       {!displayedImageUrl && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700"
-              onClick={() => setShowPopup(true)}
-            >
-              <Upload className="h-5 w-5" />
-              Ajouter un logo
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Ajouter un logo</p>
-          </TooltipContent>
-        </Tooltip>
+        <div className="relative flex justify-center mb-4">
+          <div className="relative">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className="w-32 h-32 rounded-full object-contain border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 flex flex-col items-center justify-center whitespace-normal break-words text-center leading-tight space-y-0"
+                  onClick={() => setShowPopup(true)}
+                >
+                  <Upload className="h-5 w-5 mb-0.5" />
+                  <span className="block">Ajouter un logo</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Ajouter un logo</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
       )}
     </div>
   )
