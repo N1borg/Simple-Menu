@@ -258,14 +258,16 @@ export default function CategorySection({
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <ConfirmDeleteDialog
-              onConfirm={async () => {
-                await deleteCategory(category.id)
-              }}
-              title="Supprimer la catégorie ?"
-              description="Cette action supprimera la catégorie et tous ses éléments. Voulez-vous continuer ?"
-              triggerButtonClassName="size-icon variant-ghost"
-            />
+            <span>
+              <ConfirmDeleteDialog
+                onConfirm={async () => {
+                  await deleteCategory(category.id)
+                }}
+                title="Supprimer la catégorie ?"
+                description="Cette action supprimera la catégorie et tous ses éléments. Voulez-vous continuer ?"
+                triggerButtonClassName="size-icon variant-ghost"
+              />
+            </span>
           </TooltipTrigger>
           <TooltipContent>
             <p>Supprimer la catégorie</p>

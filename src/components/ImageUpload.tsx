@@ -228,39 +228,41 @@ export default function ImageUpload({
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <ConfirmDeleteDialog
-                    onConfirm={async () => {
-                      setShowPopup(false)
-                      if (isDemo) {
-                        setDisplayedImageUrl(undefined)
-                        if (onDeleteLogo) onDeleteLogo()
-                        toast.success('Logo supprimé !')
-                        return
-                      }
-                      try {
-                        const res = await fetch('/api/admin/update-logo', {
-                          method: 'DELETE',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ slug: slug, id: establishmentId }),
-                        })
-                        const data = await res.json()
-                        if (res.ok && data.success) {
+                  <span>
+                    <ConfirmDeleteDialog
+                      onConfirm={async () => {
+                        setShowPopup(false)
+                        if (isDemo) {
                           setDisplayedImageUrl(undefined)
                           if (onDeleteLogo) onDeleteLogo()
                           toast.success('Logo supprimé !')
-                        } else {
-                          setError({ message: data.error || "Erreur lors de la suppression du logo", type: 'server' })
-                          toast.error(data.error || "Erreur lors de la suppression du logo")
+                          return
                         }
-                      } catch (err) {
-                        setError({ message: "Erreur réseau lors de la suppression du logo", type: 'network' })
-                        toast.error("Erreur réseau lors de la suppression du logo")
-                      }
-                    }}
-                    title="Confirmer la suppression"
-                    description="Supprimer le logo ? Cette action est irréversible."
-                    triggerButtonClassName="opacity-70 hover:opacity-100"
-                  />
+                        try {
+                          const res = await fetch('/api/admin/update-logo', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ slug: slug, id: establishmentId }),
+                          })
+                          const data = await res.json()
+                          if (res.ok && data.success) {
+                            setDisplayedImageUrl(undefined)
+                            if (onDeleteLogo) onDeleteLogo()
+                            toast.success('Logo supprimé !')
+                          } else {
+                            setError({ message: data.error || "Erreur lors de la suppression du logo", type: 'server' })
+                            toast.error(data.error || "Erreur lors de la suppression du logo")
+                          }
+                        } catch (err) {
+                          setError({ message: "Erreur réseau lors de la suppression du logo", type: 'network' })
+                          toast.error("Erreur réseau lors de la suppression du logo")
+                        }
+                      }}
+                      title="Confirmer la suppression"
+                      description="Supprimer le logo ? Cette action est irréversible."
+                      triggerButtonClassName="opacity-70 hover:opacity-100"
+                    />
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Supprimer le logo</p>

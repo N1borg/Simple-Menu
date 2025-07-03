@@ -11,6 +11,10 @@ export function useMenuItems(
 
   // Add a new menu item (API call if not demo)
   const addMenuItem = async (catId: string) => {
+    const getTempId = () =>
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? `temp-${crypto.randomUUID()}`
+        : `temp-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
     if (isDemo) {
       const newCategories = categories.map((cat: Category) =>
         cat.id === catId
@@ -38,7 +42,7 @@ export function useMenuItems(
       setCategories(newCategories)
       return
     }
-    const tempId = `temp-${Date.now()}`
+    const tempId = getTempId();
     const tempItem = {
       id: tempId,
       name: 'Nouvel élément',

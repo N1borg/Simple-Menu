@@ -17,6 +17,8 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { Loader2Icon, Trash2 } from "lucide-react"
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { toast } from "sonner"
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -93,7 +95,12 @@ export default function MenuItemCard({
       price: parsedPrice,
       is_available: localAvailable,
     }
-    await saveItem(updatedItem)
+    try {
+      await saveItem(updatedItem)
+      toast.success("Élément sauvegardé !")
+    } catch (err) {
+      toast.error("Erreur lors de la sauvegarde de l'élément")
+    }
     // After save, keep instantAvailable in sync with DB value
     setInstantAvailable(!!localAvailable)
   }
@@ -271,28 +278,46 @@ export default function MenuItemCard({
               </Label>
             </div>
             <DialogFooter>
-              <div className="flex w-full gap-2">
-                <ConfirmDeleteDialog
-                  onConfirm={async () => {
-                    await deleteMenuItem(category.id, item.id)
-                    setEditingItem(null)
-                  }}
-                  title="Supprimer l'élément ?"
-                  description="Cette action supprimera cet élément du menu. Voulez-vous continuer ?"
-                  triggerButtonClassName="mr-auto flex items-center justify-center"
-                />
-                <DialogClose asChild>
-                  <Button type="button" variant="outline" onClick={() => setEditingItem(null)}>
-                    Annuler
+              <div className="flex w-full justify-between gap-2">
+                <div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <ConfirmDeleteDialog
+                          onConfirm={async () => {
+                            try {
+                              await deleteMenuItem(category.id, item.id)
+                              toast.success("Élément supprimé !")
+                            } catch (err) {
+                              toast.error("Erreur lors de la suppression de l'élément")
+                            }
+                            setEditingItem(null)
+                          }}
+                          title="Supprimer l'élément ?"
+                          description="Cette action supprimera cet élément du menu. Voulez-vous continuer ?"
+                          triggerButtonClassName="mr-auto flex items-center justify-center"
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Supprimer l'élément</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex gap-2">
+                  <DialogClose asChild>
+                    <Button type="button" variant="outline" onClick={() => setEditingItem(null)}>
+                      Annuler
+                    </Button>
+                  </DialogClose>
+                  <Button type="submit" disabled={savingItemId === item.id || loadingAction !== null}>
+                    {savingItemId === item.id ? (
+                      <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Enregistrement...</span>
+                    ) : (
+                      'Enregistrer'
+                    )}
                   </Button>
-                </DialogClose>
-                <Button type="submit" disabled={savingItemId === item.id || loadingAction !== null}>
-                  {savingItemId === item.id ? (
-                    <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Enregistrement...</span>
-                  ) : (
-                    'Enregistrer'
-                  )}
-                </Button>
+                </div>
               </div>
             </DialogFooter>
           </form>

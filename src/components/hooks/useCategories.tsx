@@ -16,6 +16,10 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
   const [originalCategory, setOriginalCategory] = useState<any | null>(null)
 
   const addCategory = async () => {
+    const getTempId = () =>
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? `temp-${crypto.randomUUID()}`
+        : `temp-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
     if (isDemo) {
       const newCat = {
         id: `new-${Date.now()}`,
@@ -33,7 +37,7 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
     }
 
     setLoadingAction('addCategory')
-    const tempId = `temp-${Date.now()}`
+    const tempId = getTempId();
     const tempCat = {
       id: tempId,
       name: "Nouvelle catégorie",
