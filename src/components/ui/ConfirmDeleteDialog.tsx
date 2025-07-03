@@ -26,7 +26,7 @@ const ConfirmDeleteDialog = ({
   description = "Cette action est irréversible. Voulez-vous vraiment continuer ?",
   confirmLabel = "Supprimer",
   cancelLabel = "Annuler",
-  triggerButtonClassName = "mr-auto flex items-center justify-center text-red-600 hover:text-red-800",
+  triggerButtonClassName = "mr-auto flex items-center justify-center",
 }: ConfirmDeleteDialogProps) => {
   const [open, setOpen] = React.useState(false);
 

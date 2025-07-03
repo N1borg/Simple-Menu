@@ -75,9 +75,15 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
             }}
           >
             {loggingOut ? (
-              <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Déconnexion...</span>
+              <>
+                <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+                Déconnexion...
+              </>
             ) : (
-              <><LogOut className="w-4 h-4" /> Se déconnecter</>
+              <>
+                <LogOut className="w-4 h-4 mr-2" />
+                Se déconnecter
+              </>
             )}
           </Button>
         </SheetFooter>

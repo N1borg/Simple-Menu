@@ -258,9 +258,8 @@ export default function ImageUpload({
                           toast.error("Erreur réseau lors de la suppression du logo")
                         }
                       }}
-                      title="Confirmer la suppression"
-                      description="Supprimer le logo ? Cette action est irréversible."
-                      triggerButtonClassName="opacity-70 hover:opacity-100"
+                      title="Confirmer le logo"
+                      description="Cette action supprimera le logo du menu. Voulez-vous continuer ?"
                     />
                   </span>
                 </TooltipTrigger>

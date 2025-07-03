@@ -312,7 +312,10 @@ export default function MenuItemCard({
                   </DialogClose>
                   <Button type="submit" disabled={savingItemId === item.id || loadingAction !== null}>
                     {savingItemId === item.id ? (
-                      <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Enregistrement...</span>
+                      <>
+                        <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+                        Enregistrement...
+                      </>
                     ) : (
                       'Enregistrer'
                     )}

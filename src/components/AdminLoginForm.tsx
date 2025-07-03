@@ -75,6 +75,7 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
                       placeholder="Mot de passe"
                       {...field}
                       disabled={loading}
+                      autoFocus
                     />
                     <button
                       type="button"
@@ -101,7 +102,10 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
             style={color ? { backgroundColor: color, borderColor: color, color: '#fff' } : {}}
           >
             {loading ? (
-              <span className="flex items-center gap-2"><Loader2Icon className="animate-spin" /> Connexion...</span>
+              <>
+                <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+                Connexion...
+              </>
             ) : (
               'Se connecter'
             )}
