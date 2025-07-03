@@ -1,4 +1,5 @@
 'use client'
+
 import { useState } from 'react'
 import Image from 'next/image'
 import type { MenuDisplayProps, Category, MenuItem } from '@/types/supabase_types'
@@ -35,9 +36,8 @@ function renderMenuItem(item: MenuItem, category: Category, establishmentColor?:
   const [open, setOpen] = useState(false)
   const ringColor = establishmentColor || '#3a4fff'
   return (
-    <>
+    <div key={item.id}>
       <div
-        key={item.id}
         className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group transition cursor-pointer"
         style={{
           boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
@@ -63,7 +63,7 @@ function renderMenuItem(item: MenuItem, category: Category, establishmentColor?:
         <div className="text-right font-bold mt-2">{item.price.toFixed(2)}€</div>
       </div>
       <MenuItemDialog item={item} open={open} onOpenChange={setOpen} />
-    </>
+    </div>
   )
 }
 

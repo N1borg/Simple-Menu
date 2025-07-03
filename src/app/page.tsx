@@ -257,7 +257,7 @@ export default function HomePage() {
         </p>
         <div className="bg-gradient-to-r from-green-100 to-blue-100 p-6 rounded-xl mb-6">
           <p className="text-green-800 font-semibold mb-2">🎯 OFFRE DE LANCEMENT LIMITÉE</p>
-          <p className="text-sm text-gray-700">1 mois gratuit + 50% de réduction + QR codes imprimés offerts</p>
+          <p className="text-sm text-gray-700">1 mois gratuit + 50% de réduction</p>
         </div>
         <div className="flex flex-col gap-4">
           <a 
