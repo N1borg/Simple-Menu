@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import type { Category, MenuItem } from '@/types/supabase_types'
 
 export function useMenuItems(
@@ -42,27 +43,37 @@ export function useMenuItems(
       setCategories(newCategories)
       return
     }
-    const tempId = getTempId();
-    const tempItem = {
-      id: tempId,
-      name: 'Nouvel élément',
-      description: '',
-      price: 0,
-      is_available: true,
-      display_order: categories.find((cat: Category) => cat.id === catId)?.menu_items.length ?? 0,
-      category_id: catId,
-      created_at: new Date().toISOString(),
-      display_style: null,
-      image_url: null,
-      order: null,
+    // Non-demo: call API to create item immediately
+    const res = await fetch('/api/admin/menu-item/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Nouvel élément',
+        description: '',
+        price: 0,
+        is_available: true,
+        display_order: categories.find((cat: Category) => cat.id === catId)?.menu_items.length ?? 0,
+        category_id: catId,
+        created_at: new Date().toISOString(),
+        display_style: null,
+        image_url: null,
+        order: null,
+      }),
+    })
+    const data = await res.json()
+    // Ensure toast is only called once per operation
+    if (!res.ok || !data || !data.item) {
+      toast.error("Erreur lors de la création de l'élément")
+      return
     }
     const newCategories = categories.map((cat: Category) =>
       cat.id === catId
-        ? { ...cat, menu_items: [...cat.menu_items, tempItem] }
+        ? { ...cat, menu_items: [...cat.menu_items, data.item] }
         : cat
     )
     setCategories(newCategories)
-    setEditingItem(tempId)
+    setEditingItem(data.item.id)
+    toast.success("Élément créé !")
   }
 
   // Delete a menu item (API call if not demo)
@@ -96,17 +107,24 @@ export function useMenuItems(
       body: JSON.stringify({ id: itemId }),
     })
     const data = await res.json()
-    if (!(res.ok && data.success) && removedItem) {
-      const revertCategories = categories.map((cat: Category) =>
-        cat.id === catId
-          ? {
-              ...cat,
-              menu_items: [...cat.menu_items, removedItem],
-            }
-          : cat
-      )
-      setCategories(revertCategories)
+    // Ensure toast is only called once per operation
+    if (!res.ok || !data.success) {
+      toast.error("Erreur lors de la suppression de l'élément")
+      // Revert the optimistic update if the API call failed
+      if (removedItem) {
+        const revertCategories = categories.map((cat: Category) =>
+          cat.id === catId
+            ? {
+                ...cat,
+                menu_items: [...cat.menu_items, removedItem],
+              }
+            : cat
+        )
+        setCategories(revertCategories)
+      }
+      return
     }
+    toast.success("Élément supprimé !")
   }
 
   // Save or create a menu item
@@ -129,6 +147,7 @@ export function useMenuItems(
       const data = await res.json()
       setSavingItemId(null)
       setEditingItem(null)
+      // Ensure toast is only called once per operation
       if (res.ok && data && data.item) {
         const newCategories = categories.map((cat: Category) =>
           cat.id === item.category_id
@@ -141,6 +160,9 @@ export function useMenuItems(
             : cat
         )
         setCategories(newCategories)
+        toast.success("Élément créé !")
+      } else {
+        toast.error("Erreur lors de la création de l'élément")
       }
       return
     }
@@ -164,6 +186,13 @@ export function useMenuItems(
       body: JSON.stringify(item),
       headers: { 'Content-Type': 'application/json' },
     })
+    const data = await res.json()
+    // Ensure toast is only called once per operation
+    if (!res.ok) {
+      toast.error("Erreur lors de la sauvegarde de l'élément")
+      return
+    }
+    toast.success("Élément sauvegardé !")
     setSavingItemId(null)
   }
 

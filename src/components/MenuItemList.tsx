@@ -137,7 +137,6 @@ export default function MenuItemList({
             onSubmit={async (updatedItem) => {
               try {
                 await saveItem(updatedItem)
-                toast.success("Élément sauvegardé !")
               } catch (err) {
                 toast.error("Erreur lors de la sauvegarde de l'élément")
               }
@@ -151,7 +150,6 @@ export default function MenuItemList({
               }
               try {
                 await deleteMenuItem(category.id, item.id)
-                toast.success("Élément supprimé !")
               } catch (err) {
                 toast.error("Erreur lors de la suppression de l'élément")
               }

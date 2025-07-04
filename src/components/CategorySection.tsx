@@ -32,7 +32,7 @@ interface CategorySectionProps {
   savingCategoryId: string | null
   loadingAction: string | null
   categories: any[]
-  setCategories: (cats: any[]) => void
+  setCategories: React.Dispatch<React.SetStateAction<Category[]>>
   saveCategory: (cat: any) => Promise<void>
   establishmentColor?: string
   deleteCategory: (catId: string) => Promise<void>
@@ -72,6 +72,7 @@ export default function CategorySection({
       return
     }
     await addMenuItem(catId)
+    // editingItem will be set by the hook after API returns
   }
 
   // Block delete item in demo mode
