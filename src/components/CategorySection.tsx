@@ -6,6 +6,7 @@ import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableItem } from '@/components/SortableItem'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
 import MenuItemCard from '@/components/MenuItemCard'
+import MenuItemList from '@/components/MenuItemList'
 import type { Category, MenuItem } from '@/types/supabase_types'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useRef, useEffect, useState } from 'react'
@@ -316,7 +317,24 @@ export default function CategorySection({
         onDragEnd={handleItemDragEnd}
         renderOverlay={activeId => {
           const item: MenuItem | undefined = category.menu_items.find((i: MenuItem) => i.id === activeId)
-          return item ? (
+          if (!item) return null
+          if (category.display_style === 'list') {
+            return (
+              <MenuItemList
+                item={item}
+                category={category}
+                editingItem={editingItem}
+                setEditingItem={setEditingItem}
+                handleItemChange={handleItemChange}
+                saveItem={handleSaveItem}
+                savingItemId={savingItemId}
+                loadingAction={loadingAction}
+                deleteMenuItem={deleteMenuItem}
+                establishmentColor={establishmentColor}
+              />
+            )
+          }
+          return (
             <MenuItemCard
               item={item}
               category={category}
@@ -329,26 +347,41 @@ export default function CategorySection({
               deleteMenuItem={deleteMenuItem}
               establishmentColor={establishmentColor}
             />
-          ) : null
+          )
         }}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className={category.display_style === 'list' ? '' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'}>
           {[...category.menu_items]
             .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
             .map((item) => (
               <SortableItem key={item.id} id={item.id}>
-                <MenuItemCard
-                  item={item}
-                  category={category}
-                  editingItem={editingItem}
-                  setEditingItem={setEditingItem}
-                  handleItemChange={handleItemChange}
-                  saveItem={handleSaveItem}
-                  savingItemId={savingItemId}
-                  loadingAction={loadingAction}
-                  deleteMenuItem={deleteMenuItem}
-                  establishmentColor={establishmentColor}
-                />
+                {category.display_style === 'list' ? (
+                  <MenuItemList
+                    item={item}
+                    category={category}
+                    editingItem={editingItem}
+                    setEditingItem={setEditingItem}
+                    handleItemChange={handleItemChange}
+                    saveItem={handleSaveItem}
+                    savingItemId={savingItemId}
+                    loadingAction={loadingAction}
+                    deleteMenuItem={deleteMenuItem}
+                    establishmentColor={establishmentColor}
+                  />
+                ) : (
+                  <MenuItemCard
+                    item={item}
+                    category={category}
+                    editingItem={editingItem}
+                    setEditingItem={setEditingItem}
+                    handleItemChange={handleItemChange}
+                    saveItem={handleSaveItem}
+                    savingItemId={savingItemId}
+                    loadingAction={loadingAction}
+                    deleteMenuItem={deleteMenuItem}
+                    establishmentColor={establishmentColor}
+                  />
+                )}
               </SortableItem>
             ))}
         </div>

@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { SortableHandle } from './SortableHandle'
 import type { Category, MenuItem } from '@/types/supabase_types'
 import {
   Dialog,
@@ -12,15 +11,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { useEffect, useRef, useState } from 'react'
-import { Loader2Icon, Trash2 } from "lucide-react"
+import { Loader2Icon } from "lucide-react"
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "sonner"
 
-interface MenuItemCardProps {
+interface MenuItemListProps {
   item: MenuItem
   category: Category
   editingItem: string | null
@@ -33,7 +31,7 @@ interface MenuItemCardProps {
   establishmentColor?: string
 }
 
-export default function MenuItemCard({
+export default function MenuItemList({
   item,
   category,
   editingItem,
@@ -44,7 +42,7 @@ export default function MenuItemCard({
   loadingAction,
   deleteMenuItem,
   establishmentColor
-}: MenuItemCardProps) {
+}: MenuItemListProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = establishmentColor || '#3a4fff'
 
@@ -53,12 +51,8 @@ export default function MenuItemCard({
   const [localDescription, setLocalDescription] = useState(item.description || '')
   const [localPrice, setLocalPrice] = useState(item.price?.toFixed(2) ?? '')
   const [localAvailable, setLocalAvailable] = useState(!!item.is_available)
-
-  // --- NEW: Track availability for instant UI update on card ---
-  // This state is synced with the dialog switch, so the card updates instantly
   const [instantAvailable, setInstantAvailable] = useState(!!item.is_available)
 
-  // Reset local state when dialog opens
   useEffect(() => {
     if (editingItem === item.id) {
       setLocalName(item.name)
@@ -69,14 +63,12 @@ export default function MenuItemCard({
     }
   }, [editingItem, item])
 
-  // When dialog closes without saving, reset instantAvailable to DB value
   useEffect(() => {
     if (editingItem !== item.id) {
       setInstantAvailable(!!item.is_available)
     }
   }, [editingItem, item.is_available, item.id])
 
-  // When the switch is toggled, update both local and instant state
   const handleAvailableChange = (val: boolean) => {
     setLocalAvailable(val)
     setInstantAvailable(val)
@@ -84,10 +76,8 @@ export default function MenuItemCard({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Parse price, allow comma or dot
     let parsedPrice = parseFloat(localPrice.replace(',', '.'))
     if (isNaN(parsedPrice)) parsedPrice = 0
-    // Prepare updated item
     const updatedItem = {
       ...item,
       name: localName,
@@ -101,46 +91,10 @@ export default function MenuItemCard({
     } catch (err) {
       toast.error("Erreur lors de la sauvegarde de l'élément")
     }
-    // After save, keep instantAvailable in sync with DB value
     setInstantAvailable(!!localAvailable)
   }
 
-  // Title fade logic (unchanged)
-  const titleSpanRef = useRef<HTMLSpanElement>(null)
-  useEffect(() => {
-    const el = titleSpanRef.current
-    if (!el) return
-    const fade = el.querySelector('.fade-title') as HTMLElement | null
-    if (!fade) return
-    const updateFade = () => {
-      if (el.scrollWidth > el.clientWidth) {
-        fade.style.display = 'block'
-      } else {
-        fade.style.display = 'none'
-      }
-    }
-    updateFade()
-    const resizeObserver = new window.ResizeObserver(updateFade)
-    resizeObserver.observe(el)
-    return () => resizeObserver.disconnect()
-  }, [item.name])
-
-  // Description fade logic: only show fade if more than one line
-  const descRef = useRef<HTMLParagraphElement>(null)
-  const [showDescFade, setShowDescFade] = useState(false)
-  useEffect(() => {
-    const el = descRef.current
-    if (!el) return
-    const checkOverflow = () => {
-      const lineHeight = parseFloat(getComputedStyle(el).lineHeight)
-      // Only show fade if more than one line
-      setShowDescFade(el.scrollHeight > lineHeight * 1.5 + 2)
-    }
-    checkOverflow()
-    const resizeObserver = new window.ResizeObserver(checkOverflow)
-    resizeObserver.observe(el)
-    return () => resizeObserver.disconnect()
-  }, [item.description])
+  // No fade logic for list view, just plain text
 
   return (
     <Dialog open={editingItem === item.id} onOpenChange={open => {
@@ -148,92 +102,26 @@ export default function MenuItemCard({
       if (open) setEditingItem(item.id)
     }}>
       <div className="relative group">
-        {/* Menu Item Content - clickable to open dialog */}
+        {/* Menu Item Content - improved list style */}
         <div
-          className={
-            `bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 transition cursor-pointer min-h-[7.5em] ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through border border-gray-200' : ''}`
-          }
-          style={{
-            boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
-            borderColor: 'transparent',
-            outline: 'none',
-            ...(editingItem === item.id ? { boxShadow: `0 0 0 2px ${ringColor}` } : {}),
-          }}
+          className={`flex items-center gap-4 p-4 rounded-lg shadow-sm border bg-white hover:bg-gray-50 transition cursor-pointer min-h-[5.1em] mb-3 ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through' : ''}`}
+          style={{ outline: 'none', ...(editingItem === item.id ? { boxShadow: `0 0 0 2px ${ringColor}` } : {}) }}
           onClick={() => setEditingItem(item.id)}
           tabIndex={0}
           role="button"
           aria-label={`Modifier l'élément ${item.name}`}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingItem(item.id) }}
-          onMouseEnter={e => {
-            e.currentTarget.style.boxShadow = `0 0 0 2px ${ringColor}`
-          }}
-          onMouseLeave={e => {
-            if (editingItem !== item.id) e.currentTarget.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)'
-          }}
         >
-          <div className="flex justify-between items-start">
-            <h3
-              className="text-lg font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative"
-              title={item.name}
-              style={{ textOverflow: 'clip' }}
-            >
-              <span ref={titleSpanRef} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
-                {item.name}
-                <span
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '4em',
-                    height: '100%',
-                    background: 'linear-gradient(to right, transparent, #fff 80%)',
-                    pointerEvents: 'none',
-                    display: 'none',
-                  }}
-                  className="fade-title"
-                />
-              </span>
-            </h3>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-base truncate" title={item.name}>{item.name}</span>
+            </div>
+            {item.description && (
+              <div className="text-sm text-gray-500 truncate mt-1" title={item.description}>{item.description}</div>
+            )}
           </div>
-          {/* Content area with flex-1 to push price down */}
-          <div className="flex-1 flex flex-col justify-between">
-            <div className="relative min-h-[2.5em] max-h-[2.5em]">
-              {item.description ? (
-                <p
-                  ref={descRef}
-                  className={`text-sm mt-1 overflow-hidden ${!instantAvailable ? 'italic' : 'text-gray-500'}`}
-                  style={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    position: 'relative',
-                  }}
-                >
-                  {item.description}
-                  {showDescFade && instantAvailable && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        right: 0,
-                        bottom: 0,
-                        width: '25%',
-                        height: '1.2em',
-                        background: 'linear-gradient(to right, transparent, #fff 70%)',
-                        pointerEvents: 'none',
-                        WebkitMaskImage: 'linear-gradient(to right, transparent, black 70%)',
-                        maskImage: 'linear-gradient(to right, transparent, black 70%)',
-                        display: 'block',
-                      }}
-                    />
-                  )}
-                </p>
-              ) : (
-                <div className="text-sm mt-1 text-transparent select-none min-h-[2.5em] max-h-[2.5em]"> </div>
-              )}
-            </div>
-            <div className="text-right font-bold mt-2">
-              {item.price?.toFixed(2)}€
-            </div>
+          <div className="flex flex-col items-end min-w-[70px]">
+            <span className="font-bold text-lg">{item.price?.toFixed(2)}€</span>
           </div>
         </div>
 
@@ -269,7 +157,6 @@ export default function MenuItemCard({
                 value={localPrice}
                 placeholder="0.00"
                 onChange={e => {
-                  // Allow only numbers and one dot or comma
                   const val = e.target.value.replace(/[^0-9.,]/g, '')
                   setLocalPrice(val)
                 }}
