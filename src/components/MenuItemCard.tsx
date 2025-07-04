@@ -151,7 +151,7 @@ export default function MenuItemCard({
         {/* Menu Item Content - clickable to open dialog */}
         <div
           className={
-            `bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 transition cursor-pointer min-h-[7.5em] ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through border border-gray-200' : ''}`
+            `bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 transition cursor-pointer min-h-[7.5em]${!instantAvailable ? ' bg-gray-100 text-gray-400 border border-gray-200' : ''}`
           }
           style={{
             boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
@@ -173,11 +173,11 @@ export default function MenuItemCard({
         >
           <div className="flex justify-between items-start">
             <h3
-              className="text-lg font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative"
+              className={`text-lg font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative`}
               title={item.name}
               style={{ textOverflow: 'clip' }}
             >
-              <span ref={titleSpanRef} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+              <span ref={titleSpanRef} className={!instantAvailable ? 'line-through' : ''} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
                 {item.name}
                 <span
                   style={{
@@ -201,7 +201,7 @@ export default function MenuItemCard({
               {item.description ? (
                 <p
                   ref={descRef}
-                  className={`text-sm mt-1 overflow-hidden ${!instantAvailable ? 'italic' : 'text-gray-500'}`}
+                  className={`text-sm mt-1 overflow-hidden${!instantAvailable ? ' line-through italic' : ' text-gray-500'}`}
                   style={{
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
@@ -228,10 +228,10 @@ export default function MenuItemCard({
                   )}
                 </p>
               ) : (
-                <div className="text-sm mt-1 text-transparent select-none min-h-[2.5em] max-h-[2.5em]"> </div>
+                <div className="text-sm mt-1 select-none min-h-[2.5em] max-h-[2.5em]" style={{color: 'transparent', textDecoration: 'none'}}>&nbsp;</div>
               )}
             </div>
-            <div className="text-right font-bold mt-2">
+            <div className={`text-right font-bold mt-2${!instantAvailable ? ' line-through' : ''}`}>
               {item.price?.toFixed(2)}€
             </div>
           </div>

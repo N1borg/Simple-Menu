@@ -94,8 +94,6 @@ export default function MenuItemList({
     setInstantAvailable(!!localAvailable)
   }
 
-  // No fade logic for list view, just plain text
-
   return (
     <Dialog open={editingItem === item.id} onOpenChange={open => {
       if (!open && editingItem === item.id) setEditingItem(null)
@@ -104,20 +102,45 @@ export default function MenuItemList({
       <div className="relative group">
         {/* Menu Item Content - improved list style */}
         <div
-          className={`flex items-center gap-4 p-4 rounded-lg shadow-sm border bg-white hover:bg-gray-50 transition cursor-pointer min-h-[5.1em] mb-3 ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through' : ''}`}
-          style={{ outline: 'none', ...(editingItem === item.id ? { boxShadow: `0 0 0 2px ${ringColor}` } : {}) }}
+          className={`flex items-center gap-4 p-4 rounded-xl shadow-md border bg-white group-hover:ring-2 transition cursor-pointer min-h-[5.1em] mb-3 ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through border border-gray-200' : ''}`}
+          style={{
+            boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
+            borderColor: 'transparent',
+            outline: 'none',
+            ...(editingItem === item.id ? { boxShadow: `0 0 0 2px ${ringColor}` } : {}),
+          }}
           onClick={() => setEditingItem(item.id)}
           tabIndex={0}
           role="button"
           aria-label={`Modifier l'élément ${item.name}`}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingItem(item.id) }}
+          onMouseEnter={e => {
+            e.currentTarget.style.boxShadow = `0 0 0 2px ${ringColor}`
+          }}
+          onMouseLeave={e => {
+            if (editingItem !== item.id) e.currentTarget.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)'
+          }}
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-base truncate" title={item.name}>{item.name}</span>
             </div>
             {item.description && (
-              <div className="text-sm text-gray-500 truncate mt-1" title={item.description}>{item.description}</div>
+              <div className="text-sm text-gray-500 truncate mt-1 relative" title={item.description}>
+                {item.description}
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: 0,
+                    width: '3em',
+                    height: '100%',
+                    background: 'linear-gradient(to right, transparent, #fff 80%)',
+                    pointerEvents: 'none',
+                    display: 'block',
+                  }}
+                />
+              </div>
             )}
           </div>
           <div className="flex flex-col items-end min-w-[70px]">
