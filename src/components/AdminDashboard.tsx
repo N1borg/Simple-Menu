@@ -54,7 +54,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const handleLogoUpload = async (url: string) => {
     if (isDemo) {
       setDemoLogoUrl(url)
-      toast.info("Aperçu du logo modifié (démo, non sauvegardé)")
+      toast.info("Modification désactivée (mode démo).")
       return
     }
 
@@ -67,70 +67,40 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     const data = await res.json()
 
     if (res.ok && data.success) {
-      toast.success("Logo mis à jour !")
       establishment.logo_url = url
     } else {
       toast.error(data.error || "Erreur lors de la mise à jour du logo")
     }
   }
 
-  const handleCategoryDragEnd = (oldIndex: number, newIndex: number) => {
-    if (oldIndex === newIndex) return
-
-    const sorted = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-    const [moved] = sorted.splice(oldIndex, 1)
-    sorted.splice(newIndex, 0, moved)
-    sorted.forEach((cat, idx) => (cat.display_order = idx))
-
-    setCategories(sorted)
-
-    // Persist order to API
-    if (!isDemo) {
-      sorted.forEach((cat, idx) => {
-        fetch('/api/admin/menu-category/update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...cat, display_order: idx }),
-        })
-      })
-    }
-  }
-
   // Add category at a specific position (top or bottom)
   const addCategory = async (position: 'top' | 'bottom') => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return
+    }
+    const getTempId = () =>
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? `temp-${crypto.randomUUID()}`
+        : `temp-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
     const display_order = position === 'top' ? 0 : categories.length
     if (position === 'top') {
       // Increment display_order for all existing categories
       setCategories(cats => cats.map(cat => ({ ...cat, display_order: (cat.display_order ?? 0) + 1 })))
     }
-    await addCategoryWithOrder(display_order)
+    await addCategoryWithOrder(display_order, getTempId())
   }
 
   // Helper to add category with a specific display_order
-  const addCategoryWithOrder = async (display_order: number) => {
+  const addCategoryWithOrder = async (display_order: number, tempId?: string) => {
     if (isDemo) {
-      const newCat = {
-        id: `new-${Date.now()}`,
-        name: "Nouvelle catégorie",
-        display_style: "card",
-        order: display_order,
-        created_at: new Date().toISOString(),
-        display_order,
-        establishment_id: establishment.id,
-        menu_items: [],
-      }
-      setCategories(cats => {
-        const arr = [...cats]
-        arr.splice(display_order, 0, newCat)
-        return arr
-      })
-      toast.info("Catégorie ajoutée (démo, non sauvegardé)")
+      toast.info("Modification désactivée (mode démo).")
       return
     }
+    const uniqueTempId = tempId || `temp-${Date.now()}`
     setLoadingAction('addCategory')
-    const tempId = `temp-${Date.now()}`
     const tempCat = {
-      id: tempId,
+      id: uniqueTempId,
       name: "Nouvelle catégorie",
       display_style: "card",
       order: display_order,
@@ -158,18 +128,61 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       const data = await res.json()
       if (res.ok && data?.category) {
         setCategories(cats => cats.map(cat =>
-          cat.id === tempId ? { ...data.category, menu_items: [] } : cat
+          cat.id === uniqueTempId ? { ...data.category, menu_items: [] } : cat
         ))
         toast.success("Catégorie créée")
       } else {
         throw new Error('Failed to create category')
       }
     } catch (error) {
-      setCategories(cats => cats.filter(cat => cat.id !== tempId))
+      setCategories(cats => cats.filter(cat => cat.id !== uniqueTempId))
       toast.error("Erreur lors de la création de la catégorie")
     } finally {
       setLoadingAction(null)
     }
+  }
+
+  // Disable drag and drop in demo mode
+  const handleCategoryDragEnd = (oldIndex: number, newIndex: number) => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return
+    }
+    if (oldIndex === newIndex) return
+
+    const sorted = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+    const [moved] = sorted.splice(oldIndex, 1)
+    sorted.splice(newIndex, 0, moved)
+    sorted.forEach((cat, idx) => (cat.display_order = idx))
+
+    setCategories(sorted)
+
+    // Persist order to API
+    if (!isDemo) {
+      sorted.forEach((cat, idx) => {
+        fetch('/api/admin/menu-category/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...cat, display_order: idx }),
+        })
+      })
+    }
+  }
+
+  const handleDeleteCategory = async (catId: string) => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return
+    }
+    await deleteCategory(catId)
+  }
+
+  const handleSaveCategory = async (cat: any) => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return
+    }
+    await saveCategory(cat)
   }
 
   return (
@@ -234,16 +247,9 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   loadingAction={loadingAction}
                   categories={categories}
                   setCategories={setCategories}
-                  saveCategory={saveCategory}
-                  deleteCategory={deleteCategory}
-                  addMenuItem={addMenuItem}
-                  deleteMenuItem={deleteMenuItem}
-                  saveItem={saveItem}
-                  handleItemChange={handleItemChange}
-                  savingItemId={savingItemId}
-                  editingItem={editingItem}
-                  setEditingItem={setEditingItem}
+                  saveCategory={handleSaveCategory}
                   establishmentColor={establishment.primary_color ?? undefined}
+                  deleteCategory={handleDeleteCategory}
                 />
               </SortableCategory>
             ))}

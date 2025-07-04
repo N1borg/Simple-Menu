@@ -2,13 +2,22 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from '@/lib/supabase'
 import { auditLog } from '@/lib/security'
 import { sanitizeString, isDemoSlug } from '@/lib/validate'
+import { jwtVerify } from 'jose'
+import { requireAdminAuth } from '@/lib/auth'
+
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
+
   try {
-    const { id, logo_url, slug } = await req.json()
-    // Advanced demo mode protection
+    const { id, logo_url } = await req.json()
+    // Blocage des modifications en mode démo
     if (isDemoSlug(slug)) {
-      return NextResponse.json({ error: 'Modification du logo désactivée en mode démo.' }, { status: 403 })
+      return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
     }
     if (!id) {
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
@@ -37,8 +46,9 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const { id, slug } = await req.json()
+    // Blocage des modifications en mode démo
     if (isDemoSlug(slug)) {
-      return NextResponse.json({ error: 'Suppression du logo interdite en mode démo.' }, { status: 403 })
+      return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
     }
     if (!id) {
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 })

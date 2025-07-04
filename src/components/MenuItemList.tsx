@@ -1,22 +1,14 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import type { Category, MenuItem } from '@/types/supabase_types'
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useEffect, useRef, useState } from 'react'
-import { Loader2Icon } from "lucide-react"
-import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useEffect, useState } from 'react'
 import { toast } from "sonner"
+import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
 
 interface MenuItemListProps {
   item: MenuItem
@@ -29,6 +21,7 @@ interface MenuItemListProps {
   loadingAction: string | null
   deleteMenuItem: (catId: string, itemId: string) => Promise<void>
   establishmentColor?: string
+  isDemo?: boolean
 }
 
 export default function MenuItemList({
@@ -36,12 +29,12 @@ export default function MenuItemList({
   category,
   editingItem,
   setEditingItem,
-  handleItemChange,
   saveItem,
   savingItemId,
   loadingAction,
   deleteMenuItem,
-  establishmentColor
+  establishmentColor,
+  isDemo = false
 }: MenuItemListProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = establishmentColor || '#3a4fff'
@@ -72,26 +65,6 @@ export default function MenuItemList({
   const handleAvailableChange = (val: boolean) => {
     setLocalAvailable(val)
     setInstantAvailable(val)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    let parsedPrice = parseFloat(localPrice.replace(',', '.'))
-    if (isNaN(parsedPrice)) parsedPrice = 0
-    const updatedItem = {
-      ...item,
-      name: localName,
-      description: localDescription,
-      price: parsedPrice,
-      is_available: localAvailable,
-    }
-    try {
-      await saveItem(updatedItem)
-      toast.success("Élément sauvegardé !")
-    } catch (err) {
-      toast.error("Erreur lors de la sauvegarde de l'élément")
-    }
-    setInstantAvailable(!!localAvailable)
   }
 
   return (
@@ -156,91 +129,36 @@ export default function MenuItemList({
               Modifiez les informations de l'élément puis cliquez sur enregistrer.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <Label>Nom</Label>
-              <Input
-                value={localName}
-                onChange={e => setLocalName(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Input
-                value={localDescription}
-                onChange={e => setLocalDescription(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>Prix</Label>
-              <Input
-                type="text"
-                inputMode="decimal"
-                pattern="[0-9]*[.,]?[0-9]*"
-                value={localPrice}
-                placeholder="0.00"
-                onChange={e => {
-                  const val = e.target.value.replace(/[^0-9.,]/g, '')
-                  setLocalPrice(val)
-                }}
-              />
-            </div>
-            <div>
-              <Label className="flex items-center gap-2">
-                <Switch
-                  checked={localAvailable}
-                  onCheckedChange={handleAvailableChange}
-                />
-                Disponible
-              </Label>
-            </div>
-            <DialogFooter>
-              <div className="flex w-full justify-between gap-2">
-                <div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span>
-                        <ConfirmDeleteDialog
-                          onConfirm={async () => {
-                            try {
-                              await deleteMenuItem(category.id, item.id)
-                              toast.success("Élément supprimé !")
-                            } catch (err) {
-                              toast.error("Erreur lors de la suppression de l'élément")
-                            }
-                            setEditingItem(null)
-                          }}
-                          title="Supprimer l'élément ?"
-                          description="Cette action supprimera cet élément du menu. Voulez-vous continuer ?"
-                          triggerButtonClassName="mr-auto flex items-center justify-center"
-                        />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Supprimer l'élément</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <div className="flex gap-2">
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline" onClick={() => setEditingItem(null)}>
-                      Annuler
-                    </Button>
-                  </DialogClose>
-                  <Button type="submit" disabled={savingItemId === item.id || loadingAction !== null}>
-                    {savingItemId === item.id ? (
-                      <>
-                        <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
-                        Enregistrement...
-                      </>
-                    ) : (
-                      'Enregistrer'
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </DialogFooter>
-          </form>
+          <MenuItemDialogForm
+            item={item}
+            isDemo={isDemo}
+            savingItemId={savingItemId}
+            loadingAction={loadingAction}
+            onSubmit={async (updatedItem) => {
+              try {
+                await saveItem(updatedItem)
+                toast.success("Élément sauvegardé !")
+              } catch (err) {
+                toast.error("Erreur lors de la sauvegarde de l'élément")
+              }
+              setInstantAvailable(!!updatedItem.is_available)
+              setEditingItem(null)
+            }}
+            onDelete={async () => {
+              if (isDemo) {
+                toast.info("Modification désactivée (mode démo).")
+                return
+              }
+              try {
+                await deleteMenuItem(category.id, item.id)
+                toast.success("Élément supprimé !")
+              } catch (err) {
+                toast.error("Erreur lors de la suppression de l'élément")
+              }
+              setEditingItem(null)
+            }}
+            onCancel={() => setEditingItem(null)}
+          />
         </DialogContent>
       </div>
     </Dialog>

@@ -2,14 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
 import { auditLog } from '@/lib/security'
+import { jwtVerify } from 'jose'
+import { requireAdminAuth } from '@/lib/auth'
+
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  const { establishmentId, slug, currentPassword, newPassword } = await req.json()
-  if (!establishmentId || !slug || !currentPassword || !newPassword) {
+  const auth = await requireAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
+
+  const { establishmentId, currentPassword, newPassword } = await req.json()
+  if (!establishmentId || !currentPassword || !newPassword) {
     return NextResponse.json({ error: 'Champs manquants.' }, { status: 400 })
   }
+  // Blocage des modifications en mode démo
   if (slug === 'demo') {
-    return NextResponse.json({ error: 'Modification désactivée en mode démo.' }, { status: 403 })
+    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
   }
   const supabase = await getServerSupabase()
   const { data: establishment, error } = await supabase

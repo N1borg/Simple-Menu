@@ -31,7 +31,7 @@ export function useAddCategoryAtPosition({
       const arr = [...categories]
       arr.splice(display_order, 0, newCat)
       setCategories(arr)
-      toast.info("Catégorie ajoutée (démo, non sauvegardé)")
+      toast.info("Modification désactivée (mode démo).")
       return
     }
     setLoadingAction('addCategory')

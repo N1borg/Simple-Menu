@@ -2,16 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import { auditLog } from '@/lib/security'
 import { isValidUUID, isDemoSlug } from '@/lib/validate'
+import { jwtVerify } from 'jose'
+import { requireAdminAuth } from '@/lib/auth'
+
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  const { id, slug } = await req.json()
+  const auth = await requireAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
 
-  // Advanced demo mode protection
-  if (isDemoSlug(slug)) {
-    return NextResponse.json({ success: false, error: 'Suppression interdite en mode démo.' }, { status: 403 })
+  const { id, slug: categorySlug } = await req.json()
+
+  // Blocage des modifications en mode démo
+  if (isDemoSlug(categorySlug)) {
+    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
   }
 
-  // Input validation
+  // Validation des entrées
   if (!isValidUUID(id)) {
     return NextResponse.json({ success: false, error: 'ID requis' }, { status: 400 })
   }
@@ -19,7 +28,7 @@ export async function POST(req: NextRequest) {
   const supabase = await getServerSupabase()
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
 
-  // Optionally: delete all menu_items in this category first
+  // Supprimer éventuellement tous les éléments de menu dans cette catégorie d'abord
   await supabase.from('menu_items').delete().eq('category_id', id)
 
   const { error } = await supabase

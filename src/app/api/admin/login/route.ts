@@ -13,10 +13,10 @@ if (!JWT_SECRET) {
 export async function POST(req: NextRequest) {
   const { slug, password } = await req.json()
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
-  // Block login for demo page
+  // Blocage des modifications en mode démo
   if (slug === 'demo') {
     auditLog({ action: 'login_attempt_demo_blocked', ip, user: slug, details: { slug } })
-    return NextResponse.json({ error: 'Unauthorized.' }, { status: 403 })
+    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
   }
   const supabase = await getServerSupabase()
 

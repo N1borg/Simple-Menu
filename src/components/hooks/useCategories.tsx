@@ -32,7 +32,7 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
         menu_items: [],
       }
       setCategories([newCat, ...categories])
-      toast.info("Catégorie ajoutée (démo, non sauvegardé)")
+      toast.info("Modification désactivée (mode démo).")
       return
     }
 
@@ -84,7 +84,7 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
   const deleteCategory = async (catId: string) => {
     if (isDemo) {
       setCategories(cats => cats.filter(cat => cat.id !== catId))
-      toast.info("Catégorie supprimée (démo, non sauvegardé)")
+      toast.info("Modification désactivée (mode démo).")
       return
     }
 
@@ -114,7 +114,7 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
   const saveCategory = async (cat: any) => {
     if (isDemo) {
       setEditingCategoryId(null)
-      toast.info("Modification enregistrée (démo, non sauvegardé)")
+      toast.info("Modification désactivée (mode démo).")
       return
     }
 

@@ -4,6 +4,7 @@ import sharp from "sharp"
 import { jwtVerify } from 'jose'
 import { auditLog } from '@/lib/security'
 import { sanitizeString, isDemoSlug } from '@/lib/validate'
+import { requireAdminAuth } from '@/lib/auth'
 
 cloudinary.v2.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -15,21 +16,11 @@ const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  try {
-    // Auth: get token from cookie or Authorization header
-    const token = req.cookies.get('admin-session')?.value || req.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json({ error: "Non autorisé - Token manquant" }, { status: 401 })
-    }
-    let slug = null
-    try {
-      const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET))
-      slug = payload.slug as string
-      if (!slug) throw new Error('Slug manquant dans le token')
-    } catch (e) {
-      return NextResponse.json({ error: "Token invalide" }, { status: 401 })
-    }
+  const auth = await requireAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
 
+  try {
     // Parse and validate request
     const contentType = req.headers.get('content-type')
     if (!contentType?.includes('application/json')) {
@@ -39,9 +30,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { file, folder = "logos" } = body
 
-    // Advanced demo mode protection
+    // Protection avancée mode démo
     if (isDemoSlug(slug)) {
-      return NextResponse.json({ error: 'Upload interdit en mode démo.' }, { status: 403 })
+      return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
     }
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'

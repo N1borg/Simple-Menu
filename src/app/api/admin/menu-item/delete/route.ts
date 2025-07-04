@@ -2,14 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import { auditLog } from '@/lib/security'
 import { sanitizeString, isValidUUID, isDemoSlug } from '@/lib/validate'
+import { jwtVerify } from 'jose'
+import { requireAdminAuth } from '@/lib/auth'
+
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  const { id } = await req.json()
-  // Advanced demo mode protection
-  if (isDemoSlug(req.nextUrl.searchParams.get('slug'))) {
-    return NextResponse.json({ success: false, error: 'Suppression interdite en mode démo.' }, { status: 403 })
+  const auth = await requireAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
+
+  const { id, slug: reqSlug } = await req.json()
+  // Blocage des modifications en mode démo
+  if (isDemoSlug(reqSlug)) {
+    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
   }
-  // Input validation
+  // Validation de l'entrée
   if (!isValidUUID(id)) {
     return NextResponse.json({ success: false, error: 'ID invalide' }, { status: 400 })
   }

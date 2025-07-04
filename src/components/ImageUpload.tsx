@@ -2,11 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Upload, X, AlertCircle, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
+import { Upload, Pencil } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from "sonner"
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 
 interface ImageUploadProps {
@@ -132,7 +132,7 @@ export default function ImageUpload({
       }
       // Success
       setSuccess('Image optimisée et uploadée avec succès!')
-      toast.success('Logo mis à jour !')
+      toast.success("Logo mis à jour !")
       setDisplayedImageUrl(data.url) // update local display immediately
       onImageUploaded(data.url)
       setShowPopup(false) // Close the dialog after successful upload
@@ -232,13 +232,11 @@ export default function ImageUpload({
                     <ConfirmDeleteDialog
                       onConfirm={async () => {
                         setShowPopup(false)
-                        if (isDemo) {
-                          setDisplayedImageUrl(undefined)
-                          if (onDeleteLogo) onDeleteLogo()
-                          toast.success('Logo supprimé !')
-                          return
-                        }
                         try {
+                          if (isDemo) {
+                            toast.info("Modification désactivée (mode démo).")
+                            return
+                          }
                           const res = await fetch('/api/admin/update-logo', {
                             method: 'DELETE',
                             headers: { 'Content-Type': 'application/json' },
@@ -248,7 +246,7 @@ export default function ImageUpload({
                           if (res.ok && data.success) {
                             setDisplayedImageUrl(undefined)
                             if (onDeleteLogo) onDeleteLogo()
-                            toast.success('Logo supprimé !')
+                            toast.success("Logo supprimé !")
                           } else {
                             setError({ message: data.error || "Erreur lors de la suppression du logo", type: 'server' })
                             toast.error(data.error || "Erreur lors de la suppression du logo")

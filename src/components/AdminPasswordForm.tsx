@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Loader2Icon } from 'lucide-react'
 
 interface AdminPasswordFormProps {
   establishmentId: string
@@ -48,7 +48,7 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
 
   async function onSubmit(values: z.infer<typeof FormSchema>) {
     if (isDemo) {
-      toast.info('Modification du mot de passe désactivée en mode démo.')
+      toast.info("Modification désactivée (mode démo).")
       return
     }
     setLoading(true)
@@ -65,7 +65,7 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
     const data = await res.json()
     setLoading(false)
     if (res.ok && data.success) {
-      toast.success('Mot de passe modifié avec succès !')
+      toast.success("Mot de passe modifié avec succès !")
       form.reset()
     } else {
       toast.error(data.error || 'Erreur lors de la modification du mot de passe.')
@@ -149,7 +149,14 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
             )}
           />
           <Button type="submit" disabled={loading} className="w-full mt-2">
-            {loading ? 'Modification...' : 'Modifier le mot de passe'}
+            {loading ? (
+              <>
+                <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+                Modification...
+              </>
+            ) : (
+              'Modifier le mot de passe'
+            )}
           </Button>
         </div>
       </form>

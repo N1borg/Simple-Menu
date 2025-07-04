@@ -1,7 +1,7 @@
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { GripVertical, Plus, Pencil, Trash2 } from "lucide-react"
+import { GripVertical, Plus, Pencil } from "lucide-react"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableItem } from '@/components/SortableItem'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
@@ -12,6 +12,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useRef, useEffect, useState } from 'react'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 import { Loader2Icon } from "lucide-react"
+import { useMenuItems } from '@/components/hooks/useMenuItems'
+import { toast } from "sonner"
 
 const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
@@ -32,13 +34,6 @@ interface CategorySectionProps {
   categories: any[]
   setCategories: (cats: any[]) => void
   saveCategory: (cat: any) => Promise<void>
-  addMenuItem: (catId: string) => Promise<void>
-  deleteMenuItem: (catId: string, itemId: string) => Promise<void>
-  saveItem: (item: any) => Promise<void>
-  handleItemChange: (catId: string, itemId: string, field: string, value: any) => void
-  savingItemId: string | null
-  editingItem: string | null
-  setEditingItem: (id: string | null) => void
   establishmentColor?: string
   deleteCategory: (catId: string) => Promise<void>
 }
@@ -55,18 +50,63 @@ export default function CategorySection({
   categories,
   setCategories,
   saveCategory,
-  addMenuItem,
-  deleteMenuItem,
-  saveItem,
-  handleItemChange,
-  savingItemId,
-  editingItem,
-  setEditingItem,
   establishmentColor,
   deleteCategory,
 }: CategorySectionProps) {
-  
+  // Use useMenuItems hook for item actions
+  const {
+    saveItem,
+    deleteMenuItem,
+    handleItemChange,
+    savingItemId,
+    addMenuItem
+  } = useMenuItems(categories, setCategories, isDemo)
+
+  // Local state for editing item
+  const [editingItem, setEditingItem] = useState<string | null>(null)
+
+  // Add item handler using the hook, with demo mode protection
+  const handleAddMenuItem = async (catId: string) => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return
+    }
+    await addMenuItem(catId)
+  }
+
+  // Block delete item in demo mode
+  const handleDeleteMenuItem = async (catId: string, itemId: string) => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return
+    }
+    await deleteMenuItem(catId, itemId)
+  }
+
+  // Block save item in demo mode
+  const handleSaveItem = async (updatedItem: MenuItem) => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return
+    }
+    await saveItem(updatedItem)
+    setCategories(categories.map((cat: Category) =>
+      cat.id === category.id
+        ? {
+            ...cat,
+            menu_items: cat.menu_items.map((item: MenuItem) =>
+              item.id === updatedItem.id ? { ...item, ...updatedItem } : item
+            )
+          }
+        : cat
+    ))
+  }
+
   const handleItemDragEnd = (oldIndex: number, newIndex: number) => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return
+    }
     if (oldIndex === newIndex) return
 
     const sorted = [...category.menu_items].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
@@ -226,7 +266,7 @@ export default function CategorySection({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              onClick={() => addMenuItem(category.id)}
+              onClick={() => handleAddMenuItem(category.id)}
               variant="ghost"
               size="icon"
               title="Nouvel élément"
@@ -279,22 +319,6 @@ export default function CategorySection({
     )
   }
 
-  // Wrap saveItem to update local categories state after saving
-  const handleSaveItem = async (updatedItem: MenuItem) => {
-    await saveItem(updatedItem)
-    // Update the item in local categories state using categories prop
-    setCategories(categories.map((cat: Category) =>
-      cat.id === category.id
-        ? {
-            ...cat,
-            menu_items: cat.menu_items.map((item: MenuItem) =>
-              item.id === updatedItem.id ? { ...item, ...updatedItem } : item
-            )
-          }
-        : cat
-    ))
-  }
-
   return (
     <section className="max-w-4xl mx-auto px-4 py-6">
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -303,6 +327,7 @@ export default function CategorySection({
           type="button" 
           className="dnd-handle-cat cursor-grab p-1 rounded hover:bg-gray-200 focus:outline-none" 
           title="Déplacer la catégorie"
+          disabled={isDemo}
         >
           <GripVertical className="w-5 h-5 text-gray-400" />
         </button>
@@ -329,8 +354,9 @@ export default function CategorySection({
                 saveItem={handleSaveItem}
                 savingItemId={savingItemId}
                 loadingAction={loadingAction}
-                deleteMenuItem={deleteMenuItem}
+                deleteMenuItem={handleDeleteMenuItem}
                 establishmentColor={establishmentColor}
+                isDemo={isDemo}
               />
             )
           }
@@ -344,8 +370,9 @@ export default function CategorySection({
               saveItem={handleSaveItem}
               savingItemId={savingItemId}
               loadingAction={loadingAction}
-              deleteMenuItem={deleteMenuItem}
+              deleteMenuItem={handleDeleteMenuItem}
               establishmentColor={establishmentColor}
+              isDemo={isDemo}
             />
           )
         }}
@@ -365,8 +392,9 @@ export default function CategorySection({
                     saveItem={handleSaveItem}
                     savingItemId={savingItemId}
                     loadingAction={loadingAction}
-                    deleteMenuItem={deleteMenuItem}
+                    deleteMenuItem={handleDeleteMenuItem}
                     establishmentColor={establishmentColor}
+                    isDemo={isDemo}
                   />
                 ) : (
                   <MenuItemCard
@@ -378,8 +406,9 @@ export default function CategorySection({
                     saveItem={handleSaveItem}
                     savingItemId={savingItemId}
                     loadingAction={loadingAction}
-                    deleteMenuItem={deleteMenuItem}
+                    deleteMenuItem={handleDeleteMenuItem}
                     establishmentColor={establishmentColor}
+                    isDemo={isDemo}
                   />
                 )}
               </SortableItem>

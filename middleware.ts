@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
       // Block all admin API calls for demo slug
       if (payload.slug === 'demo') {
         return new NextResponse(
-          JSON.stringify({ error: 'Modification désactivée sur la page de démonstration.' }),
+          JSON.stringify({ error: 'Modification désactivée (mode démo).' }),
           {
             status: 403,
             headers: { 'Content-Type': 'application/json', 'Content-Security-Policy': csp }

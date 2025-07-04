@@ -2,12 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import { auditLog } from '@/lib/security'
 import { sanitizeString, sanitizeNumber, isValidUUID, isDemoSlug } from '@/lib/validate'
+import { jwtVerify } from 'jose'
+import { requireAdminAuth } from '@/lib/auth'
+
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
+
   const item = await req.json()
-  // Advanced demo mode protection
+  // Blocage des modifications en mode démo
   if (isDemoSlug(item.slug)) {
-    return NextResponse.json({ success: false, error: 'Modification désactivée en mode démo.' }, { status: 403 })
+    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
   }
   // Input validation & sanitization
   const name = sanitizeString(item.name, 100)
