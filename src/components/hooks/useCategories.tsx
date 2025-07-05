@@ -47,8 +47,9 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
       display_order: categories.length,
       establishment_id: establishment.id,
       menu_items: [],
+      isLoading: true,
     }
-    
+
     setCategories([tempCat, ...categories])
     
     try {

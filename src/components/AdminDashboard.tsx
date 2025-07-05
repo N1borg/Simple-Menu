@@ -77,30 +77,16 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const addCategory = async (position: 'top' | 'bottom') => {
     if (isDemo) {
       toast.info("Modification désactivée (mode démo).")
-      return
+      return;
     }
-    const getTempId = () =>
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? `temp-${crypto.randomUUID()}`
-        : `temp-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
-    const display_order = position === 'top' ? 0 : categories.length
-    if (position === 'top') {
-      // Increment display_order for all existing categories
-      setCategories(cats => cats.map(cat => ({ ...cat, display_order: (cat.display_order ?? 0) + 1 })))
-    }
-    await addCategoryWithOrder(display_order, getTempId())
-  }
 
-  // Helper to add category with a specific display_order
-  const addCategoryWithOrder = async (display_order: number, tempId?: string) => {
-    if (isDemo) {
-      toast.info("Modification désactivée (mode démo).")
-      return
+    const display_order = position === 'top' ? 0 : categories.length;
+    if (position === 'top') {
+      setCategories(cats => cats.map(cat => ({ ...cat, display_order: (cat.display_order ?? 0) + 1 })));
     }
-    const uniqueTempId = tempId || `temp-${Date.now()}`
-    setLoadingAction('addCategory')
+
     const tempCat = {
-      id: uniqueTempId,
+      id: `temp-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
       name: "Nouvelle catégorie",
       display_style: "card",
       order: display_order,
@@ -108,12 +94,15 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       display_order,
       establishment_id: establishment.id,
       menu_items: [],
-    }
+      isLoading: true,
+    };
+
     setCategories(cats => {
-      const arr = [...cats]
-      arr.splice(display_order, 0, tempCat)
-      return arr
-    })
+      const arr = [...cats];
+      arr.splice(display_order, 0, tempCat);
+      return arr;
+    });
+
     try {
       const res = await fetch('/api/admin/menu-category/create', {
         method: 'POST',
@@ -124,21 +113,22 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           display_order: tempCat.display_order,
           establishment_id: tempCat.establishment_id,
         }),
-      })
-      const data = await res.json()
+      });
+
+      const data = await res.json();
       if (res.ok && data?.category) {
         setCategories(cats => cats.map(cat =>
-          cat.id === uniqueTempId ? { ...data.category, menu_items: [] } : cat
-        ))
-        toast.success("Catégorie créée")
+          cat.id === tempCat.id ? { ...data.category, menu_items: [] } : cat
+        ));
+        toast.success("Catégorie créée");
       } else {
-        throw new Error('Failed to create category')
+        throw new Error('Failed to create category');
       }
     } catch (error) {
-      setCategories(cats => cats.filter(cat => cat.id !== uniqueTempId))
-      toast.error("Erreur lors de la création de la catégorie")
+      setCategories(cats => cats.filter(cat => cat.id !== tempCat.id));
+      toast.error("Erreur lors de la création de la catégorie");
     } finally {
-      setLoadingAction(null)
+      setLoadingAction(null);
     }
   }
 

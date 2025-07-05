@@ -14,6 +14,7 @@ import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 import { Loader2Icon } from "lucide-react"
 import { useMenuItems } from '@/components/hooks/useMenuItems'
 import { toast } from "sonner"
+import CategorySkeleton from "@/components/CategorySkeleton"
 
 const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
@@ -317,6 +318,14 @@ export default function CategorySection({
           </TooltipContent>
         </Tooltip>
       </>
+    )
+  }
+
+  if (category.isLoading) {
+    return (
+    <section className="max-w-4xl mx-auto px-4 py-6">
+      <CategorySkeleton />;
+    </section>
     )
   }
 
