@@ -15,6 +15,15 @@ import { Loader2Icon } from "lucide-react"
 import { useMenuItems } from '@/components/hooks/useMenuItems'
 import { toast } from "sonner"
 import CategorySkeleton from "@/components/CategorySkeleton"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
@@ -148,55 +157,61 @@ export default function CategorySection({
     return () => resizeObserver.disconnect()
   }, [category.name])
 
+  // Fix TypeScript error for Select value
   const renderCategoryHeader = () => {
     if (editingCategoryId === category.id) {
       return (
         <form
-          onSubmit={e => {
-            e.preventDefault()
+          onSubmit={(e) => {
+            e.preventDefault();
             if (
               originalCategory &&
               category.name === originalCategory.name &&
               category.display_style === originalCategory.display_style
             ) {
-              setEditingCategoryId(null)
-              return
+              setEditingCategoryId(null);
+              return;
             }
-            saveCategory(category)
+            saveCategory(category);
           }}
           className="flex items-center gap-2 flex-wrap"
         >
           <Input
             value={category.name}
-            onChange={e => {
-              const newCategories = categories.map(c => c.id === category.id ? { ...c, name: e.target.value } : c)
-              setCategories(newCategories)
+            onChange={(e) => {
+              const newCategories = categories.map((c) =>
+                c.id === category.id ? { ...c, name: e.target.value } : c
+              );
+              setCategories(newCategories);
             }}
             className="w-40"
           />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline">
-                Style: {DISPLAY_STYLES.find(style => style.value === category.display_style)?.label || 'Carte'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {DISPLAY_STYLES.map(style => (
-                <DropdownMenuItem
-                  key={style.value}
-                  onClick={() => {
-                    const newCategories = categories.map(c => c.id === category.id ? { ...c, display_style: style.value } : c)
-                    setCategories(newCategories)
-                  }}
-                >
-                  {style.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button 
-            type="submit" 
-            size="sm" 
+          <Select
+            onValueChange={(value) => {
+              const newCategories = categories.map((c) =>
+                c.id === category.id ? { ...c, display_style: value } : c
+              );
+              setCategories(newCategories);
+            }}
+            value={category.display_style || ""}
+          >
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Style" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Styles</SelectLabel>
+                {DISPLAY_STYLES.map((style) => (
+                  <SelectItem key={style.value} value={style.value}>
+                    {style.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <Button
+            type="submit"
+            size="sm"
             disabled={savingCategoryId === category.id || loadingAction !== null}
           >
             {savingCategoryId === category.id || loadingAction === `saveCategory-${category.id}` ? (
@@ -204,18 +219,20 @@ export default function CategorySection({
                 <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
                 Enregistrement...
               </>
-            ) : "Enregistrer"}
+            ) : (
+              "Enregistrer"
+            )}
           </Button>
-          <Button 
-            type="button" 
-            size="sm" 
-            variant="secondary" 
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
             onClick={() => setEditingCategoryId(null)}
           >
             Annuler
           </Button>
         </form>
-      )
+      );
     }
 
     return (
@@ -223,48 +240,53 @@ export default function CategorySection({
         <h2
           ref={catTitleRef}
           className="text-2xl font-bold mr-2 mb-2 sm:mb-0 overflow-hidden whitespace-nowrap relative"
-          style={{ textOverflow: 'clip', maxWidth: '100%' }}
+          style={{ textOverflow: "clip", maxWidth: "100%" }}
           title={category.name}
         >
-          <span style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+          <span
+            style={{ position: "relative", display: "inline-block", width: "100%" }}
+          >
             {category.name}
             {showCatTitleFade && (
               <span
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   right: 0,
                   top: 0,
-                  width: '3em',
-                  height: '100%',
-                  background: 'linear-gradient(to right, transparent, #fff 80%)',
-                  pointerEvents: 'none',
-                  display: 'block',
+                  width: "3em",
+                  height: "100%",
+                  background: "linear-gradient(to right, transparent, #fff 80%)",
+                  pointerEvents: "none",
+                  display: "block",
                 }}
               />
             )}
           </span>
         </h2>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" variant="outline">
-              Style: {DISPLAY_STYLES.find(style => style.value === category.display_style)?.label || 'Carte'}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {DISPLAY_STYLES.map(style => (
-              <DropdownMenuItem
-                key={style.value}
-                onClick={async () => {
-                  const newCategories = categories.map(c => c.id === category.id ? { ...c, display_style: style.value } : c)
-                  setCategories(newCategories)
-                  await saveCategory({ ...category, display_style: style.value })
-                }}
-              >
-                {style.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Select
+          onValueChange={async (value) => {
+            const newCategories = categories.map((c) =>
+              c.id === category.id ? { ...c, display_style: value } : c
+            );
+            setCategories(newCategories);
+            await saveCategory({ ...category, display_style: value });
+          }}
+          value={category.display_style || ""}
+        >
+          <SelectTrigger className="w-[120px]">
+            <SelectValue placeholder="Style" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Styles</SelectLabel>
+              {DISPLAY_STYLES.map((style) => (
+                <SelectItem key={style.value} value={style.value}>
+                  {style.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -273,7 +295,7 @@ export default function CategorySection({
               size="icon"
               title="Nouvel élément"
               className="bg-gray-100 hover:bg-gray-200 text-gray-600"
-              disabled={category.id.startsWith('temp-')}
+              disabled={category.id.startsWith("temp-")}
             >
               <Plus className="w-5 h-5" />
             </Button>
@@ -284,13 +306,13 @@ export default function CategorySection({
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button 
-              size="icon" 
-              variant="ghost" 
+            <Button
+              size="icon"
+              variant="ghost"
               onClick={() => {
-                setEditingCategoryId(category.id)
-                setOriginalCategory({ ...category })
-              }} 
+                setEditingCategoryId(category.id);
+                setOriginalCategory({ ...category });
+              }}
               title="Modifier la catégorie"
             >
               <Pencil className="w-4 h-4" />
@@ -305,7 +327,7 @@ export default function CategorySection({
             <span>
               <ConfirmDeleteDialog
                 onConfirm={async () => {
-                  await deleteCategory(category.id)
+                  await deleteCategory(category.id);
                 }}
                 title="Supprimer la catégorie ?"
                 description="Cette action supprimera la catégorie et tous ses éléments. Voulez-vous continuer ?"
@@ -318,13 +340,13 @@ export default function CategorySection({
           </TooltipContent>
         </Tooltip>
       </>
-    )
+    );
   }
 
   if (category.isLoading) {
     return (
     <section className="max-w-4xl mx-auto px-4 py-6">
-      <CategorySkeleton />;
+      <CategorySkeleton />
     </section>
     )
   }
@@ -333,15 +355,15 @@ export default function CategorySection({
     <section className="max-w-4xl mx-auto px-4 py-6">
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {/* Drag handle for category */}
-        <button 
-          type="button" 
-          className="dnd-handle-cat cursor-grab p-1 rounded hover:bg-gray-200 focus:outline-none" 
+        <button
+          type="button"
+          className="dnd-handle-cat cursor-grab p-0 flex items-center justify-center rounded hover:bg-gray-200 focus:outline-none w-9 h-9" // Adjusted styles for centering
           title="Déplacer la catégorie"
           disabled={isDemo}
         >
           <GripVertical className="w-5 h-5 text-gray-400" />
         </button>
-        
+
         {renderCategoryHeader()}
       </div>
 
@@ -350,10 +372,10 @@ export default function CategorySection({
         items={category.menu_items}
         modifiers={[restrictToParentElement]}
         onDragEnd={handleItemDragEnd}
-        renderOverlay={activeId => {
-          const item: MenuItem | undefined = category.menu_items.find((i: MenuItem) => i.id === activeId)
-          if (!item) return null
-          if (category.display_style === 'list') {
+        renderOverlay={(activeId) => {
+          const item: MenuItem | undefined = category.menu_items.find((i: MenuItem) => i.id === activeId);
+          if (!item) return null;
+          if (category.display_style === "list") {
             return (
               <MenuItemList
                 item={item}
@@ -368,7 +390,7 @@ export default function CategorySection({
                 establishmentColor={establishmentColor}
                 isDemo={isDemo}
               />
-            )
+            );
           }
           return (
             <MenuItemCard
@@ -384,15 +406,21 @@ export default function CategorySection({
               establishmentColor={establishmentColor}
               isDemo={isDemo}
             />
-          )
+          );
         }}
       >
-        <div className={category.display_style === 'list' ? '' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'}>
+        <div
+          className={
+            category.display_style === "list"
+              ? ""
+              : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          }
+        >
           {[...category.menu_items]
             .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
             .map((item) => (
               <SortableItem key={item.id} id={item.id}>
-                {category.display_style === 'list' ? (
+                {category.display_style === "list" ? (
                   <MenuItemList
                     item={item}
                     category={category}
