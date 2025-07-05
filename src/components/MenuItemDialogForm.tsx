@@ -98,6 +98,7 @@ export function MenuItemDialogForm({
           <Switch
             checked={localAvailable}
             onCheckedChange={handleAvailableChange}
+            className="cursor-pointer"
           />
           Disponible
         </Label>
@@ -123,11 +124,20 @@ export function MenuItemDialogForm({
           </div>
           <div className="flex gap-2">
             <DialogClose asChild>
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                className="cursor-pointer"
+              >
                 Annuler
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={savingItemId === item.id || loadingAction !== null || isDemo}>
+            <Button
+              type="submit"
+              disabled={savingItemId === item.id || loadingAction !== null || isDemo}
+              className="cursor-pointer"
+            >
               {savingItemId === item.id ? (
                 <>
                   <Loader2Icon className="animate-spin mr-2 h-4 w-4" />

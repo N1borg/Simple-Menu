@@ -35,7 +35,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="flex items-center gap-2 cursor-pointer">
           <Settings className="w-4 h-4" /> Paramètres
         </Button>
       </SheetTrigger>
@@ -61,7 +61,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
           <Button
             type="button"
             variant="destructive"
-            className="w-full flex items-center gap-2"
+            className="w-full flex items-center gap-2 cursor-pointer"
             disabled={loggingOut}
             onClick={async () => {
               setLoggingOut(true);

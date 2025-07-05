@@ -36,7 +36,7 @@ const ConfirmDeleteDialog = ({
         <Button
           type="button"
           variant="destructive"
-          className={triggerButtonClassName}
+          className={`${triggerButtonClassName} w-9 h-9 cursor-pointer`}
           aria-label="Supprimer"
         >
           <Trash2 className="w-5 h-5" />
@@ -48,16 +48,21 @@ const ConfirmDeleteDialog = ({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            className="cursor-pointer"
+            >
             {cancelLabel}
-          </Button>
-          <Button
+            </Button>
+            <Button
             variant="destructive"
             onClick={() => {
               setOpen(false);
               onConfirm();
             }}
-          >
+            className="cursor-pointer"
+            >
             {confirmLabel}
           </Button>
         </DialogFooter>

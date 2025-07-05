@@ -204,7 +204,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
               variant="ghost"
               size="icon"
               title="Nouvelle catégorie"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-600"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer"
               disabled={loadingAction !== null}
             >
               <Plus className="w-6 h-6" />
@@ -253,7 +253,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
               variant="ghost"
               size="icon"
               title="Nouvelle catégorie"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-600"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer"
               disabled={loadingAction !== null}
             >
               <Plus className="w-6 h-6" />

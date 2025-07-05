@@ -88,7 +88,7 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
                     <button
                       type="button"
                       tabIndex={-1}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
                       onClick={() => setShowCurrent(v => !v)}
                       aria-label={showCurrent ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                     >
@@ -112,7 +112,7 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
                     <button
                       type="button"
                       tabIndex={-1}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
                       onClick={() => setShowNew(v => !v)}
                       aria-label={showNew ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                     >
@@ -136,7 +136,7 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
                     <button
                       type="button"
                       tabIndex={-1}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
                       onClick={() => setShowConfirm(v => !v)}
                       aria-label={showConfirm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                     >
@@ -148,7 +148,11 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={loading} className="w-full mt-2">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-2 cursor-pointer"
+          >
             {loading ? (
               <>
                 <Loader2Icon className="animate-spin mr-2 h-4 w-4" />

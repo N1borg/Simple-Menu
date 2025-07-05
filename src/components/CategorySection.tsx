@@ -15,6 +15,7 @@ import { Loader2Icon } from "lucide-react"
 import { useMenuItems } from '@/components/hooks/useMenuItems'
 import { toast } from "sonner"
 import CategorySkeleton from "@/components/CategorySkeleton"
+import MenuItemSkeleton from "@/components/MenuItemSkeleton";
 import {
   Select,
   SelectContent,
@@ -78,11 +79,55 @@ export default function CategorySection({
   // Add item handler using the hook, with demo mode protection
   const handleAddMenuItem = async (catId: string) => {
     if (isDemo) {
-      toast.info("Modification désactivée (mode démo).")
-      return
+      toast.info("Modification désactivée (mode démo).");
+      return;
     }
-    await addMenuItem(catId)
-    // editingItem will be set by the hook after API returns
+
+    // Add a temporary skeleton item
+    const newCategories = categories.map((cat) =>
+      cat.id === catId
+        ? {
+            ...cat,
+            menu_items: [
+              ...cat.menu_items,
+              {
+                id: `temp-${Date.now()}`,
+                category_id: catId,
+                created_at: null,
+                description: null,
+                display_order: cat.menu_items.length,
+                display_style: category.display_style || "card",
+                image_url: null,
+                is_available: null,
+                name: "",
+                order: null,
+                price: 0,
+                isLoading: true,
+              },
+            ],
+          }
+        : cat
+    );
+    setCategories(newCategories);
+
+    // Call the API to add the item
+    const newItem = await addMenuItem(catId);
+
+    // Replace the skeleton with the real item
+    setCategories((prevCategories) =>
+      prevCategories.map((cat) =>
+        cat.id === catId
+          ? {
+              ...cat,
+              menu_items: cat.menu_items.map((item) =>
+                item.id.startsWith("temp-") && newItem && typeof newItem === "object" && !Array.isArray(newItem)
+                  ? { ...(newItem as MenuItem), isLoading: false }
+                  : item
+              ),
+            }
+          : cat
+      )
+    );
   }
 
   // Block delete item in demo mode
@@ -195,9 +240,16 @@ export default function CategorySection({
             }}
             value={category.display_style || ""}
           >
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Style" />
-            </SelectTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SelectTrigger className="w-[120px] bg-white cursor-pointer">
+                  <SelectValue placeholder="Style" />
+                </SelectTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Sélectionnez un style</p>
+              </TooltipContent>
+            </Tooltip>
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Styles</SelectLabel>
@@ -213,6 +265,7 @@ export default function CategorySection({
             type="submit"
             size="sm"
             disabled={savingCategoryId === category.id || loadingAction !== null}
+            className="cursor-pointer"
           >
             {savingCategoryId === category.id || loadingAction === `saveCategory-${category.id}` ? (
               <>
@@ -228,6 +281,7 @@ export default function CategorySection({
             size="sm"
             variant="secondary"
             onClick={() => setEditingCategoryId(null)}
+            className="cursor-pointer"
           >
             Annuler
           </Button>
@@ -273,9 +327,16 @@ export default function CategorySection({
           }}
           value={category.display_style || ""}
         >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Style" />
-          </SelectTrigger>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SelectTrigger className="w-[120px] bg-white cursor-pointer">
+                <SelectValue placeholder="Style" />
+              </SelectTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Sélectionnez un style</p>
+            </TooltipContent>
+          </Tooltip>
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Styles</SelectLabel>
@@ -294,7 +355,7 @@ export default function CategorySection({
               variant="ghost"
               size="icon"
               title="Nouvel élément"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-600"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer"
               disabled={category.id.startsWith("temp-")}
             >
               <Plus className="w-5 h-5" />
@@ -314,6 +375,7 @@ export default function CategorySection({
                 setOriginalCategory({ ...category });
               }}
               title="Modifier la catégorie"
+              className="cursor-pointer"
             >
               <Pencil className="w-4 h-4" />
             </Button>
@@ -357,7 +419,7 @@ export default function CategorySection({
         {/* Drag handle for category */}
         <button
           type="button"
-          className="dnd-handle-cat cursor-grab p-0 flex items-center justify-center rounded hover:bg-gray-200 focus:outline-none w-9 h-9" // Adjusted styles for centering
+          className="dnd-handle-cat cursor-pointer p-0 flex items-center justify-center rounded hover:bg-gray-200 focus:outline-none w-9 h-9"
           title="Déplacer la catégorie"
           disabled={isDemo}
         >
@@ -420,7 +482,9 @@ export default function CategorySection({
             .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
             .map((item) => (
               <SortableItem key={item.id} id={item.id}>
-                {category.display_style === "list" ? (
+                {item.isLoading ? (
+                  <MenuItemSkeleton displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />
+                ) : category.display_style === "list" ? (
                   <MenuItemList
                     item={item}
                     category={category}

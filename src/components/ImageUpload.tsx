@@ -215,7 +215,7 @@ export default function ImageUpload({
                   <Button 
                     size="icon" 
                     variant="ghost" 
-                    className="opacity-70 hover:opacity-100" 
+                    className="opacity-70 hover:opacity-100 cursor-pointer" 
                     title="Modifier" 
                     onClick={() => setShowPopup(true)}
                   >
@@ -343,7 +343,7 @@ export default function ImageUpload({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  className="w-32 h-32 rounded-full object-contain border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 flex flex-col items-center justify-center whitespace-normal break-words text-center leading-tight space-y-0"
+                  className="w-32 h-32 rounded-full object-contain border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 flex flex-col items-center justify-center whitespace-normal break-words text-center leading-tight space-y-0 cursor-pointer"
                   onClick={() => setShowPopup(true)}
                 >
                   <Upload className="h-5 w-5 mb-0.5" />
