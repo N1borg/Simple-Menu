@@ -35,7 +35,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2 cursor-pointer">
+        <Button variant="outline" size="default" className="flex items-center gap-2 cursor-pointer">
           <Settings className="w-4 h-4" /> Paramètres
         </Button>
       </SheetTrigger>

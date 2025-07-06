@@ -142,10 +142,9 @@ export default function MenuItemCard({
       if (open) setEditingItem(item.id)
     }}>
       <div className="relative group">
-        {/* Menu Item Content - clickable to open dialog */}
         <div
           className={
-            `bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 transition cursor-pointer min-h-[7.5em]${!instantAvailable ? ' bg-gray-100 text-gray-400 border border-gray-200' : ''}`
+            `bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 transition cursor-pointer min-h-[7.5em]${!instantAvailable ? " bg-gray-100 text-gray-400 border border-gray-200" : ""}`
           }
           style={{
             boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
@@ -195,7 +194,7 @@ export default function MenuItemCard({
               {item.description ? (
                 <p
                   ref={descRef}
-                  className={`text-sm mt-1 overflow-hidden${!instantAvailable ? ' line-through italic' : ' text-gray-500'}`}
+                  className={`text-sm mt-1 overflow-hidden${!instantAvailable ? ' line-through' : ' text-gray-500'}`}
                   style={{
                     display: '-webkit-box',
                     WebkitLineClamp: 2,

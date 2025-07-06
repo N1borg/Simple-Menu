@@ -1,4 +1,3 @@
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { GripVertical, Plus, Pencil } from "lucide-react"
@@ -7,6 +6,7 @@ import { SortableItem } from '@/components/SortableItem'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
 import MenuItemCard from '@/components/MenuItemCard'
 import MenuItemList from '@/components/MenuItemList'
+import MenuItemCompact from '@/components/MenuItemCompact';
 import type { Category, MenuItem } from '@/types/supabase_types'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useRef, useEffect, useState } from 'react'
@@ -187,22 +187,7 @@ export default function CategorySection({
     }
   }
 
-  // Fade logic for category title
-  const catTitleRef = useRef<HTMLHeadingElement>(null)
-  const [showCatTitleFade, setShowCatTitleFade] = useState(false)
-  useEffect(() => {
-    const el = catTitleRef.current
-    if (!el) return
-    const checkOverflow = () => {
-      setShowCatTitleFade(el.scrollWidth > el.clientWidth)
-    }
-    checkOverflow()
-    const resizeObserver = new window.ResizeObserver(checkOverflow)
-    resizeObserver.observe(el)
-    return () => resizeObserver.disconnect()
-  }, [category.name])
-
-  // Fix TypeScript error for Select value
+  // Removed fade logic for category title
   const renderCategoryHeader = () => {
     if (editingCategoryId === category.id) {
       return (
@@ -292,30 +277,11 @@ export default function CategorySection({
     return (
       <>
         <h2
-          ref={catTitleRef}
-          className="text-2xl font-bold mr-2 mb-2 sm:mb-0 overflow-hidden whitespace-nowrap relative"
+          className="text-2xl font-bold mr-2 mb-2 sm:mb-0 overflow-hidden whitespace-nowrap"
           style={{ textOverflow: "clip", maxWidth: "100%" }}
           title={category.name}
         >
-          <span
-            style={{ position: "relative", display: "inline-block", width: "100%" }}
-          >
-            {category.name}
-            {showCatTitleFade && (
-              <span
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 0,
-                  width: "3em",
-                  height: "100%",
-                  background: "linear-gradient(to right, transparent, #fff 80%)",
-                  pointerEvents: "none",
-                  display: "block",
-                }}
-              />
-            )}
-          </span>
+          {category.name}
         </h2>
         <Select
           onValueChange={async (value) => {
@@ -437,24 +403,106 @@ export default function CategorySection({
         renderOverlay={(activeId) => {
           const item: MenuItem | undefined = category.menu_items.find((i: MenuItem) => i.id === activeId);
           if (!item) return null;
-          if (category.display_style === "list") {
-            return (
-              <MenuItemList
-                item={item}
-                category={category}
-                editingItem={editingItem}
-                setEditingItem={setEditingItem}
-                handleItemChange={handleItemChange}
-                saveItem={handleSaveItem}
-                savingItemId={savingItemId}
-                loadingAction={loadingAction}
-                deleteMenuItem={handleDeleteMenuItem}
-                establishmentColor={establishmentColor}
-                isDemo={isDemo}
-              />
-            );
+          
+          switch (category.display_style) {
+            case "list":
+              return (
+                <MenuItemList
+                  item={item}
+                  category={category}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  handleItemChange={handleItemChange}
+                  saveItem={handleSaveItem}
+                  savingItemId={savingItemId}
+                  loadingAction={loadingAction}
+                  deleteMenuItem={handleDeleteMenuItem}
+                  establishmentColor={establishmentColor}
+                  isDemo={isDemo}
+                />
+              );
+            case "compact":
+              return (
+                <MenuItemCompact
+                  item={item}
+                  category={category}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  saveItem={handleSaveItem}
+                  savingItemId={savingItemId}
+                  loadingAction={loadingAction}
+                  deleteMenuItem={handleDeleteMenuItem}
+                  establishmentColor={establishmentColor}
+                  isDemo={isDemo}
+                />
+              );
+            case "table":
+              return (
+                <MenuItemSkeleton displayStyle="table" />
+              );
+            default:
+              return (
+                <MenuItemCard
+                  item={item}
+                  category={category}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  handleItemChange={handleItemChange}
+                  saveItem={handleSaveItem}
+                  savingItemId={savingItemId}
+                  loadingAction={loadingAction}
+                  deleteMenuItem={handleDeleteMenuItem}
+                  establishmentColor={establishmentColor}
+                  isDemo={isDemo}
+                />
+              );
           }
-          return (
+        }}
+      >
+        <div
+          className={
+            category.display_style === "card"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-full"
+              : category.display_style === "compact"
+              ? "grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full"
+              : "max-w-full"
+          }
+        >
+          {[...category.menu_items]
+            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+            .map((item) => (
+              <SortableItem key={item.id} id={item.id}>
+          {item.isLoading ? (
+            <MenuItemSkeleton displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />
+          ) : category.display_style === "list" ? (
+            <MenuItemList
+              item={item}
+              category={category}
+              editingItem={editingItem}
+              setEditingItem={setEditingItem}
+              handleItemChange={handleItemChange}
+              saveItem={handleSaveItem}
+              savingItemId={savingItemId}
+              loadingAction={loadingAction}
+              deleteMenuItem={handleDeleteMenuItem}
+              establishmentColor={establishmentColor}
+              isDemo={isDemo}
+            />
+          ) : category.display_style === "compact" ? (
+            <MenuItemCompact
+              item={item}
+              category={category}
+              editingItem={editingItem}
+              setEditingItem={setEditingItem}
+              // handleItemChange={handleItemChange}
+              saveItem={handleSaveItem}
+              savingItemId={savingItemId}
+              loadingAction={loadingAction}
+              deleteMenuItem={handleDeleteMenuItem}
+              establishmentColor={establishmentColor}
+              isDemo={isDemo}
+            />
+          ) : (
             <MenuItemCard
               item={item}
               category={category}
@@ -468,52 +516,7 @@ export default function CategorySection({
               establishmentColor={establishmentColor}
               isDemo={isDemo}
             />
-          );
-        }}
-      >
-        <div
-          className={
-            category.display_style === "list"
-              ? ""
-              : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-          }
-        >
-          {[...category.menu_items]
-            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map((item) => (
-              <SortableItem key={item.id} id={item.id}>
-                {item.isLoading ? (
-                  <MenuItemSkeleton displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />
-                ) : category.display_style === "list" ? (
-                  <MenuItemList
-                    item={item}
-                    category={category}
-                    editingItem={editingItem}
-                    setEditingItem={setEditingItem}
-                    handleItemChange={handleItemChange}
-                    saveItem={handleSaveItem}
-                    savingItemId={savingItemId}
-                    loadingAction={loadingAction}
-                    deleteMenuItem={handleDeleteMenuItem}
-                    establishmentColor={establishmentColor}
-                    isDemo={isDemo}
-                  />
-                ) : (
-                  <MenuItemCard
-                    item={item}
-                    category={category}
-                    editingItem={editingItem}
-                    setEditingItem={setEditingItem}
-                    handleItemChange={handleItemChange}
-                    saveItem={handleSaveItem}
-                    savingItemId={savingItemId}
-                    loadingAction={loadingAction}
-                    deleteMenuItem={handleDeleteMenuItem}
-                    establishmentColor={establishmentColor}
-                    isDemo={isDemo}
-                  />
-                )}
-                <MenuItemSkeleton displayStyle="list" />
+          )}
               </SortableItem>
             ))}
         </div>

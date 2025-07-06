@@ -43,8 +43,9 @@ const MenuItemSkeleton = ({ displayStyle }: MenuItemSkeletonProps) => {
       );
     case "compact":
       return (
-        <div className="flex items-center gap-2 p-2">
-          <Skeleton className="h-4 w-20" />
+        <div className="flex flex-col items-center gap-2 p-2 bg-white rounded-md shadow-md w-[45%]">
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-4 w-16" />
         </div>
       );
     case "table":
