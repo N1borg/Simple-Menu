@@ -513,6 +513,7 @@ export default function CategorySection({
                     isDemo={isDemo}
                   />
                 )}
+                <MenuItemSkeleton displayStyle="list" />
               </SortableItem>
             ))}
         </div>

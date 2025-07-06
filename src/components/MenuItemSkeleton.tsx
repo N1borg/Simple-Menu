@@ -27,9 +27,18 @@ const MenuItemSkeleton = ({ displayStyle }: MenuItemSkeletonProps) => {
       );
     case "list":
       return (
-        <div className="flex items-center gap-4 p-2 bg-white">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-24" />
+        <div className="flex items-center gap-4 p-4 rounded-xl shadow-md border bg-white transition min-h-[5.1em] mb-3"
+        style={{
+            boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
+            borderColor: 'transparent',
+            outline: 'none',
+        }}>
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <Skeleton className="h-7 w-32.5" />
+          </div>
+          <div className="flex flex-col items-end min-w-[70px]">
+            <Skeleton className="h-7 w-12" />
+          </div>
         </div>
       );
     case "compact":

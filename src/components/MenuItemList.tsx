@@ -96,7 +96,7 @@ export default function MenuItemList({
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-base truncate" title={item.name}>{item.name}</span>
+              <span className="text-lg font-semibold max-w-[100%] text-base truncate" title={item.name}>{item.name}</span>
             </div>
             {item.description && (
               <div className="text-sm text-gray-500 truncate mt-1 relative" title={item.description}>
