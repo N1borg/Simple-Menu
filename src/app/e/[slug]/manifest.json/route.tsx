@@ -17,6 +17,39 @@ export async function GET(
     return new Response('Establishment not found', { status: 404 })
   }
 
+  // Bloque le PWA pour la démo
+  if (slug === 'demo') {
+    return new Response(
+      JSON.stringify({
+        name: 'Démo Simple Menu',
+        short_name: 'Démo',
+        display: 'browser', // Pas standalone
+        start_url: `/e/demo`,
+        background_color: '#ffffff',
+        theme_color: establishment.primary_color || '#1f2937',
+        icons: [
+          {
+            src: '/icons/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/manifest+json; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600',
+        },
+      }
+    )
+  }
+
   const manifest = {
     name: `Menu – ${establishment.name}`,
     short_name: establishment.name,
@@ -28,14 +61,14 @@ export async function GET(
       {
         src: '/icons/icon-192.png',
         sizes: '192x192',
-        type: 'image/png'
+        type: 'image/png',
       },
       {
         src: '/icons/icon-512.png',
         sizes: '512x512',
-        type: 'image/png'
-      }
-    ]
+        type: 'image/png',
+      },
+    ],
   }
 
   return new Response(JSON.stringify(manifest), {

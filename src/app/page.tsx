@@ -149,9 +149,10 @@ export default function HomePage() {
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes personnalisés</li>
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Modifications illimitées</li>
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Support email & téléphonique</li>
-                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Images et couleurs personnalisées</li>
-                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Gestion des stocks en temps réel</li>
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes imprimés (10 unités)</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Application mobile</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Gestion des stocks</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Photos personnalisées</li>
               </ul>
               <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer mt-auto">
                 Je passe au Pro
@@ -174,15 +175,16 @@ export default function HomePage() {
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Accès administrateur</li>
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes personnalisés</li>
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Modifications illimitées</li>
-                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Support téléphonique prioritaire</li>
-                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Images et couleurs personnalisées</li>
-                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Gestion des stocks en temps réel</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Support email & téléphonique</li>
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes imprimés (100 unités)</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Application mobile</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Gestion des stocks</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Photos personnalisées</li>
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Nom de domaine personnalisé</li>
-                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Pages événementielles personnalisées</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Formation personnalisée</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Gestion des événements</li>
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Menu multilingue</li>
                 <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Statistiques utilisateurs</li>
-                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Formation personnalisée</li>
               </ul>
               <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer mt-auto">
                 Je veux le Premium
@@ -218,7 +220,7 @@ export default function HomePage() {
                   href={`mailto:contact.simplemenu@gmail.com?subject=Simple%20Menu%20-%20Offre%20de%20lancement%20${selectedPlan}&body=Bonjour%20Robin,%20je%20veux%20profiter%20de%20l'offre%20de%20lancement%20Simple%20Menu%20(${selectedPlan})%20!`}
                 >
                   <Mail className="text-xl" />
-                  Contacter par email
+                  contact.simplemenu@gmail.com
                 </a>
               </div>
               <p className="text-xs text-gray-500 mt-4">⚡ Offre limitée • Setup en 24h • Support français</p>
@@ -254,7 +256,7 @@ export default function HomePage() {
       <section id="contact" className="py-24 px-6 max-w-2xl mx-auto text-center">
         <h2 className="text-3xl font-bold mb-6">Prêt à digitaliser votre menu ?</h2>
         <p className="mb-6 text-gray-700">
-          Je vous accompagne personnellement pour mettre en ligne un menu à votre image, en moins de 24h.
+          Nous vous accompagnons personnellement pour mettre en ligne un menu à votre image, en moins de 24h.
         </p>
         <div className="bg-gradient-to-r from-green-100 to-blue-100 p-6 rounded-xl mb-6">
           <p className="text-green-800 font-semibold mb-2">🎯 OFFRE DE LANCEMENT LIMITÉE</p>
@@ -266,7 +268,7 @@ export default function HomePage() {
             href="mailto:contact.simplemenu@gmail.com?subject=Simple%20Menu%20-%20Offre%20de%20lancement&body=Bonjour%20Robin,%20je%20veux%20profiter%20de%20l'offre%20de%20lancement%20Simple%20Menu%20!"
           >
             <Mail className="text-xl" />
-            Contacter par email
+            contact.simplemenu@gmail.com
           </a>
         </div>
       </section>

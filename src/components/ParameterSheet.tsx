@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/sheet'
 import { Loader2Icon } from "lucide-react";
 import QrCodeDialog from "@/components/QrCodeDialog";
-import { LogOut, Trash2, Download, Settings } from "lucide-react";
+import { LogOut, Trash2, Download, Settings, X } from "lucide-react";
 import PWAInstallButton from "@/components/PWAInstallButton";
 
 interface ParameterSheetProps {
@@ -61,7 +61,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
             />
           </div>
         </div>
-        <SheetFooter className="mt-4">
+        <SheetFooter className="mt-4 flex flex-col gap-2">
           <Button
             type="button"
             variant="destructive"
@@ -89,6 +89,22 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
                 Se déconnecter
               </>
             )}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full flex items-center gap-2 cursor-pointer"
+            onClick={() => {
+              // Ferme le panneau
+              document.activeElement && (document.activeElement as HTMLElement).blur();
+            }}
+            asChild
+          >
+            <SheetClose asChild>
+              <span className="flex items-center w-full justify-center">
+                Fermer
+              </span>
+            </SheetClose>
           </Button>
         </SheetFooter>
       </SheetContent>
