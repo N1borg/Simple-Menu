@@ -2,9 +2,17 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { FaWhatsapp } from 'react-icons/fa'
-import { Mail } from "lucide-react"
+import { Mail, CircleCheck } from "lucide-react"
 import { Analytics } from "@vercel/analytics/next"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog'
+// @ts-ignore
+import confetti from 'canvas-confetti'
 
 export default function HomePage() {
   const [showContactPopup, setShowContactPopup] = useState(false)
@@ -13,6 +21,13 @@ export default function HomePage() {
   const handlePlanClick = (plan: string) => {
     setSelectedPlan(plan)
     setShowContactPopup(true)
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      scalar: 0.8,
+      zIndex: 9999
+    })
   }
 
   const closePopup = () => {
@@ -23,14 +38,14 @@ export default function HomePage() {
   return (
     <main className="bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen text-[#1e293b]">
       {/* HERO */}
-      <section className="px-6 py-24 text-center max-w-3xl mx-auto">
+      <section className="px-6 pt-12 pb-24 text-center max-w-3xl mx-auto">
         {/* Launch Offer Banner */}
         <div
           className="relative overflow-hidden bg-[linear-gradient(270deg,_#3b82f6,_#22d3ee,_#22c55e,_#3b82f6)] text-white p-4 mb-8 rounded-xl shadow-lg flex items-center justify-center gap-3 animate-gradient-slide"
           style={{ backgroundSize: '400% 400%' }}
         >
           <span className="text-2xl">🔥</span>
-          <span className="font-semibold">OFFRE DE LANCEMENT : -50% sur tous les abonnements + 1 mois gratuit !</span>
+          <span className="font-semibold">OFFRE DE LANCEMENT : 1 mois gratuit + -50% sur tous les abonnements !</span>
         </div>
         
         <h1 className="text-5xl md:text-6xl font-extrabold text-blue-700 mb-6 drop-shadow-lg">Simple Menu</h1>
@@ -52,7 +67,6 @@ export default function HomePage() {
             Voir un exemple de menu
           </Link>
         </div>
-        <p className="text-sm text-gray-500 mt-4">✨ Offre limitée aux 30 premiers clients</p>
       </section>
 
       {/* FONCTIONNALITÉS */}
@@ -88,17 +102,12 @@ export default function HomePage() {
             style={{ backgroundSize: '400% 400%' }}
           >
             <span className="text-2xl">🔥</span>
-            <span className="font-semibold">OFFRE DE LANCEMENT : -50% sur tous les abonnements + 1 mois gratuit !</span>
+            <span className="font-semibold">OFFRE DE LANCEMENT : 1 mois gratuit + -50% sur tous les abonnements !</span>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 text-left">
-            <div
-              className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition cursor-pointer border-2 border-transparent hover:border-blue-600"
-              onClick={() => handlePlanClick('Essentiel')}
-              tabIndex={0}
-              role="button"
-              aria-label="Sélectionner la formule Essentiel"
-            >
+            {/* Essentiel */}
+            <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition cursor-pointer border-2 border-transparent hover:border-blue-600 flex flex-col" onClick={() => handlePlanClick('Essentiel')} tabIndex={0} role="button" aria-label="Sélectionner la formule Essentiel">
               <h3 className="text-xl font-bold text-blue-700 mb-2">Essentiel</h3>
               <div className="mb-4">
                 <span className="text-lg text-gray-400 line-through">13,99€</span>
@@ -108,27 +117,22 @@ export default function HomePage() {
               <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block">
                 + 1 mois gratuit
               </div>
-              <ul className="text-sm text-gray-700 mb-6 space-y-1">
-                <li>✅ Menu digital responsive</li>
-                <li>✅ QR codes personnalisés</li>
-                <li>✅ Accès administrateur</li>
-                <li>✅ Modifications illimitées</li>
-                <li>✅ Support email</li>
+              <ul className="text-sm text-gray-700 mb-6 space-y-1 flex-1">
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Menu digital responsive</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Accès administrateur</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes personnalisés</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Modifications illimitées</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Support email</li>
               </ul>
-              <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer">
+              <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer mt-auto">
                 Je suis intéressé
               </span>
             </div>
 
-            <div
-              className="bg-white rounded-xl p-6 shadow-md border-2 border-blue-700 hover:shadow-xl transition cursor-pointer relative"
-              onClick={() => handlePlanClick('Pro')}
-              tabIndex={0}
-              role="button"
-              aria-label="Sélectionner la formule Pro"
-            >
+            {/* Pro */}
+            <div className="bg-white rounded-xl p-6 shadow-md border-2 border-blue-700 hover:shadow-xl transition cursor-pointer relative flex flex-col" onClick={() => handlePlanClick('Pro')} tabIndex={0} role="button" aria-label="Sélectionner la formule Pro">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-700 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                Le plus populaire
+                La plus populaire
               </div>
               <h3 className="text-xl font-bold text-blue-700 mb-2">Pro</h3>
               <div className="mb-4">
@@ -139,27 +143,23 @@ export default function HomePage() {
               <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block">
                 + 1 mois gratuit + QR codes imprimés
               </div>
-              <ul className="text-sm text-gray-700 mb-6 space-y-1">
-                <li>✅ Plan Essentiel inclus</li>
-                <li>✅ Logo et couleurs personnalisés</li>
-                <li>✅ Nom de domaine personnalisé</li>
-                <li>✅ Statistiques de visites</li>
-                <li>✅ Gestion des stocks en temps réel</li>
-                <li>✅ QR codes imprimés (10 unités)</li>
-                <li>✅ Support prioritaire</li>
+              <ul className="text-sm text-gray-700 mb-6 space-y-1 flex-1">
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Menu digital responsive</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Accès administrateur</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes personnalisés</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Modifications illimitées</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Support email & téléphonique</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Images et couleurs personnalisées</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Gestion des stocks en temps réel</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes imprimés (10 unités)</li>
               </ul>
-              <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer">
+              <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer mt-auto">
                 Je passe au Pro
               </span>
             </div>
 
-            <div
-              className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition cursor-pointer border-2 border-transparent hover:border-blue-600"
-              onClick={() => handlePlanClick('Premium')}
-              tabIndex={0}
-              role="button"
-              aria-label="Sélectionner la formule Premium"
-            >
+            {/* Premium */}
+            <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition cursor-pointer border-2 border-transparent hover:border-blue-600 flex flex-col" onClick={() => handlePlanClick('Premium')} tabIndex={0} role="button" aria-label="Sélectionner la formule Premium">
               <h3 className="text-xl font-bold text-blue-700 mb-2">Premium</h3>
               <div className="mb-4">
                 <span className="text-lg text-gray-400 line-through">39,99€</span>
@@ -169,61 +169,62 @@ export default function HomePage() {
               <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block">
                 + 1 mois gratuit + Setup complet offert
               </div>
-              <ul className="text-sm text-gray-700 mb-6 space-y-1">
-                <li>✅ Plan Pro inclus</li>
-                <li>✅ Pages événementielles personnalisées</li>
-                <li>✅ Menu multilingue</li>
-                <li>✅ Statistiques avancées (heure, plats populaires)</li>
-                <li>✅ QR codes imprimés illimités</li>
-                <li>✅ Intégration outils de réservation</li>
-                <li>✅ Gestion des avis clients</li>
-                <li>✅ Formation personnalisée</li>
-                <li>✅ Support téléphonique dédié</li>
-                <li>✅ Gestion multi-établissements</li>
+              <ul className="text-sm text-gray-700 mb-6 space-y-1 flex-1">
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Menu digital responsive</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Accès administrateur</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes personnalisés</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Modifications illimitées</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Support téléphonique prioritaire</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Images et couleurs personnalisées</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Gestion des stocks en temps réel</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes imprimés (100 unités)</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Nom de domaine personnalisé</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Pages événementielles personnalisées</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Menu multilingue</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Statistiques utilisateurs</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Formation personnalisée</li>
               </ul>
-              <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer">
+              <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer mt-auto">
                 Je veux le Premium
               </span>
             </div>
           </div>
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-600">💡 Tous les plans incluent : Hébergement sécurisé, mises à jour automatiques, sauvegarde quotidienne</p>
+            <p className="text-sm text-gray-600">Tous les plans incluent : Hébergement sécurisé, mises à jour automatiques, sauvegarde quotidienne</p>
+            <p className="text-xs text-gray-500 mt-2">Remise de 50% appliquée automatiquement sur les 3 premiers mois d'abonnement.</p>
           </div>
         </div>
 
-        {/* Contact popup */}
-        {showContactPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={closePopup}>
-            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md mx-auto text-center relative animate-fade-in" onClick={e => e.stopPropagation()}>
-              <button className="absolute top-3 right-3 text-gray-400 hover:text-blue-700 text-2xl" onClick={closePopup} aria-label="Fermer">&times;</button>
-              <div className="text-4xl mb-4">🎉</div>
-              <h3 className="text-2xl font-bold text-blue-700 mb-2">Profitez de l'offre de lancement !</h3>
-              <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4">
-                <p className="font-semibold">Formule {selectedPlan}</p>
-                <p className="text-sm">1 mois gratuit + réduction de 50%</p>
-              </div>
-              <p className="mb-6 text-gray-700">Je vous accompagne personnellement pour mettre en ligne votre menu en moins de 24h.</p>
+        {/* Contact popup using shadcn/ui Dialog */}
+        <Dialog open={showContactPopup} onOpenChange={(open) => { if (!open) closePopup() }}>
+          <DialogContent className="max-w-md w-full p-0">
+            <DialogHeader>
+              <DialogTitle className="flex flex-col items-center gap-2 pt-6">
+                <span className="text-4xl">🎉</span>
+                <span className="text-2xl font-bold text-blue-700">Profitez de l'offre de lancement !</span>
+              </DialogTitle>
+              <DialogDescription className="px-8">
+                <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 mt-4 text-center">
+                  <p className="font-semibold">Formule {selectedPlan}</p>
+                  <p className="text-sm">1 mois gratuit + réduction de 50%</p>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="px-8 pb-8 text-center">
+              <p className="mb-6 text-gray-700">Nous vous accompagnons personnellement pour mettre en ligne votre menu en moins de 24h.</p>
               <div className="space-y-3">
                 <a 
-                  className="w-full bg-green-600 text-white font-semibold py-3 px-6 rounded-xl shadow hover:bg-green-700 transition flex items-center justify-center gap-2" 
-                  href={`https://wa.me/33637702875?text=Bonjour%20Robin,%20je%20veux%20profiter%20de%20l'offre%20de%20lancement%20Simple%20Menu%20(${selectedPlan})%20!`}
-                  target="_blank"
-                >
-                  <FaWhatsapp className="text-xl" />
-                  WhatsApp (Réponse immédiate)
-                </a>
-                <a 
                   className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition flex items-center justify-center gap-2" 
-                  href={`mailto:robin.caboche@epitech.eu?subject=Simple%20Menu%20-%20Offre%20de%20lancement%20${selectedPlan}&body=Bonjour%20Robin,%20je%20veux%20profiter%20de%20l'offre%20de%20lancement%20Simple%20Menu%20(${selectedPlan})%20!`}
+                  href={`mailto:contact.simplemenu@gmail.com?subject=Simple%20Menu%20-%20Offre%20de%20lancement%20${selectedPlan}&body=Bonjour%20Robin,%20je%20veux%20profiter%20de%20l'offre%20de%20lancement%20Simple%20Menu%20(${selectedPlan})%20!`}
                 >
                   <Mail className="text-xl" />
-                  Email
+                  Contacter par email
                 </a>
               </div>
               <p className="text-xs text-gray-500 mt-4">⚡ Offre limitée • Setup en 24h • Support français</p>
             </div>
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
       </section>
 
       {/* TESTIMONIALS SECTION */}
@@ -261,26 +262,18 @@ export default function HomePage() {
         </div>
         <div className="flex flex-col gap-4">
           <a 
-            className="bg-green-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2" 
-            href="https://wa.me/33637702875?text=Bonjour%20Robin,%20je%20veux%20profiter%20de%20l'offre%20de%20lancement%20Simple%20Menu%20!"
-            target="_blank"
-          >
-            <FaWhatsapp className="text-xl" />
-            WhatsApp - Réponse immédiate
-          </a>
-          <a 
             className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition flex items-center justify-center gap-2" 
-            href="mailto:robin.caboche@epitech.eu?subject=Simple%20Menu%20-%20Offre%20de%20lancement&body=Bonjour%20Robin,%20je%20veux%20profiter%20de%20l'offre%20de%20lancement%20Simple%20Menu%20!"
+            href="mailto:contact.simplemenu@gmail.com?subject=Simple%20Menu%20-%20Offre%20de%20lancement&body=Bonjour%20Robin,%20je%20veux%20profiter%20de%20l'offre%20de%20lancement%20Simple%20Menu%20!"
           >
             <Mail className="text-xl" />
-            Mail - robin.caboche@epitech.eu
+            Contacter par email
           </a>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="text-center text-sm text-gray-500 py-6 border-t">
-        © {new Date().getFullYear()} Simple Menu — Conçu avec passion 🧑‍🍳
+        © {new Date().getFullYear()} Simple-Menu — Conçu avec passion 🧑‍🍳
       </footer>
       <Analytics />
     </main>
