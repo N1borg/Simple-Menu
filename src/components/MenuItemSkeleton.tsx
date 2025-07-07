@@ -43,9 +43,31 @@ const MenuItemSkeleton = ({ displayStyle }: MenuItemSkeletonProps) => {
       );
     case "compact":
       return (
-        <div className="flex flex-col items-center gap-2 p-2 bg-white rounded-md shadow-md w-[45%]">
-          <Skeleton className="h-5 w-20" />
-          <Skeleton className="h-4 w-16" />
+        
+        <div className="relative group">
+          <div
+            className="flex flex-col items-start gap-2 p-4 rounded-md shadow-md bg-white transition w-[120px]"
+            style={{
+              boxShadow: "0 1px 4px 0 rgba(0,0,0,0.07)",
+              borderColor: "transparent",
+              outline: "none",
+              width: "100%",
+            }}
+            tabIndex={0}
+          >
+            <Skeleton
+              className="h-6 w-5 rounded overflow-hidden whitespace-nowrap relative self-start"
+              style={{
+                textOverflow: "clip",
+                display: "inline-block",
+                width: "100%",
+                position: "relative",
+              }}
+            />
+            <div className="w-full flex justify-end">
+              <Skeleton className="h-6 w-10 rounded" />
+            </div>
+          </div>
         </div>
       );
     case "table":

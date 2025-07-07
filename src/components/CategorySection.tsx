@@ -519,6 +519,7 @@ export default function CategorySection({
           )}
               </SortableItem>
             ))}
+          <MenuItemSkeleton displayStyle="compact" />
         </div>
       </DndKitWrapper>
     </section>

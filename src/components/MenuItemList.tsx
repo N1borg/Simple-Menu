@@ -117,7 +117,7 @@ export default function MenuItemList({
             )}
           </div>
           <div className="flex flex-col items-end min-w-[70px]">
-            <span className="font-bold text-lg">{item.price?.toFixed(2)}€</span>
+            <span className="font-bold">{item.price?.toFixed(2)}€</span>
           </div>
         </div>
 

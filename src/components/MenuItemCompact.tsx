@@ -74,7 +74,7 @@ export default function MenuItemCompact({
     >
       <div className="relative group">
         <div
-          className={`flex flex-col items-start gap-2 p-4 rounded-md shadow-md bg-white group-hover:ring-2 transition cursor-pointer w-[120px] h-[120px]${!instantAvailable ? " line-through bg-gray-100 text-gray-400 border border-gray-200" : ""}`}
+          className={`flex flex-col items-start gap-2 p-4 rounded-md shadow-md bg-white group-hover:ring-2 transition cursor-pointer w-[120px]${!instantAvailable ? " line-through bg-gray-100 text-gray-400 border border-gray-200" : ""}`}
           style={{
             boxShadow: "0 1px 4px 0 rgba(0,0,0,0.07)",
             borderColor: "transparent",
@@ -123,7 +123,9 @@ export default function MenuItemCompact({
               className="fade-title"
             />
           </span>
-          <span className="text-right font-bold">{item.price?.toFixed(2)}€</span>
+          <div className="w-full flex justify-end">
+            <span className="font-bold">{item.price?.toFixed(2)}€</span>
+          </div>
         </div>
 
         <DialogContent className="sm:max-w-[425px]">
