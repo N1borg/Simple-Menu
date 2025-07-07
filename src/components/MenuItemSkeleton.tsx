@@ -43,10 +43,9 @@ const MenuItemSkeleton = ({ displayStyle }: MenuItemSkeletonProps) => {
       );
     case "compact":
       return (
-        
         <div className="relative group">
           <div
-            className="flex flex-col items-start gap-2 p-4 rounded-md shadow-md bg-white transition w-[120px]"
+            className="flex flex-col items-start gap-2 p-4 rounded-md shadow-md bg-white transition w-[120px] overflow-hidden"
             style={{
               boxShadow: "0 1px 4px 0 rgba(0,0,0,0.07)",
               borderColor: "transparent",
@@ -56,11 +55,10 @@ const MenuItemSkeleton = ({ displayStyle }: MenuItemSkeletonProps) => {
             tabIndex={0}
           >
             <Skeleton
-              className="h-6 w-5 rounded overflow-hidden whitespace-nowrap relative self-start"
+              className="h-7 w-full max-w-[90%] rounded overflow-hidden whitespace-nowrap relative self-start"
               style={{
                 textOverflow: "clip",
                 display: "inline-block",
-                width: "100%",
                 position: "relative",
               }}
             />

@@ -114,7 +114,7 @@ export default function MenuItemCompact({
                 position: "absolute",
                 right: 0,
                 top: 0,
-                width: "4em",
+                width: "2em",
                 height: "100%",
                 background: "linear-gradient(to right, transparent, #fff 80%)",
                 pointerEvents: "none",
