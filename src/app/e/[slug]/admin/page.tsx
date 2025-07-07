@@ -21,7 +21,7 @@ interface PageProps {
 
 export default async function AdminPage({ params }: PageProps) {
   const { slug } = await params
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = await getServerSupabase()
 
   const { data: establishment, error } = await supabase
@@ -40,7 +40,7 @@ export default async function AdminPage({ params }: PageProps) {
     return NotFound()
   }
 
-  const token = (await cookieStore).get('admin-session')?.value
+  const token = cookieStore.get('admin-session')?.value
   let isAuthenticated = false
   let tokenSlug: string | undefined
 

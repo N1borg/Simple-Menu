@@ -15,6 +15,7 @@ import {
 import { Loader2Icon } from "lucide-react";
 import QrCodeDialog from "@/components/QrCodeDialog";
 import { LogOut, Trash2, Download, Settings } from "lucide-react";
+import PWAInstallButton from "@/components/PWAInstallButton";
 
 interface ParameterSheetProps {
   establishment: {
@@ -48,6 +49,9 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
             {/* QR Code Button and Dialog */}
             <QrCodeDialog url={publicMenuUrl} />
           </div>
+          {/* <div className="px-4">
+            <PWAInstallButton />
+          </div> */}
           <div>
             <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Changer de mot de passe</Label>
             <AdminPasswordForm
