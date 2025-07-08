@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { toast } from 'sonner'
-import type { EstablishmentWithCategories } from '@/types/supabase'
+import type { EstablishmentWithCategories } from '@/types/supabase_types'
 
 export function useAddCategoryAtPosition({
   isDemo,

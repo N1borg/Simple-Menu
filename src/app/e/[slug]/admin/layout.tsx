@@ -1,4 +1,5 @@
 import React from "react";
+import Head from "next/head";
 
 export default async function AdminLayout({
   children,
@@ -10,13 +11,13 @@ export default async function AdminLayout({
   const { slug } = await params;
   
   return (
-    <html lang="fr">
-      <head>
+    <>
+      <Head>
         <link rel="manifest" href={`/e/${slug}/manifest.json`} />
-      </head>
-      <body>
+      </Head>
+      <div>
         {children}
-      </body>
-    </html>
+      </div>
+    </>
   );
 }

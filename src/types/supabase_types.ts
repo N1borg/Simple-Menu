@@ -14,3 +14,9 @@ export type Establishment = Database['public']['Tables']['establishments']['Row'
 export type MenuDisplayProps = {
   establishment: Establishment
 }
+
+export type EstablishmentWithCategories = Database['public']['Tables']['establishments']['Row'] & {
+  categories: (Database['public']['Tables']['categories']['Row'] & {
+    menu_items: Database['public']['Tables']['menu_items']['Row'][]
+  })[]
+}

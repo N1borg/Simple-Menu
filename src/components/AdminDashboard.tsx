@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { EstablishmentWithCategories } from '@/types/supabase'
+import type { EstablishmentWithCategories } from '@/types/supabase_types'
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"

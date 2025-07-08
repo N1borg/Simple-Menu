@@ -114,7 +114,7 @@ export default function HomePage() {
                 <span className="text-4xl font-extrabold text-blue-700 ml-2">6,99€</span>
                 <span className="text-gray-600"> / mois</span>
               </div>
-              <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block">
+              <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block text-center">
                 + 1 mois gratuit
               </div>
               <ul className="text-sm text-gray-700 mb-6 space-y-1 flex-1">
@@ -140,7 +140,7 @@ export default function HomePage() {
                 <span className="text-4xl font-extrabold text-blue-700 ml-2">12,99€</span>
                 <span className="text-gray-600"> / mois</span>
               </div>
-              <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block">
+              <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block text-center">
                 + 1 mois gratuit + QR codes imprimés
               </div>
               <ul className="text-sm text-gray-700 mb-6 space-y-1 flex-1">
@@ -167,7 +167,7 @@ export default function HomePage() {
                 <span className="text-4xl font-extrabold text-blue-700 ml-2">19,99€</span>
                 <span className="text-gray-600"> / mois</span>
               </div>
-              <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block">
+              <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block text-center">
                 + 1 mois gratuit + Setup complet offert
               </div>
               <ul className="text-sm text-gray-700 mb-6 space-y-1 flex-1">
