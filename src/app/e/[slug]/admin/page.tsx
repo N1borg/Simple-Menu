@@ -1,6 +1,7 @@
 import { getServerSupabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
+import { redirect } from 'next/navigation'
 import AdminDashboard from '@/components/AdminDashboard'
 import AdminLoginForm from '@/components/AdminLoginForm'
 import { EstablishmentWithCategories } from '@/types/supabase_types'
@@ -82,6 +83,12 @@ export default async function AdminPage({ params }: PageProps) {
           </div>
       </div>
     )
+  }
+
+  // Check if setup is needed and redirect (only for authenticated users, not demo)
+  const needsSetup = !establishment.primary_color && slug !== 'demo' && isAuthenticated
+  if (needsSetup) {
+    redirect(`/e/${slug}/admin/setup`)
   }
 
   return (

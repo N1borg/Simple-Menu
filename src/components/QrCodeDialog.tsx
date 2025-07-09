@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,19 +6,29 @@ import {
   DialogTitle,
   DialogDescription,
   DialogTrigger,
+  DialogClose,
   DialogFooter
 } from "@/components/ui/dialog";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
-import { QrCode, Download } from "lucide-react";
+import { QrCode, Download, Globe, Settings } from "lucide-react";
 
 interface QrCodeDialogProps {
   url: string;
+  adminUrl?: string;
   triggerButton?: React.ReactNode;
 }
 
-const QrCodeDialog = ({ url, triggerButton }: QrCodeDialogProps) => {
+const QrCodeDialog = ({ url, adminUrl, triggerButton }: QrCodeDialogProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [selectedType, setSelectedType] = useState<string>("public");
+  
+  // Determine which URL to use based on selection
+  const currentUrl = selectedType === "admin" && adminUrl ? adminUrl : url;
 
   const handleDownload = () => {
     const svg = svgRef.current;
@@ -59,21 +69,45 @@ const QrCodeDialog = ({ url, triggerButton }: QrCodeDialogProps) => {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-xs w-full flex flex-col items-center">
+      <DialogContent className="max-w-xs w-full flex flex-col">
         <DialogHeader>
           <DialogTitle>QR Code pour le menu</DialogTitle>
           <DialogDescription>
-            Scannez ou téléchargez ce QR Code pour accéder au menu public.
+            Choisissez le type de QR Code à générer et télécharger.
           </DialogDescription>
         </DialogHeader>
+        
+        {/* Toggle Group for selecting QR code type */}
+        {adminUrl && (
+          <div className="mb-4">
+            <ToggleGroup 
+              type="single" 
+              value={selectedType} 
+              onValueChange={(value: string) => setSelectedType(value)}
+              className="w-full"
+            >
+              <ToggleGroupItem value="public" aria-label="Menu public" className="flex-1">
+                <Globe className="h-4 w-4 mr-2" />
+                Menu public
+              </ToggleGroupItem>
+              <ToggleGroupItem value="admin" aria-label="Administration" className="flex-1">
+                <Settings className="h-4 w-4 mr-2" />
+                Administration
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        )}
+        
         <div className="my-4 flex justify-center">
-          <QRCodeSVG ref={svgRef} value={url} size={180} bgColor="#fff" fgColor="#000" title="QR Code" />
+          <QRCodeSVG ref={svgRef} value={currentUrl} size={180} bgColor="#fff" fgColor="#000" title="QR Code" />
         </div>
-        <div className="text-center text-xs break-all mb-2">{url}</div>
+        <div className="text-center text-xs break-all mb-2">{currentUrl}</div>
         <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Annuler</Button>
+          </DialogClose>
           <Button
             type="button"
-            className="w-full mt-2 flex items-center gap-2"
             onClick={handleDownload}
           >
             <Download className="w-4 h-4" /> Télécharger le QR Code

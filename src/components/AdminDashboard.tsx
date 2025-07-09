@@ -178,7 +178,14 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 relative flex flex-col">
       <div className="flex justify-end mb-4">
-        <ParameterSheet establishment={establishment} isDemo={isDemo} />
+        <ParameterSheet
+          establishment={{
+            id: establishment.id,
+            slug: establishment.slug,
+            primary_color: establishment.primary_color ?? undefined,
+          }}
+          isDemo={isDemo}
+        />
       </div>
 
       <div className="mb-4 mt-7">
