@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Loader2Icon } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -102,10 +102,12 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
             style={color ? { backgroundColor: color, borderColor: color, color: '#fff' } : {}}
           >
             {loading ? (
-              <>
-                <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+              <div className="flex items-center">
+                <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
                 Connexion...
-              </>
+              </div>
             ) : (
               'Se connecter'
             )}

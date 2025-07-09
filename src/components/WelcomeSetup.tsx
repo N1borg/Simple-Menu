@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { Eye, EyeOff, CheckCircle2, Upload, Loader2Icon } from 'lucide-react'
+import { Eye, EyeOff, CheckCircle2, Upload, Loader2 } from 'lucide-react'
 import ImageUpload from '@/components/ImageUpload'
 import ColorSelector from '@/components/ColorSelector'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -101,7 +101,7 @@ export function WelcomeSetup({
   const isStepValid = () => {
     switch (currentStep) {
       case 0: return passwordForm.formState.isValid
-      case 1: return true
+      case 1: return !!logoUrl // Only valid if a logo is present
       case 2: return selectedColor !== ''
       default: return false
     }
@@ -179,8 +179,9 @@ export function WelcomeSetup({
         throw new Error('Erreur lors de la mise à jour de la couleur')
       }
       toast.success('Configuration terminée avec succès !')
+      
       onComplete()
-      setTimeout(() => window.location.reload(), 1000)
+      // Don't reload - let the parent handle navigation with tutorial trigger
     } catch (error) {
       console.error('Configuration error:', error)
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la configuration')
@@ -195,10 +196,10 @@ export function WelcomeSetup({
         return (
           <Form {...passwordForm}>
             <form className="w-full">
-              <div className="rounded-xl bg-white border shadow-sm p-6 space-y-4">
+              <div className="rounded-xl bg-white border shadow-sm p-6 space-y-4 max-w-lg mx-auto">
                 <div className="text-center mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Bienvenue {establishmentName} ! 👋
+                    Bienvenue {establishmentName} !
                   </h3>
                   <p className="text-gray-600">
                     Définissez votre nouveau mot de passe pour sécuriser votre compte.
@@ -284,15 +285,15 @@ export function WelcomeSetup({
 
       case 1: // Logo upload
         return (
-          <div className="rounded-xl bg-white border shadow-sm p-6 space-y-4">
+          <div className="rounded-xl bg-white border shadow-sm p-6 space-y-4 max-w-lg mx-auto">
             <div className="text-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {currentLogo ? "Modifier votre logo 📸" : "Ajoutez votre logo 📸"}
+                {currentLogo ? "Modifier votre logo" : "Ajoutez votre logo"}
               </h3>
               <p className="text-gray-600">
                 {currentLogo 
-                  ? "Vous pouvez modifier votre logo ou conserver l'actuel (cette étape est optionnelle)."
-                  : "Personnalisez votre menu avec votre logo (cette étape est optionnelle)."
+                  ? "Vous pouvez modifier votre logo ou conserver l'actuel."
+                  : "Personnalisez votre menu avec votre logo."
                 }
               </p>
               {currentLogo && (
@@ -309,22 +310,12 @@ export function WelcomeSetup({
               slug={establishmentSlug}
               establishmentId={establishmentId}
             />
-            
-            {logoUrl && (
-              <div className="mt-4 text-center">
-                <img 
-                  src={logoUrl} 
-                  alt="Logo preview" 
-                  className="max-w-32 max-h-32 mx-auto rounded-lg shadow-md"
-                />
-              </div>
-            )}
           </div>
         )
 
       case 2: // Color selection
         return (
-          <div className="rounded-xl bg-white border shadow-sm p-6 space-y-4">
+          <div className="rounded-xl bg-white border shadow-sm p-6 space-y-4 max-w-lg mx-auto">
             <ColorSelector
               currentColor={selectedColor}
               onColorChange={setSelectedColor}
@@ -390,16 +381,21 @@ export function WelcomeSetup({
           
           <Button
             onClick={handleNext}
-            disabled={!isStepValid() || isLoading}
+            disabled={
+              isLoading ||
+              (currentStep === 1 && !logoUrl) // Only disable on logo step if no logo
+            }
             className="cursor-pointer"
           >
             {isLoading ? (
-              <>
-                <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+              <div className="flex items-center">
+                <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
                 Configuration...
-              </>
+              </div>
             ) : currentStep === steps.length - 1 ? (
-              'Terminer ✨'
+              'Terminer'
             ) : (
               'Suivant →'
             )}

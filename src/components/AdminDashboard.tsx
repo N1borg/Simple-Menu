@@ -1,10 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { EstablishmentWithCategories } from '@/types/supabase_types'
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
 import ImageUpload from "@/components/ImageUpload"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableCategory } from '@/components/SortableCategory'
@@ -13,7 +11,8 @@ import CategorySection from '@/components/CategorySection'
 import { useCategories } from '@/components/hooks/useCategories'
 import { useMenuItems } from '@/components/hooks/useMenuItems'
 import ParameterSheet from '@/components/ParameterSheet'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { AddCategoryButton } from '@/components/AddCategoryButton'
+import { useDashboardTutorial } from '@/hooks/useDashboardTutorial'
 
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
@@ -26,6 +25,8 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   )
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+
+  const { startTutorial, tutorialCompleted } = useDashboardTutorial()
 
   const {
     categories,
@@ -79,6 +80,9 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       toast.info("Modification désactivée (mode démo).")
       return;
     }
+
+    // Set loading state to disable buttons
+    setLoadingAction(`adding-category-${position}`)
 
     const display_order = position === 'top' ? 0 : categories.length;
     if (position === 'top') {
@@ -178,17 +182,20 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 relative flex flex-col">
       <div className="flex justify-end mb-4">
-        <ParameterSheet
-          establishment={{
-            id: establishment.id,
-            slug: establishment.slug,
-            primary_color: establishment.primary_color ?? undefined,
-          }}
-          isDemo={isDemo}
-        />
+        <div className="tutorial-parameters-button">
+          <ParameterSheet
+            establishment={{
+              id: establishment.id,
+              slug: establishment.slug,
+              primary_color: establishment.primary_color ?? undefined,
+            }}
+            isDemo={isDemo}
+            onTutorialStart={startTutorial}
+          />
+        </div>
       </div>
 
-      <div className="mb-4 mt-7">
+      <div className="tutorial-welcome mb-4 mt-7">
         <ImageUpload
           establishmentId={establishment.id}
           currentImageUrl={establishment.logo_url ?? undefined}
@@ -203,25 +210,24 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         <h1 className="text-3xl font-bold text-center mt-2">{establishment.name}</h1>
       </div>
 
-      <div className="flex justify-center mt-4">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              onClick={() => addCategory('top')}
-              variant="ghost"
-              size="icon"
-              title="Nouvelle catégorie"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer"
-              disabled={loadingAction !== null}
-            >
-              <Plus className="w-6 h-6" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Ajouter une catégorie</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
+      {/* Show only one button when there are no categories */}
+      {categories.length === 0 ? (
+        <AddCategoryButton
+          onClick={() => addCategory('top')}
+          disabled={loadingAction !== null}
+          loading={loadingAction?.startsWith('adding-category')}
+          className="flex justify-center mt-4"
+        />
+      ) : (
+        <>
+          <AddCategoryButton
+            onClick={() => addCategory('top')}
+            disabled={loadingAction !== null}
+            loading={loadingAction?.startsWith('adding-category')}
+            className="flex justify-center mt-4"
+          />
+        </>
+      )}
 
       <DndKitWrapper
         items={categories}
@@ -252,25 +258,16 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             ))}
         </div>
       </DndKitWrapper>
-      <div className="flex justify-center mt-8 mb-4">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              onClick={() => addCategory('bottom')}
-              variant="ghost"
-              size="icon"
-              title="Nouvelle catégorie"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer"
-              disabled={loadingAction !== null}
-            >
-              <Plus className="w-6 h-6" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Ajouter une catégorie</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
+      
+      {/* Show bottom button only when there are categories */}
+      {categories.length > 0 && (
+        <AddCategoryButton
+          onClick={() => addCategory('bottom')}
+          disabled={loadingAction !== null}
+          loading={loadingAction?.startsWith('adding-category')}
+          className="flex justify-center mt-8 mb-4"
+        />
+      )}
     </div>
   )
 }

@@ -141,7 +141,7 @@ export default function MenuItemCard({
       if (!open && editingItem === item.id) setEditingItem(null)
       if (open) setEditingItem(item.id)
     }}>
-      <div className="relative group">
+      <div className="menu-item-card relative group">
         <div
           className={
             `bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 transition cursor-pointer min-h-[7.5em]${!instantAvailable ? " bg-gray-100 text-gray-400 border border-gray-200" : ""}`

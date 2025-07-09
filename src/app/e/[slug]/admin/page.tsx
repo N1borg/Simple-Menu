@@ -94,7 +94,9 @@ export default async function AdminPage({ params }: PageProps) {
   return (
     <div className="min-h-screen flex flex-col">
       {(isAuthenticated || slug === 'demo') && (
-        <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />
+        <div className="tutorial-admin-banner">
+          <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />
+        </div>
       )}
       <div className="flex-grow">
         <AdminDashboard

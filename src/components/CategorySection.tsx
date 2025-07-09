@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { GripVertical, Plus, Pencil } from "lucide-react"
+import { GripVertical, Plus, Pencil, Loader2 } from "lucide-react"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableItem } from '@/components/SortableItem'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
@@ -11,7 +11,6 @@ import type { Category, MenuItem } from '@/types/supabase_types'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useRef, useEffect, useState } from 'react'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
-import { Loader2Icon } from "lucide-react"
 import { useMenuItems } from '@/components/hooks/useMenuItems'
 import { toast } from "sonner"
 import CategorySkeleton from "@/components/CategorySkeleton"
@@ -75,6 +74,7 @@ export default function CategorySection({
 
   // Local state for editing item
   const [editingItem, setEditingItem] = useState<string | null>(null)
+  const [addingItem, setAddingItem] = useState<boolean>(false)
 
   // Add item handler using the hook, with demo mode protection
   const handleAddMenuItem = async (catId: string) => {
@@ -82,6 +82,9 @@ export default function CategorySection({
       toast.info("Modification désactivée (mode démo).");
       return;
     }
+
+    // Set loading state to disable button
+    setAddingItem(true)
 
     // Add a temporary skeleton item
     const newCategories = categories.map((cat) =>
@@ -110,24 +113,42 @@ export default function CategorySection({
     );
     setCategories(newCategories);
 
-    // Call the API to add the item
-    const newItem = await addMenuItem(catId);
+    try {
+      // Call the API to add the item
+      const newItem = await addMenuItem(catId);
 
-    // Replace the skeleton with the real item
-    setCategories((prevCategories) =>
-      prevCategories.map((cat) =>
-        cat.id === catId
-          ? {
-              ...cat,
-              menu_items: cat.menu_items.map((item) =>
-                item.id.startsWith("temp-") && newItem && typeof newItem === "object" && !Array.isArray(newItem)
-                  ? { ...(newItem as MenuItem), isLoading: false }
-                  : item
-              ),
-            }
-          : cat
-      )
-    );
+      // Replace the skeleton with the real item
+      setCategories((prevCategories) =>
+        prevCategories.map((cat) =>
+          cat.id === catId
+            ? {
+                ...cat,
+                menu_items: cat.menu_items.map((item) =>
+                  item.id.startsWith("temp-") && newItem && typeof newItem === "object" && !Array.isArray(newItem)
+                    ? { ...(newItem as MenuItem), isLoading: false }
+                    : item
+                ),
+              }
+            : cat
+        )
+      );
+    } catch (error) {
+      // Remove the temporary item on error
+      setCategories((prevCategories) =>
+        prevCategories.map((cat) =>
+          cat.id === catId
+            ? {
+                ...cat,
+                menu_items: cat.menu_items.filter((item) => !item.id.startsWith("temp-"))
+              }
+            : cat
+        )
+      );
+      toast.error("Erreur lors de l'ajout de l'élément");
+    } finally {
+      // Reset loading state
+      setAddingItem(false);
+    }
   }
 
   // Block delete item in demo mode
@@ -253,10 +274,12 @@ export default function CategorySection({
             className="cursor-pointer"
           >
             {savingCategoryId === category.id || loadingAction === `saveCategory-${category.id}` ? (
-              <>
-                <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+              <div className="flex items-center">
+                <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
                 Enregistrement...
-              </>
+              </div>
             ) : (
               "Enregistrer"
             )}
@@ -314,23 +337,31 @@ export default function CategorySection({
             </SelectGroup>
           </SelectContent>
         </Select>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              onClick={() => handleAddMenuItem(category.id)}
-              variant="ghost"
-              size="icon"
-              title="Nouvel élément"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer"
-              disabled={category.id.startsWith("temp-")}
-            >
-              <Plus className="w-5 h-5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Ajouter un élément</p>
-          </TooltipContent>
-        </Tooltip>
+        <div className="tutorial-add-item">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() => handleAddMenuItem(category.id)}
+                variant="ghost"
+                size="icon"
+                title="Nouvel élément"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative"
+                disabled={category.id.startsWith("temp-") || addingItem}
+              >
+                <div className="w-5 h-5 flex items-center justify-center">
+                  {addingItem ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Plus className="w-5 h-5" />
+                  )}
+                </div>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{addingItem ? "Ajout en cours..." : "Ajouter un élément"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -380,7 +411,7 @@ export default function CategorySection({
   }
 
   return (
-    <section className="max-w-4xl mx-auto px-4 py-6">
+    <section className="category-section max-w-4xl mx-auto px-4 py-6">
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {/* Drag handle for category */}
         <button

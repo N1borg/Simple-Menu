@@ -90,7 +90,7 @@ export default function WelcomeSetupPage({ params }: PageProps) {
   }, [params, router])
 
   const handleComplete = () => {
-    router.push(`/e/${slug}/admin`)
+    router.push(`/e/${slug}/admin?tutorial=start`)
   }
 
   if (loading) {

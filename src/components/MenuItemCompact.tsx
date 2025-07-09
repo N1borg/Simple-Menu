@@ -72,7 +72,7 @@ export default function MenuItemCompact({
         if (open) setEditingItem(item.id);
       }}
     >
-      <div className="relative group">
+      <div className="menu-item-card relative group">
         <div
           className={`flex flex-col items-start gap-2 p-4 rounded-md shadow-md bg-white group-hover:ring-2 transition cursor-pointer w-[120px]${!instantAvailable ? " line-through bg-gray-100 text-gray-400 border border-gray-200" : ""}`}
           style={{

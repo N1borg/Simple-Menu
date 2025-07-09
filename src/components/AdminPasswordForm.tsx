@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Eye, EyeOff, Loader2Icon } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
 interface AdminPasswordFormProps {
   establishmentId: string
@@ -154,10 +154,12 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
             className="w-full mt-2 cursor-pointer"
           >
             {loading ? (
-              <>
-                <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+              <div className="flex items-center">
+                <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
                 Modification...
-              </>
+              </div>
             ) : (
               'Modifier le mot de passe'
             )}

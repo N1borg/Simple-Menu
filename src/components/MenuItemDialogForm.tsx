@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { DialogClose, DialogFooter } from "@/components/ui/dialog"
-import { Loader2Icon } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "sonner"
@@ -139,10 +139,12 @@ export function MenuItemDialogForm({
               className="cursor-pointer"
             >
               {savingItemId === item.id ? (
-                <>
-                  <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+                <div className="flex items-center">
+                  <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
                   Enregistrement...
-                </>
+                </div>
               ) : (
                 'Enregistrer'
               )}

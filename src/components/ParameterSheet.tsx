@@ -22,7 +22,7 @@ import {
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2Icon } from "lucide-react";
+import { Loader2, HelpCircle } from "lucide-react";
 import QrCodeDialog from "@/components/QrCodeDialog";
 import { LogOut, Settings } from "lucide-react";
 
@@ -33,9 +33,10 @@ interface ParameterSheetProps {
     primary_color?: string;
   };
   isDemo: boolean;
+  onTutorialStart?: () => void;
 }
 
-const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }) => {
+const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, onTutorialStart }) => {
   const [loggingOut, setLoggingOut] = useState(false);
   const [colorDialogOpen, setColorDialogOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState(establishment.primary_color || '#3b82f6');
@@ -87,16 +88,16 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
           <Settings className="w-4 h-4" /> Paramètres
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="max-w-md w-full">
+      <SheetContent side="right" className="max-w-md w-full" data-testid="sheet-close">
         <SheetHeader>
             <SheetTitle>Paramètres administrateur</SheetTitle>
         </SheetHeader>
         <div className="grid flex-1 auto-rows-min gap-6 px-1 mt-6">
-          <div className="px-4">
+          <div className="px-4 tutorial-qr-code">
             {/* QR Code Button and Dialog */}
             <QrCodeDialog url={publicMenuUrl} adminUrl={adminUrl} />
           </div>
-          <div className="px-4">
+          <div className="px-4 tutorial-color-settings">
             <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Couleur de l'établissement</Label>
             <Dialog open={colorDialogOpen} onOpenChange={setColorDialogOpen}>
               <DialogTrigger asChild>
@@ -135,10 +136,12 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
                     disabled={isSavingColor}
                   >
                     {isSavingColor ? (
-                      <>
-                        <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        </div>
                         Sauvegarde...
-                      </>
+                      </div>
                     ) : (
                       'Enregistrer'
                     )}
@@ -147,7 +150,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
               </DialogContent>
             </Dialog>
           </div>
-          <div>
+          <div className="tutorial-password-change">
             <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Changer de mot de passe</Label>
             <AdminPasswordForm
               establishmentId={establishment.id}
@@ -155,36 +158,57 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo }
               isDemo={isDemo}
             />
           </div>
+          {onTutorialStart && (
+            <div className="px-4">
+              <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Aide</Label>
+              <SheetClose asChild>
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center gap-2"
+                  onClick={() => {
+                    onTutorialStart()
+                  }}
+                >
+                  <HelpCircle className="w-4 h-4" />
+                  Relancer le tutoriel
+                </Button>
+              </SheetClose>
+            </div>
+          )}
         </div>
         <SheetFooter className="mt-4 flex flex-col gap-2">
-          <Button
-            type="button"
-            variant="destructive"
-            className="w-full flex items-center gap-2 cursor-pointer"
-            disabled={loggingOut}
-            onClick={async () => {
-              setLoggingOut(true);
-              await fetch("/api/admin/logout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ slug: establishment.slug })
-              });
-              document.cookie = "admin-session=; path=/; max-age=0;";
-              window.location.href = `/e/${establishment.slug}/admin`;
-            }}
-          >
-            {loggingOut ? (
-              <>
-                <Loader2Icon className="animate-spin mr-2 h-4 w-4" />
-                Déconnexion...
-              </>
-            ) : (
-              <>
-                <LogOut className="w-4 h-4 mr-2" />
-                Se déconnecter
-              </>
-            )}
-          </Button>
+          <div className="tutorial-logout">
+            <Button
+              type="button"
+              variant="destructive"
+              className="w-full flex items-center gap-2 cursor-pointer"
+              disabled={loggingOut}
+              onClick={async () => {
+                setLoggingOut(true);
+                await fetch("/api/admin/logout", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ slug: establishment.slug })
+                });
+                document.cookie = "admin-session=; path=/; max-age=0;";
+                window.location.href = `/e/${establishment.slug}/admin`;
+              }}
+            >
+              {loggingOut ? (
+                <div className="flex items-center">
+                  <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
+                  Déconnexion...
+                </div>
+              ) : (
+                <>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Se déconnecter
+                </>
+              )}
+            </Button>
+          </div>
           <Button
             type="button"
             variant="outline"
