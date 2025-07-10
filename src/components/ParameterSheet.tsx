@@ -22,7 +22,7 @@ import {
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, HelpCircle, Download } from "lucide-react";
+import { Loader2, HelpCircle, Smartphone } from "lucide-react";
 import QrCodeDialog from "@/components/QrCodeDialog";
 import { LogOut, Settings } from "lucide-react";
 
@@ -132,29 +132,8 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
             <SheetTitle>Paramètres administrateur</SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto min-h-0 pb-4">
-          <div className="grid auto-rows-min gap-6 px-1 mt-6">
-          <div className="px-4 tutorial-qr-code">
-            {/* QR Code Button and Dialog */}
-            <QrCodeDialog url={publicMenuUrl} adminUrl={adminUrl} />
-          </div>
-          {isPwaAllowed && (
-            <div className="px-4">
-              <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Application mobile</Label>
-              <Button
-                variant="outline"
-                className="w-full flex items-center gap-2"
-                onClick={handlePWAInstall}
-              >
-                <Download className="w-4 h-4" />
-                {showPWAInstall || !deferredPrompt 
-                  ? "Installer l'application" 
-                  : "Application disponible"
-                }
-              </Button>
-            </div>
-          )}
+          <div className="grid auto-rows-min gap-6 px-1">
           <div className="px-4 tutorial-color-settings">
-            <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Couleur de l'établissement</Label>
             <Dialog open={colorDialogOpen} onOpenChange={setColorDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="w-full flex items-center gap-2">
@@ -206,13 +185,31 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
               </DialogContent>
             </Dialog>
           </div>
+          <div className="px-4 tutorial-qr-code">
+            {/* QR Code Button and Dialog */}
+            <QrCodeDialog url={publicMenuUrl} adminUrl={adminUrl} />
+          </div>
+          {isPwaAllowed && (
+            <div className="px-4">
+                <Button
+                className="w-full flex items-center gap-2"
+                onClick={handlePWAInstall}
+                >
+                <Smartphone className="w-4 h-4" />
+                {showPWAInstall || !deferredPrompt 
+                  ? "Installer l'application" 
+                  : "Application disponible"
+                }
+                </Button>
+            </div>
+          )}
           <div className="tutorial-password-change">
             <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Changer de mot de passe</Label>
             <AdminPasswordForm
               establishmentId={establishment.id}
               slug={establishment.slug}
               isDemo={isDemo}
-            />
+              />
           </div>
           {onTutorialStart && (
             <div className="px-4">
@@ -224,7 +221,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                   onClick={() => {
                     onTutorialStart()
                   }}
-                >
+                  >
                   <HelpCircle className="w-4 h-4" />
                   Relancer le tutoriel
                 </Button>
@@ -271,7 +268,6 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
             variant="outline"
             className="w-full flex items-center gap-2 cursor-pointer"
             onClick={() => {
-              // Ferme le panneau
               document.activeElement && (document.activeElement as HTMLElement).blur();
             }}
             asChild

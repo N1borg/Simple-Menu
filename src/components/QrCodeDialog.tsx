@@ -81,6 +81,7 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton }: QrCodeDialogProps) => {
         {adminUrl && (
           <div className="mb-4">
             <ToggleGroup 
+              variant="outline"
               type="single" 
               value={selectedType} 
               onValueChange={(value: string) => setSelectedType(value)}
