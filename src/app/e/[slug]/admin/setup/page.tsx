@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { WelcomeSetup } from '@/components/WelcomeSetup'
-import NotFound from '@/app/not-found'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -22,7 +22,6 @@ export default function WelcomeSetupPage({ params }: PageProps) {
   const [slug, setSlug] = useState<string>('')
   const [establishment, setEstablishment] = useState<EstablishmentData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -30,27 +29,24 @@ export default function WelcomeSetupPage({ params }: PageProps) {
       try {
         const resolvedParams = await params
         const currentSlug = resolvedParams.slug
+        
+        // Block demo mode immediately
+        if (currentSlug === 'demo') {
+          notFound()
+          return
+        }
+        
         setSlug(currentSlug)
 
-        // Check authentication by calling a protected API endpoint
-        try {
-          const authResponse = await fetch('/api/admin/establishment-info', {
-            credentials: 'include'
-          })
+        // Check authentication immediately
+        const authResponse = await fetch('/api/admin/establishment-info', {
+          credentials: 'include'
+        })
           
-          if (!authResponse.ok) {
-            // Not authenticated, redirect to login (unless demo mode)
-            if (currentSlug !== 'demo') {
-              router.push(`/e/${currentSlug}/admin`)
-              return
-            }
-          }
-        } catch {
-          // Authentication check failed, redirect to login (unless demo mode)
-          if (currentSlug !== 'demo') {
-            router.push(`/e/${currentSlug}/admin`)
-            return
-          }
+        if (!authResponse.ok) {
+          // Not authenticated, return 404
+          notFound()
+          return
         }
 
         // Get establishment data
@@ -59,7 +55,7 @@ export default function WelcomeSetupPage({ params }: PageProps) {
         })
 
         if (!response.ok) {
-          setError('Establishment not found')
+          notFound()
           return
         }
 
@@ -67,20 +63,15 @@ export default function WelcomeSetupPage({ params }: PageProps) {
 
         // Check if setup is already completed (has primary color)
         if (establishmentData.primary_color) {
-          setError('setup_completed')
-          return
-        }
-
-        // Block demo mode from accessing setup
-        if (currentSlug === 'demo') {
-          setError('demo_blocked')
+          notFound()
           return
         }
 
         setEstablishment(establishmentData)
       } catch (err) {
         console.error('Error initializing setup page:', err)
-        setError('An error occurred while loading the page')
+        notFound()
+        return
       } finally {
         setLoading(false)
       }
@@ -104,8 +95,8 @@ export default function WelcomeSetupPage({ params }: PageProps) {
     )
   }
 
-  if (error || !establishment) {
-    return <NotFound />
+  if (!establishment) {
+    notFound()
   }
 
   return (

@@ -22,9 +22,8 @@ import {
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, HelpCircle, Smartphone } from "lucide-react";
+import { LogOut, Settings, Loader2, HelpCircle, Smartphone } from "lucide-react";
 import QrCodeDialog from "@/components/QrCodeDialog";
-import { LogOut, Settings } from "lucide-react";
 
 interface ParameterSheetProps {
   establishment: {

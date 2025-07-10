@@ -13,6 +13,10 @@ import { useMenuItems } from '@/components/hooks/useMenuItems'
 import ParameterSheet from '@/components/ParameterSheet'
 import { AddCategoryButton } from '@/components/AddCategoryButton'
 import { useDashboardTutorial } from '@/hooks/useDashboardTutorial'
+import { EstablishmentInfoManager } from '@/components/EstablishmentInfoManager'
+import { Settings } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
@@ -220,14 +224,12 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           className="flex justify-center mt-4"
         />
       ) : (
-        <>
-          <AddCategoryButton
-            onClick={() => addCategory('top')}
-            disabled={loadingAction !== null}
-            loading={loadingAction?.startsWith('adding-category')}
-            className="flex justify-center mt-4"
-          />
-        </>
+        <AddCategoryButton
+          onClick={() => addCategory('top')}
+          disabled={loadingAction !== null}
+          loading={loadingAction?.startsWith('adding-category')}
+          className="flex justify-center mt-4"
+        />
       )}
 
       <DndKitWrapper
@@ -266,9 +268,43 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           onClick={() => addCategory('bottom')}
           disabled={loadingAction !== null}
           loading={loadingAction?.startsWith('adding-category')}
-          className="flex justify-center mt-8 mb-4"
+          className="flex justify-center mt-8"
         />
       )}
+      
+      {/* Edit Contact Information Button - Always visible */}
+      <div className="flex justify-center mt-6 mb-6">
+        {isDemo ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                disabled={true}
+              >
+                <Settings className="w-4 h-4" />
+                Modifier les informations de contact
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Modification désactivée (mode démo)</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <EstablishmentInfoManager 
+            establishmentId={establishment.id}
+            slug={establishment.slug}
+          >
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Modifier les informations de contact
+            </Button>
+          </EstablishmentInfoManager>
+        )}
+      </div>
     </div>
   )
 }

@@ -51,32 +51,59 @@ export type Database = {
       }
       establishments: {
         Row: {
+          address: string | null
           admin_hash: string | null
+          city: string | null
           created_at: string | null
+          email: string | null
+          facebook_url: string | null
+          google_maps_url: string | null
           id: string
+          instagram_url: string | null
           logo_url: string | null
           name: string
+          opening_hours: Json | null
+          phone: string | null
           plan: string
+          postal_code: string | null
           primary_color: string | null
           slug: string
         }
         Insert: {
+          address?: string | null
           admin_hash?: string | null
+          city?: string | null
           created_at?: string | null
+          email?: string | null
+          facebook_url?: string | null
+          google_maps_url?: string | null
           id?: string
+          instagram_url?: string | null
           logo_url?: string | null
           name: string
+          opening_hours?: Json | null
+          phone?: string | null
           plan?: string
+          postal_code?: string | null
           primary_color?: string | null
           slug: string
         }
         Update: {
+          address?: string | null
           admin_hash?: string | null
+          city?: string | null
           created_at?: string | null
+          email?: string | null
+          facebook_url?: string | null
+          google_maps_url?: string | null
           id?: string
+          instagram_url?: string | null
           logo_url?: string | null
           name?: string
+          opening_hours?: Json | null
+          phone?: string | null
           plan?: string
+          postal_code?: string | null
           primary_color?: string | null
           slug?: string
         }

@@ -1,28 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAdminAuth } from '@/lib/auth'
 import { getServerSupabase } from '@/lib/supabase'
-import { jwtVerify } from 'jose'
-
-const JWT_SECRET = process.env.JWT_SECRET
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET non défini dans les variables d\'environnement')
-}
 
 export async function GET(req: NextRequest) {
   try {
-    // Get JWT token from cookies
-    const token = req.cookies.get('admin-session')?.value
-
-    if (!token) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    const adminAuth = await requireAdminAuth(req)
+    if ('status' in adminAuth) {
+      return adminAuth
     }
 
-    // Verify JWT and get slug
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET))
-    const slug = payload.slug as string
+    const { slug } = adminAuth
 
-    if (!slug) {
-      return NextResponse.json({ error: 'Token invalide' }, { status: 401 })
+    // Block demo requests
+    if (slug === 'demo') {
+      return NextResponse.json({ error: 'Accès non autorisé en mode démo' }, { status: 403 })
     }
 
     const supabase = await getServerSupabase()
@@ -30,7 +21,7 @@ export async function GET(req: NextRequest) {
     // Get establishment basic info
     const { data: establishment, error } = await supabase
       .from('establishments')
-      .select('id, name, primary_color, logo_url')
+      .select('id, name, primary_color, logo_url, address, phone, email, facebook_url, instagram_url, google_maps_url, opening_hours')
       .eq('slug', slug)
       .single()
 
@@ -42,7 +33,14 @@ export async function GET(req: NextRequest) {
       id: establishment.id,
       name: establishment.name,
       primary_color: establishment.primary_color,
-      logo_url: establishment.logo_url
+      logo_url: establishment.logo_url,
+      address: establishment.address,
+      phone: establishment.phone,
+      email: establishment.email,
+      facebook_url: establishment.facebook_url,
+      instagram_url: establishment.instagram_url,
+      google_maps_url: establishment.google_maps_url,
+      opening_hours: establishment.opening_hours
     })
 
   } catch (error) {

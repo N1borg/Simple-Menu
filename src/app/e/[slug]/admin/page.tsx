@@ -103,7 +103,18 @@ export default async function AdminPage({ params }: PageProps) {
           establishment={establishment as EstablishmentWithCategories}
         />
       </div>
-      <MenuFooter color={establishment.primary_color ?? undefined} />
+      <MenuFooter 
+        color={establishment.primary_color ?? undefined} 
+        establishmentInfo={{
+          address: establishment.address ?? undefined,
+          phone: establishment.phone ?? undefined,
+          email: establishment.email ?? undefined,
+          opening_hours: establishment.opening_hours as Array<{ day: string; hours: string }> ?? undefined,
+          facebook_url: establishment.facebook_url ?? undefined,
+          instagram_url: establishment.instagram_url ?? undefined,
+          google_maps_url: establishment.google_maps_url ?? undefined
+        }}
+      />
     </div>
   )
 }

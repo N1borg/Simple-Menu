@@ -4,9 +4,11 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl } from '@/lib/utils'
 import { Eye, EyeOff, CheckCircle2, Upload, Loader2 } from 'lucide-react'
 import ImageUpload from '@/components/ImageUpload'
 import ColorSelector from '@/components/ColorSelector'
+import { EstablishmentInfoForm, validateEstablishmentInfo } from '@/components/EstablishmentInfoForm'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -55,6 +57,7 @@ export function WelcomeSetup({
   // React Hook Form for password step
   const passwordForm = useForm<z.infer<typeof PasswordFormSchema>>({
     resolver: zodResolver(PasswordFormSchema),
+    mode: 'onChange', // Enable real-time validation
     defaultValues: {
       newPassword: '',
       confirmPassword: '',
@@ -65,6 +68,16 @@ export function WelcomeSetup({
   
   // Color selection
   const [selectedColor, setSelectedColor] = useState('#3b82f6')
+
+  // Establishment info
+  const [establishmentInfo, setEstablishmentInfo] = useState({
+    address: '',
+    phone: '',
+    email: '',
+    opening_hours: [] as Array<{ day: string; hours: string }>,
+    facebook_url: '',
+    instagram_url: ''
+  })
 
   // Add keyboard event handler for Enter key
   useEffect(() => {
@@ -95,6 +108,7 @@ export function WelcomeSetup({
   const steps = [
     { title: "Définir votre mot de passe", required: true },
     { title: "Ajouter votre logo", required: false },
+    { title: "Informations de l'établissement", required: false },
     { title: "Choisir votre couleur", required: true }
   ]
 
@@ -102,12 +116,25 @@ export function WelcomeSetup({
     switch (currentStep) {
       case 0: return passwordForm.formState.isValid
       case 1: return !!logoUrl // Only valid if a logo is present
-      case 2: return selectedColor !== ''
+      case 2: 
+        // Validate establishment info if any data is provided
+        const validation = validateEstablishmentInfo(establishmentInfo)
+        return validation.isValid
+      case 3: return selectedColor !== ''
       default: return false
     }
   }
 
   const handleNext = async () => {
+    // Validate current step before proceeding
+    if (!isStepValid()) {
+      if (currentStep === 2) {
+        const validation = validateEstablishmentInfo(establishmentInfo)
+        validation.errors.forEach(error => toast.error(error))
+      }
+      return
+    }
+
     // If on password step, validate and set password before proceeding
     if (currentStep === 0) {
       setIsLoading(true)
@@ -153,35 +180,83 @@ export function WelcomeSetup({
   const handleComplete = async () => {
     setIsLoading(true)
     try {
-      // 2. Update logo if provided
-      if (logoUrl && logoUrl !== currentLogo) {
-        const logoResponse = await fetch('/api/admin/update-logo', {
+      // Validate establishment info before submitting
+      const validation = validateEstablishmentInfo(establishmentInfo)
+      if (!validation.isValid) {
+        validation.errors.forEach(error => toast.error(error))
+        setIsLoading(false)
+        return
+      }
+
+      // Prepare all data for a single API call
+      const setupData = {
+        logo_url: logoUrl && logoUrl !== currentLogo ? logoUrl : undefined,
+        primary_color: selectedColor,
+        establishment_info: {
+          address: sanitizeText(establishmentInfo.address, 200),
+          phone: sanitizePhone(establishmentInfo.phone),
+          email: sanitizeEmail(establishmentInfo.email),
+          opening_hours: establishmentInfo.opening_hours.length > 0 ? establishmentInfo.opening_hours : undefined,
+          facebook_url: sanitizeFacebookUrl(establishmentInfo.facebook_url),
+          instagram_url: sanitizeInstagramUrl(establishmentInfo.instagram_url)
+        }
+      }
+
+      // Make individual API calls (we can optimize this later to a single endpoint)
+      const promises = []
+
+      // Update logo if provided
+      if (setupData.logo_url) {
+        promises.push(
+          fetch('/api/admin/update-logo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: establishmentId,
+              logo_url: setupData.logo_url
+            })
+          })
+        )
+      }
+
+      // Update color
+      promises.push(
+        fetch('/api/admin/update-color', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            id: establishmentId,
-            logo_url: logoUrl
+            color: setupData.primary_color
           })
         })
-        if (!logoResponse.ok) {
-          throw new Error('Erreur lors de la mise à jour du logo')
+      )
+
+      // Update establishment info if any data provided
+      const hasEstablishmentData = Object.values(setupData.establishment_info).some(value => 
+        value !== undefined && (Array.isArray(value) ? value.length > 0 : value !== '')
+      )
+      
+      if (hasEstablishmentData) {
+        promises.push(
+          fetch('/api/admin/establishment-info/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(setupData.establishment_info)
+          })
+        )
+      }
+
+      // Execute all API calls
+      const responses = await Promise.all(promises)
+      
+      // Check if all responses are ok
+      for (const response of responses) {
+        if (!response.ok) {
+          throw new Error('Erreur lors de la sauvegarde de la configuration')
         }
       }
-      // 3. Update color
-      const colorResponse = await fetch('/api/admin/update-color', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          color: selectedColor
-        })
-      })
-      if (!colorResponse.ok) {
-        throw new Error('Erreur lors de la mise à jour de la couleur')
-      }
+
       toast.success('Configuration terminée avec succès !')
-      
       onComplete()
-      // Don't reload - let the parent handle navigation with tutorial trigger
     } catch (error) {
       console.error('Configuration error:', error)
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la configuration')
@@ -209,9 +284,9 @@ export function WelcomeSetup({
                 <FormField
                   control={passwordForm.control}
                   name="newPassword"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
-                      <FormLabel>Nouveau mot de passe</FormLabel>
+                      <FormLabel className="text-gray-700">Nouveau mot de passe</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input
@@ -219,6 +294,7 @@ export function WelcomeSetup({
                             autoComplete="new-password"
                             placeholder="Minimum 6 caractères"
                             {...field}
+                            className={fieldState.error ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : ''}
                             autoFocus={false}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && isStepValid() && !isLoading) {
@@ -238,7 +314,9 @@ export function WelcomeSetup({
                           </button>
                         </div>
                       </FormControl>
-                      <FormMessage />
+                      {fieldState.error && (
+                        <p className="text-xs text-red-500 mt-1">{fieldState.error.message}</p>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -246,7 +324,7 @@ export function WelcomeSetup({
                 <FormField
                   control={passwordForm.control}
                   name="confirmPassword"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Confirmer le nouveau mot de passe</FormLabel>
                       <FormControl>
@@ -256,6 +334,7 @@ export function WelcomeSetup({
                             autoComplete="new-password"
                             placeholder="Confirmer le mot de passe"
                             {...field}
+                            className={fieldState.error ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : ''}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' && isStepValid() && !isLoading) {
                                 e.preventDefault()
@@ -274,7 +353,9 @@ export function WelcomeSetup({
                           </button>
                         </div>
                       </FormControl>
-                      <FormMessage />
+                      {fieldState.error && (
+                        <p className="text-xs text-red-500 mt-1">{fieldState.error.message}</p>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -313,7 +394,15 @@ export function WelcomeSetup({
           </div>
         )
 
-      case 2: // Color selection
+      case 2: // Establishment info
+        return (
+          <EstablishmentInfoForm
+            establishmentId={establishmentId}
+            onDataChange={setEstablishmentInfo}
+          />
+        )
+
+      case 3: // Color selection
         return (
           <div className="rounded-xl bg-white border shadow-sm p-6 space-y-4 max-w-lg mx-auto">
             <ColorSelector
@@ -378,28 +467,26 @@ export function WelcomeSetup({
               Ignorer
             </Button>
           )}
-          
           <Button
             onClick={handleNext}
-            disabled={
-              isLoading ||
-              (currentStep === 1 && !logoUrl) // Only disable on logo step if no logo
-            }
+            disabled={isLoading || !isStepValid()}
             className="cursor-pointer"
           >
-            {isLoading ? (
-              <div className="flex items-center">
-                <div className="w-4 h-4 mr-2 flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
+                  Configuration...
                 </div>
-                Configuration...
-              </div>
-            ) : currentStep === steps.length - 1 ? (
-              'Terminer'
-            ) : (
-              'Suivant →'
-            )}
-          </Button>
+              ) : currentStep === steps.length - 1 ? (
+                'Terminer'
+              ) : currentStep === 2 ? (
+                'Suivant →' // Don't show complete on establishment info step
+              ) : (
+                'Suivant →'
+              )}
+            </Button>
         </div>
       </div>
     </div>
