@@ -188,6 +188,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
               id: establishment.id,
               slug: establishment.slug,
               primary_color: establishment.primary_color ?? undefined,
+              plan: establishment.plan,
             }}
             isDemo={isDemo}
             onTutorialStart={startTutorial}

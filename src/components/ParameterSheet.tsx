@@ -22,7 +22,7 @@ import {
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, HelpCircle } from "lucide-react";
+import { Loader2, HelpCircle, Download } from "lucide-react";
 import QrCodeDialog from "@/components/QrCodeDialog";
 import { LogOut, Settings } from "lucide-react";
 
@@ -31,6 +31,7 @@ interface ParameterSheetProps {
     id: string;
     slug: string;
     primary_color?: string;
+    plan?: string;
   };
   isDemo: boolean;
   onTutorialStart?: () => void;
@@ -41,6 +42,44 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
   const [colorDialogOpen, setColorDialogOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState(establishment.primary_color || '#3b82f6');
   const [isSavingColor, setIsSavingColor] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showPWAInstall, setShowPWAInstall] = useState(false);
+
+  // Check if PWA is allowed for this establishment
+  const plan = establishment?.plan || 'essentiel';
+  const isPwaAllowed = (plan === 'pro' || plan === 'premium') && !isDemo;
+
+  React.useEffect(() => {
+    if (!isPwaAllowed) return;
+
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowPWAInstall(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, [isPwaAllowed]);
+
+  const handlePWAInstall = async () => {
+    if (!deferredPrompt) {
+      // For iOS or already installed
+      toast.info("Sur iOS, utilisez Safari et cliquez sur 'Partager' puis 'Sur l'écran d'accueil'");
+      return;
+    }
+    
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        toast.success("Application installée avec succès !");
+        setShowPWAInstall(false);
+        setDeferredPrompt(null);
+      }
+    } catch (error) {
+      toast.error("Erreur lors de l'installation");
+    }
+  };
 
   const handleColorSave = async () => {
     if (isDemo) {
@@ -88,15 +127,32 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
           <Settings className="w-4 h-4" /> Paramètres
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="max-w-md w-full" data-testid="sheet-close">
-        <SheetHeader>
+      <SheetContent side="right" className="max-w-md w-full flex flex-col h-full" data-testid="sheet-close">
+        <SheetHeader className="flex-shrink-0">
             <SheetTitle>Paramètres administrateur</SheetTitle>
         </SheetHeader>
-        <div className="grid flex-1 auto-rows-min gap-6 px-1 mt-6">
+        <div className="flex-1 overflow-y-auto min-h-0 pb-4">
+          <div className="grid auto-rows-min gap-6 px-1 mt-6">
           <div className="px-4 tutorial-qr-code">
             {/* QR Code Button and Dialog */}
             <QrCodeDialog url={publicMenuUrl} adminUrl={adminUrl} />
           </div>
+          {isPwaAllowed && (
+            <div className="px-4">
+              <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Application mobile</Label>
+              <Button
+                variant="outline"
+                className="w-full flex items-center gap-2"
+                onClick={handlePWAInstall}
+              >
+                <Download className="w-4 h-4" />
+                {showPWAInstall || !deferredPrompt 
+                  ? "Installer l'application" 
+                  : "Application disponible"
+                }
+              </Button>
+            </div>
+          )}
           <div className="px-4 tutorial-color-settings">
             <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Couleur de l'établissement</Label>
             <Dialog open={colorDialogOpen} onOpenChange={setColorDialogOpen}>
@@ -175,8 +231,9 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
               </SheetClose>
             </div>
           )}
+          </div>
         </div>
-        <SheetFooter className="mt-4 flex flex-col gap-2">
+        <SheetFooter className="flex-shrink-0 bg-background p-4 flex flex-col gap-2">
           <div className="tutorial-logout">
             <Button
               type="button"

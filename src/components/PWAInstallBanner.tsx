@@ -9,12 +9,30 @@ function isIos() {
   );
 }
 
-export function PWAInstallBanner() {
+interface PWAInstallBannerProps {
+  establishment?: {
+    plan?: string;
+    slug?: string;
+  };
+}
+
+export function PWAInstallBanner({ establishment }: PWAInstallBannerProps) {
   const [showIos, setShowIos] = useState(false);
   const [showAndroid, setShowAndroid] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
+  // Check if PWA is allowed for this establishment
+  const plan = establishment?.plan || 'essentiel';
+  const isDemo = establishment?.slug === 'demo';
+  const isPwaAllowed = (plan === 'pro' || plan === 'premium') && !isDemo;
+
   useEffect(() => {
+    if (!isPwaAllowed) {
+      setShowIos(false);
+      setShowAndroid(false);
+      return;
+    }
+
     if (isIos()) {
       setShowIos(true);
     } else {
@@ -26,7 +44,7 @@ export function PWAInstallBanner() {
       window.addEventListener("beforeinstallprompt", handler);
       return () => window.removeEventListener("beforeinstallprompt", handler);
     }
-  }, []);
+  }, [isPwaAllowed]);
 
   const handleInstall = async () => {
     if (!deferredPrompt) return;
@@ -37,6 +55,10 @@ export function PWAInstallBanner() {
       setDeferredPrompt(null);
     }
   };
+
+  if (!isPwaAllowed) {
+    return null;
+  }
 
   if (showIos) {
     return (
