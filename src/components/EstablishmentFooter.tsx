@@ -29,14 +29,12 @@ export interface EstablishmentInfo {
 interface EstablishmentFooterProps {
   color?: string
   establishmentInfo?: EstablishmentInfo
-  showAttribution?: boolean
   className?: string
 }
 
 const EstablishmentFooter: React.FC<EstablishmentFooterProps> = ({ 
-  color, 
-  establishmentInfo, 
-  showAttribution = true,
+  color,
+  establishmentInfo,
   className = ""
 }) => {
   if (!establishmentInfo) return null;
@@ -51,7 +49,7 @@ const EstablishmentFooter: React.FC<EstablishmentFooterProps> = ({
     establishmentInfo.google_maps_url
   );
 
-  if (!hasInfo && !showAttribution) return null;
+  if (!hasInfo) return null;
 
   return (
     <div className={`text-sm ${className}`}>
@@ -147,23 +145,6 @@ const EstablishmentFooter: React.FC<EstablishmentFooterProps> = ({
             referrerPolicy="no-referrer-when-downgrade"
             title="Localisation de l'établissement"
           />
-        </div>
-      )}
-
-      {/* Simple Menu attribution */}
-      {showAttribution && (
-        <div className="text-center border-t pt-4" style={{ borderColor: (color || '#3a4fff') + '20' }}>
-          <p className="text-xs">
-            Menu digital créé avec ❤️ par{" "}
-            <a
-              href="https://simple-menu.niborgpro.fr"
-              className="underline"
-              target="_blank"
-              rel="noopener"
-            >
-              Simple-Menu
-            </a>
-          </p>
         </div>
       )}
     </div>
