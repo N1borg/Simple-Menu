@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl } from '@/lib/utils'
-import { Loader2, MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { Loader2, MapPin, Mail, Phone } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -38,55 +38,40 @@ interface EstablishmentInfoManagerProps {
   children?: React.ReactNode
 }
 
-interface EstablishmentData {
-  address?: string
-  phone?: string
-  email?: string
-  opening_hours?: Array<{ day: string; hours: string }>
-  facebook_url?: string
-  instagram_url?: string
+interface ContactFormData {
+  address: string
+  phone: string
+  email: string
+  facebook_url: string
+  instagram_url: string
 }
-
-const defaultHours = [
-  { day: 'Lun.', hours: '' },
-  { day: 'Mar.', hours: '' },
-  { day: 'Mer.', hours: '' },
-  { day: 'Jeu.', hours: '' },
-  { day: 'Ven.', hours: '' },
-  { day: 'Sam.', hours: '' },
-  { day: 'Dim.', hours: '' }
-]
 
 export function EstablishmentInfoManager({ establishmentId, slug, children }: EstablishmentInfoManagerProps) {
   const isDemo = slug === 'demo'
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [formData, setFormData] = useState<EstablishmentData>({
+  const [formData, setFormData] = useState<ContactFormData>({
     address: '',
     phone: '',
     email: '',
     facebook_url: '',
     instagram_url: ''
   })
-  const [initialFormData, setInitialFormData] = useState<EstablishmentData>({})
-  const [openingHours, setOpeningHours] = useState(defaultHours)
-  const [initialOpeningHours, setInitialOpeningHours] = useState(defaultHours)
+  const [initialFormData, setInitialFormData] = useState<ContactFormData>({
+    address: '',
+    phone: '',
+    email: '',
+    facebook_url: '',
+    instagram_url: ''
+  })
 
   // Check if there are any changes
   const hasChanges = () => {
-    // Compare form data
-    const formChanged = Object.keys(formData).some(key => {
-      const currentValue = formData[key as keyof EstablishmentData] || ''
-      const initialValue = initialFormData[key as keyof EstablishmentData] || ''
+    return Object.keys(formData).some(key => {
+      const currentValue = formData[key as keyof ContactFormData] || ''
+      const initialValue = initialFormData[key as keyof ContactFormData] || ''
       return currentValue !== initialValue
     })
-
-    // Compare opening hours
-    const hoursChanged = openingHours.some((item, index) => {
-      return item.hours !== (initialOpeningHours[index]?.hours || '')
-    })
-
-    return formChanged || hoursChanged
   }
 
   // Load establishment data on mount for non-demo
@@ -113,12 +98,9 @@ export function EstablishmentInfoManager({ establishmentId, slug, children }: Es
           facebook_url: data.facebook_url || '',
           instagram_url: data.instagram_url || ''
         }
-        const loadedHours = data.opening_hours || defaultHours
         
         setFormData(loadedFormData)
         setInitialFormData(loadedFormData)
-        setOpeningHours(loadedHours)
-        setInitialOpeningHours(loadedHours)
       } else {
         toast.error('Erreur lors du chargement des données')
       }
@@ -130,14 +112,8 @@ export function EstablishmentInfoManager({ establishmentId, slug, children }: Es
     }
   }
 
-  const handleInputChange = (field: keyof EstablishmentData, value: string) => {
+  const handleInputChange = (field: keyof ContactFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-  }
-
-  const handleHoursChange = (index: number, hours: string) => {
-    setOpeningHours(prev => prev.map((item, i) => 
-      i === index ? { ...item, hours } : item
-    ))
   }
 
   const handleSave = async () => {
@@ -196,19 +172,17 @@ export function EstablishmentInfoManager({ establishmentId, slug, children }: Es
       const response = await fetch('/api/admin/establishment-info/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...sanitizedData,
-          opening_hours: openingHours.filter(item => item.hours.trim() !== '')
-        })
+        body: JSON.stringify(sanitizedData)
       })
 
       if (!response.ok) {
         throw new Error('Erreur lors de la sauvegarde')
       }
 
-      toast.success('Informations mises à jour avec succès!')
+      toast.success('Informations de contact mises à jour avec succès!')
+      // Update initial state to reflect saved changes
+      setInitialFormData(formData)
       // Close dialog by triggering a close - since we're using uncontrolled, we'll reload page
-      // Reload page to show updated footer
       setTimeout(() => window.location.reload(), 500)
     } catch (error) {
       console.error('Error saving establishment info:', error)
@@ -224,13 +198,13 @@ export function EstablishmentInfoManager({ establishmentId, slug, children }: Es
         {children || (
           <Button variant="outline" className="w-full flex items-center gap-2">
             <MapPin className="w-4 h-4" />
-            Informations de l'établissement
+            Informations de contact
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Informations de l'établissement</DialogTitle>
+          <DialogTitle className="text-lg">Informations de contact</DialogTitle>
         </DialogHeader>
 
         {isLoading ? (
@@ -247,127 +221,96 @@ export function EstablishmentInfoManager({ establishmentId, slug, children }: Es
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Address */}
-              <div className="md:col-span-2">
-                <Label htmlFor="address" className="flex items-center gap-2 mb-2">
-                  <MapPin className="w-4 h-4" />
-                  Adresse
-                </Label>
-                <Input
-                  id="address"
-                  placeholder="101 Rue de l'Hôpital Militaire, 59000 Lille"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  maxLength={200}
-                />
-              </div>
+          <div className="space-y-4">
+            {/* Address */}
+            <div>
+              <Label htmlFor="address" className="flex items-center gap-2 mb-2 text-sm">
+                <MapPin className="w-4 h-4" />
+                Adresse
+              </Label>
+              <Input
+                id="address"
+                placeholder="123 Rue de la Rouge Chèvre, 59800 Lille"
+                value={formData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                maxLength={200}
+                className="text-sm"
+              />
+            </div>
 
-              {/* Phone */}
-              <div>
-                <Label htmlFor="phone" className="flex items-center gap-2 mb-2">
-                  <Phone className="w-4 h-4" />
-                  Téléphone
-                </Label>
-                <Input
-                  id="phone"
-                  placeholder="03 21 16 29 25 ou +33 3 21 16 29 25"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  maxLength={20}
-                />
-              </div>
+            {/* Phone */}
+            <div>
+              <Label htmlFor="phone" className="flex items-center gap-2 mb-2 text-sm">
+                <Phone className="w-4 h-4" />
+                Téléphone
+              </Label>
+              <Input
+                id="phone"
+                placeholder="01 23 45 67 89"
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                maxLength={20}
+                className="text-sm"
+              />
+            </div>
 
-              {/* Email */}
-              <div>
-                <Label htmlFor="email" className="flex items-center gap-2 mb-2">
-                  <Mail className="w-4 h-4" />
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="contact@restaurant.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  maxLength={255}
-                />
-              </div>
+            {/* Email */}
+            <div>
+              <Label htmlFor="email" className="flex items-center gap-2 mb-2 text-sm">
+                <Mail className="w-4 h-4" />
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="contact@exemple.fr"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                maxLength={255}
+                className="text-sm"
+              />
+            </div>
 
-              {/* Facebook */}
-              <div>
-                <Label htmlFor="facebook" className="flex items-center gap-2 mb-2">
-                  <FacebookIcon className="w-4 h-4" />
-                  Facebook
-                </Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-400 text-sm">facebook.com/</span>
-                  </div>
-                  <Input
-                    id="facebook"
-                    placeholder="votrepage"
-                    value={formData.facebook_url?.replace(/^https?:\/\/(www\.)?facebook\.com\//, '') || ''}
-                    onChange={(e) => handleInputChange('facebook_url', e.target.value)}
-                    maxLength={50}
-                    className="pl-[90px]"
-                  />
+            {/* Facebook */}
+            <div>
+              <Label htmlFor="facebook" className="flex items-center gap-2 mb-2 text-sm">
+                <FacebookIcon className="w-4 h-4" />
+                Facebook
+              </Label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                  <span className="text-gray-400 text-xs">facebook.com/</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Entrez juste le nom de votre page
-                </p>
-              </div>
-
-              {/* Instagram */}
-              <div>
-                <Label htmlFor="instagram" className="flex items-center gap-2 mb-2">
-                  <InstagramIcon className="w-4 h-4" />
-                  Instagram
-                </Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-400 text-sm">instagram.com/</span>
-                  </div>
-                  <Input
-                    id="instagram"
-                    placeholder="votrepage"
-                    value={formData.instagram_url?.replace(/^https?:\/\/(www\.)?instagram\.com\//, '') || ''}
-                    onChange={(e) => handleInputChange('instagram_url', e.target.value)}
-                    maxLength={50}
-                    className="pl-[95px]"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Entrez juste le nom d'utilisateur
-                </p>
+                <Input
+                  id="facebook"
+                  placeholder="nomdelapage"
+                  value={formData.facebook_url?.replace(/^https?:\/\/(www\.)?facebook\.com\//, '') || ''}
+                  onChange={(e) => handleInputChange('facebook_url', e.target.value)}
+                  maxLength={50}
+                  className="pl-[75px] text-sm"
+                />
               </div>
             </div>
 
-            {/* Opening Hours */}
+            {/* Instagram */}
             <div>
-              <Label className="flex items-center gap-2 mb-4">
-                <Clock className="w-4 h-4" />
-                Horaires d'ouverture
+              <Label htmlFor="instagram" className="flex items-center gap-2 mb-2 text-sm">
+                <InstagramIcon className="w-4 h-4" />
+                Instagram
               </Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {openingHours.map((item, index) => (
-                  <div key={item.day} className="flex items-center gap-2">
-                    <span className="w-12 text-sm font-medium text-gray-700">
-                      {item.day}
-                    </span>
-                    <Input
-                      placeholder="11:00 - 00:00 ou Fermé"
-                      value={item.hours}
-                      onChange={(e) => handleHoursChange(index, e.target.value)}
-                      className="flex-1"
-                    />
-                  </div>
-                ))}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                  <span className="text-gray-400 text-xs">instagram.com/</span>
+                </div>
+                <Input
+                  id="instagram"
+                  placeholder="nomdelapage"
+                  value={formData.instagram_url?.replace(/^https?:\/\/(www\.)?instagram\.com\//, '') || ''}
+                  onChange={(e) => handleInputChange('instagram_url', e.target.value)}
+                  maxLength={50}
+                  className="pl-[80px] text-sm"
+                />
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Exemples: "11:00 - 23:00", "00:00 - 01:00 11:00 - 00:00", "Fermé"
-              </p>
             </div>
           </div>
         )}

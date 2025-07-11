@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { defaultWeekSchedule, convertLegacyHours, convertToLegacyHours, DaySchedule } from '@/lib/utils'
+import EstablishmentInfoFields, { EstablishmentFormData } from '@/components/EstablishmentInfoFields'
 
 // Custom SVG icons
 const InstagramIcon = ({ className }: { className?: string }) => (
@@ -40,210 +40,67 @@ interface EstablishmentInfoFormProps {
   }
 }
 
-const defaultHours = [
-  { day: 'Lun.', hours: '' },
-  { day: 'Mar.', hours: '' },
-  { day: 'Mer.', hours: '' },
-  { day: 'Jeu.', hours: '' },
-  { day: 'Ven.', hours: '' },
-  { day: 'Sam.', hours: '' },
-  { day: 'Dim.', hours: '' }
-]
+const defaultHours = defaultWeekSchedule
 
 export function EstablishmentInfoForm({ 
   establishmentId, 
   onDataChange,
   initialData 
 }: EstablishmentInfoFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<EstablishmentFormData>({
     address: initialData?.address || '',
     phone: initialData?.phone || '',
     email: initialData?.email || '',
     facebook_url: initialData?.facebook_url || '',
     instagram_url: initialData?.instagram_url || ''
   })
-  const [openingHours, setOpeningHours] = useState(
-    initialData?.opening_hours || defaultHours
+  const [openingHours, setOpeningHours] = useState<DaySchedule[]>(
+    initialData?.opening_hours ? convertLegacyHours(initialData.opening_hours) : defaultHours
   )
 
   // Update parent whenever data changes
   const updateParent = () => {
     onDataChange({
       ...formData,
-      opening_hours: openingHours.filter(item => item.hours.trim() !== '')
+      opening_hours: convertToLegacyHours(openingHours)
     })
   }
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => {
-      const newData = { ...prev, [field]: value }
-      // Update parent with new data
-      setTimeout(() => {
-        onDataChange({
-          ...newData,
-          opening_hours: openingHours.filter(item => item.hours.trim() !== '')
-        })
-      }, 0)
-      return newData
+  const handleInputChange = (field: keyof EstablishmentFormData, value: string) => {
+    const newData = { ...formData, [field]: value }
+    setFormData(newData)
+    onDataChange({
+      ...newData,
+      opening_hours: convertToLegacyHours(openingHours)
     })
   }
 
-  const handleHoursChange = (index: number, hours: string) => {
-    setOpeningHours(prev => {
-      const newHours = prev.map((item, i) => 
-        i === index ? { ...item, hours } : item
-      )
-      // Update parent with new data
-      setTimeout(() => {
-        onDataChange({
-          ...formData,
-          opening_hours: newHours.filter(item => item.hours.trim() !== '')
-        })
-      }, 0)
-      return newHours
+  const handleHoursChange = (newSchedule: DaySchedule[]) => {
+    setOpeningHours(newSchedule)
+    onDataChange({
+      ...formData,
+      opening_hours: convertToLegacyHours(newSchedule)
     })
   }
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-white border shadow-sm p-6 space-y-6 max-w-2xl mx-auto">
-        <div className="text-center mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Informations de votre établissement
-          </h3>
-          <p className="text-gray-600">
-            Ces informations apparaîtront dans le pied de page de votre menu (optionnel).
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Address */}
-          <div className="md:col-span-2">
-            <Label htmlFor="address" className="flex items-center gap-2 mb-2">
-              <MapPin className="w-4 h-4" />
-              Adresse
-            </Label>
-            <Input
-              id="address"
-              placeholder="101 Rue de l'Hôpital Militaire, 59000 Lille"
-              value={formData.address}
-              onChange={(e) => handleInputChange('address', e.target.value)}
-              maxLength={200}
-            />
-          </div>
-
-          {/* Phone */}
-          <div>
-            <Label htmlFor="phone" className="flex items-center gap-2 mb-2">
-              <Phone className="w-4 h-4" />
-              Téléphone
-            </Label>
-            <Input
-              id="phone"
-              placeholder="03 21 16 29 25 ou +33 3 21 16 29 25"
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              maxLength={20}
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <Label htmlFor="email" className="flex items-center gap-2 mb-2">
-              <Mail className="w-4 h-4" />
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="contact@restaurant.com"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              maxLength={255}
-            />
-          </div>
-
-          {/* Facebook */}
-          <div>
-            <Label htmlFor="facebook" className="flex items-center gap-2 mb-2">
-              <FacebookIcon className="w-4 h-4" />
-              Facebook
-            </Label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-400 text-sm">facebook.com/</span>
-              </div>
-              <Input
-                id="facebook"
-                placeholder="votrepage"
-                value={formData.facebook_url?.replace(/^https?:\/\/(www\.)?facebook\.com\//, '') || ''}
-                onChange={(e) => handleInputChange('facebook_url', e.target.value)}
-                maxLength={50}
-                className="pl-[90px]"
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Entrez juste le nom de votre page
-            </p>
-          </div>
-
-          {/* Instagram */}
-          <div>
-            <Label htmlFor="instagram" className="flex items-center gap-2 mb-2">
-              <InstagramIcon className="w-4 h-4" />
-              Instagram
-            </Label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-400 text-sm">instagram.com/</span>
-              </div>
-              <Input
-                id="instagram"
-                placeholder="votrepage"
-                value={formData.instagram_url?.replace(/^https?:\/\/(www\.)?instagram\.com\//, '') || ''}
-                onChange={(e) => handleInputChange('instagram_url', e.target.value)}
-                maxLength={50}
-                className="pl-[95px]"
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Entrez juste le nom d'utilisateur
-            </p>
-          </div>
-        </div>
-
-        {/* Opening Hours */}
-        <div>
-          <Label className="flex items-center gap-2 mb-4">
-            <Clock className="w-4 h-4" />
-            Horaires d'ouverture
-          </Label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {openingHours.map((item, index) => (
-              <div key={item.day} className="flex items-center gap-2">
-                <span className="w-12 text-sm font-medium text-gray-700">
-                  {item.day}
-                </span>
-                <Input
-                  placeholder="11:00 - 00:00 ou Fermé"
-                  value={item.hours}
-                  onChange={(e) => handleHoursChange(index, e.target.value)}
-                  className="flex-1"
-                />
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Exemples: "11:00 - 23:00", "00:00 - 01:00 11:00 - 00:00", "Fermé"
-          </p>
-        </div>
-      </div>
+      <EstablishmentInfoFields
+        formData={formData}
+        openingHours={openingHours}
+        onInputChange={handleInputChange}
+        onHoursChange={handleHoursChange}
+        compact={true}
+        className="rounded-xl bg-white border shadow-sm p-4 max-w-2xl mx-auto"
+        title="Informations de votre établissement"
+        description="Ces informations apparaîtront dans le pied de page de votre menu (optionnel)."
+      />
 
       {/* Preview */}
       <FooterPreview 
         establishmentInfo={{
           ...formData,
-          opening_hours: openingHours.filter(item => item.hours.trim() !== '')
+          opening_hours: convertToLegacyHours(openingHours)
         }}
       />
     </div>

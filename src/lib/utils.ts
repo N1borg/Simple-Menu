@@ -131,3 +131,214 @@ export function sanitizeInstagramUrl(
 
   return `https://www.instagram.com/${usernameOnly}`;
 }
+
+// Opening hours utilities
+export interface TimeSlot {
+  startHour: string;
+  startMinute: string;
+  endHour: string;
+  endMinute: string;
+}
+
+export interface DaySchedule {
+  day: string;
+  isClosed: boolean;
+  hasSecondPeriod: boolean;
+  firstPeriod: TimeSlot;
+  secondPeriod: TimeSlot;
+}
+
+export const defaultTimeSlot: TimeSlot = {
+  startHour: "",
+  startMinute: "",
+  endHour: "",
+  endMinute: "",
+};
+
+export const defaultDaySchedule = (day: string): DaySchedule => ({
+  day,
+  isClosed: true,
+  hasSecondPeriod: false,
+  firstPeriod: { ...defaultTimeSlot },
+  secondPeriod: { ...defaultTimeSlot },
+});
+
+export const defaultWeekSchedule: DaySchedule[] = [
+  "Lun.",
+  "Mar.",
+  "Mer.",
+  "Jeu.",
+  "Ven.",
+  "Sam.",
+  "Dim.",
+].map((day) => defaultDaySchedule(day));
+
+// Parse legacy hours string format to structured format
+export const parseHoursString = (
+  hoursString: string
+): {
+  firstPeriod: TimeSlot;
+  secondPeriod: TimeSlot;
+  hasSecondPeriod: boolean;
+} => {
+  if (!hoursString || hoursString.toLowerCase().includes("fermé")) {
+    return {
+      firstPeriod: { ...defaultTimeSlot },
+      secondPeriod: { ...defaultTimeSlot },
+      hasSecondPeriod: false,
+    };
+  }
+
+  // Validate that we have valid hour/minute values (not just numbers without colons)
+  const validateTimeSlot = (hour: string, minute: string): boolean => {
+    const h = parseInt(hour, 10);
+    const m = parseInt(minute, 10);
+    return h >= 0 && h <= 23 && m >= 0 && m <= 59;
+  };
+
+  // Check for two periods (e.g., "09:00 - 12:00 14:00 - 18:00")
+  const doublePeriodMatch = hoursString.match(
+    /(\d{1,2}):(\d{1,2})\s*-\s*(\d{1,2}):(\d{1,2})\s+(\d{1,2}):(\d{1,2})\s*-\s*(\d{1,2}):(\d{1,2})/
+  );
+  if (doublePeriodMatch) {
+    const [, startHour1, startMin1, endHour1, endMin1, startHour2, startMin2, endHour2, endMin2] = doublePeriodMatch;
+    
+    // Validate all time components
+    if (validateTimeSlot(startHour1, startMin1) && validateTimeSlot(endHour1, endMin1) &&
+        validateTimeSlot(startHour2, startMin2) && validateTimeSlot(endHour2, endMin2)) {
+      return {
+        firstPeriod: {
+          startHour: startHour1.padStart(2, "0"),
+          startMinute: startMin1.padStart(2, "0"),
+          endHour: endHour1.padStart(2, "0"),
+          endMinute: endMin1.padStart(2, "0"),
+        },
+        secondPeriod: {
+          startHour: startHour2.padStart(2, "0"),
+          startMinute: startMin2.padStart(2, "0"),
+          endHour: endHour2.padStart(2, "0"),
+          endMinute: endMin2.padStart(2, "0"),
+        },
+        hasSecondPeriod: true,
+      };
+    }
+  }
+
+  // Check for single period (e.g., "09:00 - 18:00")
+  const singlePeriodMatch = hoursString.match(
+    /(\d{1,2}):(\d{1,2})\s*-\s*(\d{1,2}):(\d{1,2})/
+  );
+  if (singlePeriodMatch) {
+    const [, startHour, startMin, endHour, endMin] = singlePeriodMatch;
+    
+    // Validate time components
+    if (validateTimeSlot(startHour, startMin) && validateTimeSlot(endHour, endMin)) {
+      return {
+        firstPeriod: {
+          startHour: startHour.padStart(2, "0"),
+          startMinute: startMin.padStart(2, "0"),
+          endHour: endHour.padStart(2, "0"),
+          endMinute: endMin.padStart(2, "0"),
+        },
+        secondPeriod: { ...defaultTimeSlot },
+        hasSecondPeriod: false,
+      };
+    }
+  }
+
+  // If we reach here, the format is invalid or unrecognized
+  return {
+    firstPeriod: { ...defaultTimeSlot },
+    secondPeriod: { ...defaultTimeSlot },
+    hasSecondPeriod: false,
+  };
+};
+
+// Convert structured format to legacy hours string format
+export const formatToHoursString = (schedule: DaySchedule): string => {
+  if (schedule.isClosed) {
+    return "Fermé";
+  }
+
+  const formatTime = (slot: TimeSlot) => {
+    if (!slot.startHour || !slot.startMinute || !slot.endHour || !slot.endMinute) {
+      return '';
+    }
+    return `${slot.startHour}:${slot.startMinute} - ${slot.endHour}:${slot.endMinute}`;
+  };
+
+  const firstPeriodStr = formatTime(schedule.firstPeriod);
+
+  if (!schedule.hasSecondPeriod || !firstPeriodStr) {
+    return firstPeriodStr || "Fermé";
+  }
+
+  const secondPeriodStr = formatTime(schedule.secondPeriod);
+
+  if (!secondPeriodStr) {
+    return firstPeriodStr;
+  }
+
+  return `${firstPeriodStr} ${secondPeriodStr}`;
+};
+
+// Convert legacy opening hours array to structured format
+export const convertLegacyHours = (
+  legacyHours: Array<{ day: string; hours: string }>
+): DaySchedule[] => {
+  // Create a deep copy of the default schedule to avoid mutation
+  const schedule = defaultWeekSchedule.map(daySchedule => ({
+    ...daySchedule,
+    firstPeriod: { ...daySchedule.firstPeriod },
+    secondPeriod: { ...daySchedule.secondPeriod }
+  }));
+
+  legacyHours.forEach(({ day, hours }) => {
+    const scheduleIndex = schedule.findIndex((s) => s.day === day);
+    if (scheduleIndex !== -1) {
+      const parsed = parseHoursString(hours);
+      schedule[scheduleIndex] = {
+        day,
+        isClosed: !hours || hours.toLowerCase().includes("fermé"),
+        hasSecondPeriod: parsed.hasSecondPeriod,
+        firstPeriod: parsed.firstPeriod,
+        secondPeriod: parsed.secondPeriod,
+      };
+    }
+  });
+
+  return schedule;
+};
+
+// Convert structured format to legacy opening hours array
+export const convertToLegacyHours = (
+  schedule: DaySchedule[]
+): Array<{ day: string; hours: string }> => {
+  return schedule
+    .map((daySchedule) => ({
+      day: daySchedule.day,
+      hours: formatToHoursString(daySchedule),
+    }))
+    .filter((item) => item.hours && item.hours !== "Fermé");
+};
+
+// Validate time input
+export const sanitizeTimeInput = (value: string): string => {
+  // Remove non-numeric characters
+  const numbers = value.replace(/\D/g, "");
+
+  // Limit to 2 digits
+  return numbers.slice(0, 2);
+};
+
+// Validate hour (0-23)
+export const validateHour = (hour: string): boolean => {
+  const num = parseInt(hour, 10);
+  return !isNaN(num) && num >= 0 && num <= 23;
+};
+
+// Validate minute (0-59)
+export const validateMinute = (minute: string): boolean => {
+  const num = parseInt(minute, 10);
+  return !isNaN(num) && num >= 0 && num <= 59;
+};

@@ -13,7 +13,7 @@ import { useMenuItems } from '@/components/hooks/useMenuItems'
 import ParameterSheet from '@/components/ParameterSheet'
 import { AddCategoryButton } from '@/components/AddCategoryButton'
 import { useDashboardTutorial } from '@/hooks/useDashboardTutorial'
-import { EstablishmentInfoManager } from '@/components/EstablishmentInfoManager'
+import { EstablishmentControls } from '@/components/EstablishmentControls'
 import { Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -291,18 +291,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             </TooltipContent>
           </Tooltip>
         ) : (
-          <EstablishmentInfoManager 
+          <EstablishmentControls 
             establishmentId={establishment.id}
             slug={establishment.slug}
-          >
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-            >
-              <Settings className="w-4 h-4" />
-              Modifier les informations de contact
-            </Button>
-          </EstablishmentInfoManager>
+          />
         )}
       </div>
     </div>

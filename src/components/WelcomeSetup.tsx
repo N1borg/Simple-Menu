@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl } from '@/lib/utils'
+import { convertToLegacyHours, sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl } from '@/lib/utils'
 import { Eye, EyeOff, CheckCircle2, Upload, Loader2 } from 'lucide-react'
 import ImageUpload from '@/components/ImageUpload'
 import ColorSelector from '@/components/ColorSelector'
