@@ -19,6 +19,7 @@ interface OpeningHoursInputProps {
   schedule: DaySchedule[]
   onChange: (schedule: DaySchedule[]) => void
   className?: string
+  primaryColor?: string
 }
 
 const TimeSlotInput: React.FC<{
@@ -26,7 +27,8 @@ const TimeSlotInput: React.FC<{
   onChange: (timeSlot: TimeSlot) => void
   label: string
   disabled?: boolean
-}> = ({ timeSlot, onChange, label, disabled = false }) => {
+  primaryColor?: string
+}> = ({ timeSlot, onChange, label, disabled = false, primaryColor }) => {
   const updateField = (field: keyof TimeSlot, value: string) => {
     const sanitized = sanitizeTimeInput(value)
     
@@ -57,6 +59,7 @@ const TimeSlotInput: React.FC<{
             onChange={(e) => updateField('startHour', e.target.value)}
             disabled={disabled}
             className="w-9 h-8 text-center text-xs p-1"
+            style={primaryColor && timeSlot.startHour ? { color: primaryColor } : {}}
             maxLength={2}
           />
           <span className="text-xs">:</span>
@@ -68,6 +71,7 @@ const TimeSlotInput: React.FC<{
             onChange={(e) => updateField('startMinute', e.target.value)}
             disabled={disabled}
             className="w-9 h-8 text-center text-xs p-1"
+            style={primaryColor && timeSlot.startMinute ? { color: primaryColor } : {}}
             maxLength={2}
           />
         </div>
@@ -81,6 +85,7 @@ const TimeSlotInput: React.FC<{
             onChange={(e) => updateField('endHour', e.target.value)}
             disabled={disabled}
             className="w-9 h-8 text-center text-xs p-1"
+            style={primaryColor && timeSlot.endHour ? { color: primaryColor } : {}}
             maxLength={2}
           />
           <span className="text-xs">:</span>
@@ -92,6 +97,7 @@ const TimeSlotInput: React.FC<{
             onChange={(e) => updateField('endMinute', e.target.value)}
             disabled={disabled}
             className="w-9 h-8 text-center text-xs p-1"
+            style={primaryColor && timeSlot.endMinute ? { color: primaryColor } : {}}
             maxLength={2}
           />
         </div>
@@ -103,7 +109,8 @@ const TimeSlotInput: React.FC<{
 const DayScheduleInput: React.FC<{
   daySchedule: DaySchedule
   onChange: (daySchedule: DaySchedule) => void
-}> = ({ daySchedule, onChange }) => {
+  primaryColor?: string
+}> = ({ daySchedule, onChange, primaryColor }) => {
   const updateSchedule = (updates: Partial<DaySchedule>) => {
     onChange({ ...daySchedule, ...updates })
   }
@@ -119,13 +126,27 @@ const DayScheduleInput: React.FC<{
     <div className="border rounded-lg p-3 space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-sm min-w-[2.5rem]">{daySchedule.day}</span>
+          <span 
+            className="font-medium text-sm min-w-[2.5rem]"
+            style={primaryColor ? { color: primaryColor } : {}}
+          >
+            {daySchedule.day}
+          </span>
           <div className="flex items-center gap-1.5">
             <Switch
               checked={!daySchedule.isClosed}
               onCheckedChange={(checked) => updateSchedule({ isClosed: !checked })}
+              style={primaryColor && !daySchedule.isClosed ? { 
+                backgroundColor: primaryColor,
+                borderColor: primaryColor 
+              } : {}}
             />
-            <span className="text-xs text-gray-600">
+            <span 
+              className="text-xs"
+              style={primaryColor ? { 
+                color: daySchedule.isClosed ? `${primaryColor}80` : primaryColor 
+              } : {}}
+            >
               {daySchedule.isClosed ? 'Fermé' : 'Ouvert'}
             </span>
           </div>
@@ -138,6 +159,10 @@ const DayScheduleInput: React.FC<{
             size="sm"
             onClick={toggleSecondPeriod}
             className="flex items-center gap-1 text-xs h-7 px-2"
+            style={primaryColor ? { 
+              borderColor: primaryColor, 
+              color: primaryColor 
+            } : {}}
           >
             {daySchedule.hasSecondPeriod ? (
               <>
@@ -162,6 +187,7 @@ const DayScheduleInput: React.FC<{
             timeSlot={daySchedule.firstPeriod}
             onChange={(firstPeriod) => updateSchedule({ firstPeriod })}
             label="1ère période"
+            primaryColor={primaryColor}
           />
           
           {daySchedule.hasSecondPeriod && (
@@ -169,6 +195,7 @@ const DayScheduleInput: React.FC<{
               timeSlot={daySchedule.secondPeriod}
               onChange={(secondPeriod) => updateSchedule({ secondPeriod })}
               label="2ème période"
+              primaryColor={primaryColor}
             />
           )}
         </div>
@@ -180,7 +207,8 @@ const DayScheduleInput: React.FC<{
 export const OpeningHoursInput: React.FC<OpeningHoursInputProps> = ({
   schedule,
   onChange,
-  className = ""
+  className = "",
+  primaryColor
 }) => {
   const updateDay = (index: number, daySchedule: DaySchedule) => {
     const newSchedule = [...schedule]
@@ -190,8 +218,14 @@ export const OpeningHoursInput: React.FC<OpeningHoursInputProps> = ({
 
   return (
     <div className={className}>
-      <Label className="flex items-center gap-2 mb-3">
-        <Clock className="w-4 h-4" />
+      <Label 
+        className="flex items-center gap-2 mb-3"
+        style={primaryColor ? { color: primaryColor } : {}}
+      >
+        <Clock 
+          className="w-4 h-4" 
+          style={primaryColor ? { color: primaryColor } : {}}
+        />
         Horaires d'ouverture
       </Label>
       
@@ -201,6 +235,7 @@ export const OpeningHoursInput: React.FC<OpeningHoursInputProps> = ({
             key={daySchedule.day}
             daySchedule={daySchedule}
             onChange={(newDaySchedule) => updateDay(index, newDaySchedule)}
+            primaryColor={primaryColor}
           />
         ))}
       </div>

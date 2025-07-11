@@ -20,11 +20,12 @@ interface OpeningHoursManagerProps {
   establishmentId: string
   slug: string
   children?: React.ReactNode
+  primaryColor?: string
 }
 
 const defaultHours = defaultWeekSchedule
 
-export function OpeningHoursManager({ establishmentId, slug, children }: OpeningHoursManagerProps) {
+export function OpeningHoursManager({ establishmentId, slug, children, primaryColor }: OpeningHoursManagerProps) {
   const isDemo = slug === 'demo'
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -109,15 +110,30 @@ export function OpeningHoursManager({ establishmentId, slug, children }: Opening
     <Dialog>
       <DialogTrigger asChild>
         {children || (
-          <Button variant="outline" className="w-full flex items-center gap-2">
-            <Clock className="w-4 h-4" />
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center gap-2"
+            style={primaryColor ? { 
+              borderColor: primaryColor, 
+              color: primaryColor 
+            } : {}}
+          >
+            <Clock 
+              className="w-4 h-4" 
+              style={primaryColor ? { color: primaryColor } : {}}
+            />
             Horaires d'ouverture
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg">Horaires d'ouverture</DialogTitle>
+          <DialogTitle 
+            className="text-lg"
+            style={primaryColor ? { color: primaryColor } : {}}
+          >
+            Horaires d'ouverture
+          </DialogTitle>
         </DialogHeader>
 
         {isLoading ? (
@@ -138,6 +154,7 @@ export function OpeningHoursManager({ establishmentId, slug, children }: Opening
             <OpeningHoursInput
               schedule={openingHours}
               onChange={handleHoursChange}
+              primaryColor={primaryColor}
             />
           </div>
         )}
@@ -148,7 +165,11 @@ export function OpeningHoursManager({ establishmentId, slug, children }: Opening
               Annuler
             </Button>
           </DialogClose>
-          <Button onClick={handleSave} disabled={isSaving || isLoading || isDemo || !hasChanges()}>
+          <Button 
+            onClick={handleSave} 
+            disabled={isSaving || isLoading || isDemo || !hasChanges()}
+            style={primaryColor ? { backgroundColor: primaryColor, borderColor: primaryColor } : {}}
+          >
             {isSaving ? (
               <div className="flex items-center">
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

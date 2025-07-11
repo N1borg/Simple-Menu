@@ -294,6 +294,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           <EstablishmentControls 
             establishmentId={establishment.id}
             slug={establishment.slug}
+            primaryColor={establishment.primary_color ?? undefined}
           />
         )}
       </div>

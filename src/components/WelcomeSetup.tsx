@@ -108,19 +108,19 @@ export function WelcomeSetup({
   const steps = [
     { title: "Définir votre mot de passe", required: true },
     { title: "Ajouter votre logo", required: false },
-    { title: "Informations de l'établissement", required: false },
-    { title: "Choisir votre couleur", required: true }
+    { title: "Choisir votre couleur", required: true },
+    { title: "Informations de l'établissement", required: false }
   ]
 
   const isStepValid = () => {
     switch (currentStep) {
       case 0: return passwordForm.formState.isValid
       case 1: return !!logoUrl // Only valid if a logo is present
-      case 2: 
+      case 2: return selectedColor !== ''
+      case 3: 
         // Validate establishment info if any data is provided
         const validation = validateEstablishmentInfo(establishmentInfo)
         return validation.isValid
-      case 3: return selectedColor !== ''
       default: return false
     }
   }
@@ -128,7 +128,7 @@ export function WelcomeSetup({
   const handleNext = async () => {
     // Validate current step before proceeding
     if (!isStepValid()) {
-      if (currentStep === 2) {
+      if (currentStep === 3) {
         const validation = validateEstablishmentInfo(establishmentInfo)
         validation.errors.forEach(error => toast.error(error))
       }
@@ -394,15 +394,7 @@ export function WelcomeSetup({
           </div>
         )
 
-      case 2: // Establishment info
-        return (
-          <EstablishmentInfoForm
-            establishmentId={establishmentId}
-            onDataChange={setEstablishmentInfo}
-          />
-        )
-
-      case 3: // Color selection
+      case 2: // Color selection
         return (
           <div className="rounded-xl bg-white border shadow-sm p-6 space-y-4 max-w-lg mx-auto">
             <ColorSelector
@@ -413,6 +405,15 @@ export function WelcomeSetup({
               description="Sélectionnez la couleur principale qui représentera votre établissement."
             />
           </div>
+        )
+
+      case 3: // Establishment info
+        return (
+          <EstablishmentInfoForm
+            establishmentId={establishmentId}
+            onDataChange={setEstablishmentInfo}
+            primaryColor={selectedColor}
+          />
         )
 
       default:
@@ -481,7 +482,7 @@ export function WelcomeSetup({
                 </div>
               ) : currentStep === steps.length - 1 ? (
                 'Terminer'
-              ) : currentStep === 2 ? (
+              ) : currentStep === 3 ? (
                 'Suivant →' // Don't show complete on establishment info step
               ) : (
                 'Suivant →'
