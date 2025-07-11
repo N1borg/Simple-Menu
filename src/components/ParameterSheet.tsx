@@ -31,6 +31,7 @@ interface ParameterSheetProps {
     slug: string;
     primary_color?: string;
     plan?: string;
+    logo_url?: string;
   };
   isDemo: boolean;
   onTutorialStart?: () => void;
@@ -126,7 +127,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
           <Settings className="w-4 h-4" /> Paramètres
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="max-w-md w-full flex flex-col h-full" data-testid="sheet-close">
+      <SheetContent side="right" className="max-w-md w-full flex flex-col h-full">
         <SheetHeader className="flex-shrink-0">
             <SheetTitle>Paramètres administrateur</SheetTitle>
         </SheetHeader>
@@ -186,7 +187,12 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
           </div>
           <div className="px-4 tutorial-qr-code">
             {/* QR Code Button and Dialog */}
-            <QrCodeDialog url={publicMenuUrl} adminUrl={adminUrl} />
+            <QrCodeDialog 
+              url={publicMenuUrl} 
+              adminUrl={adminUrl}
+              establishmentColor={establishment.primary_color}
+              logoUrl={establishment.logo_url}
+            />
           </div>
           {isPwaAllowed && (
             <div className="px-4">
@@ -272,7 +278,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
             asChild
           >
             <SheetClose asChild>
-              <span className="flex items-center w-full justify-center">
+              <span className="flex items-center w-full justify-center" data-testid="sheet-close">
                 Fermer
               </span>
             </SheetClose>

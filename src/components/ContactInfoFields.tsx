@@ -4,8 +4,6 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { MapPin, Phone, Mail } from 'lucide-react'
-import { DaySchedule } from '@/lib/utils'
-import OpeningHoursInput from '@/components/OpeningHoursInput'
 
 // Custom SVG icons
 const InstagramIcon = ({ className, color }: { className?: string; color?: string }) => (
@@ -94,7 +92,7 @@ const validateSocialMediaUsername = (value: string, platform: 'facebook' | 'inst
   }
 }
 
-export interface EstablishmentFormData {
+export interface ContactFormData {
   address: string
   phone: string
   email: string
@@ -102,11 +100,9 @@ export interface EstablishmentFormData {
   instagram_url: string
 }
 
-interface EstablishmentInfoFieldsProps {
-  formData: EstablishmentFormData
-  openingHours: DaySchedule[]
-  onInputChange: (field: keyof EstablishmentFormData, value: string) => void
-  onHoursChange: (schedule: DaySchedule[]) => void
+interface ContactInfoFieldsProps {
+  formData: ContactFormData
+  onInputChange: (field: keyof ContactFormData, value: string) => void
   className?: string
   compact?: boolean
   title?: string
@@ -114,24 +110,22 @@ interface EstablishmentInfoFieldsProps {
   primaryColor?: string
 }
 
-export function EstablishmentInfoFields({
+export function ContactInfoFields({
   formData,
-  openingHours,
   onInputChange,
-  onHoursChange,
   className = "",
   compact = false,
   title,
   description,
   primaryColor
-}: EstablishmentInfoFieldsProps) {
-  const [errors, setErrors] = useState<Partial<EstablishmentFormData>>({})
+}: ContactInfoFieldsProps) {
+  const [errors, setErrors] = useState<Partial<ContactFormData>>({})
   
   const inputSize = compact ? "text-sm" : ""
   const labelSize = compact ? "text-sm" : ""
   const spacing = compact ? "space-y-4" : "space-y-6"
 
-  const handleFieldChange = (field: keyof EstablishmentFormData, value: string) => {
+  const handleFieldChange = (field: keyof ContactFormData, value: string) => {
     let processedValue = value.trim()
     
     // Convert social media usernames to full URLs for storage
@@ -192,21 +186,22 @@ export function EstablishmentInfoFields({
           )}
         </div>
       )}
+      
       {/* Address */}
-    <div>
-      <Label htmlFor="address" className={`flex items-center gap-2 mb-2 ${labelSize}`}>
-        <MapPin className="w-4 h-4" />
-        Adresse
-      </Label>
-      <Input
-        id="address"
-        placeholder="123 Rue de la Rouge Chèvre, 59800 Lille"
-        value={formData.address}
-        onChange={(e) => handleFieldChange('address', e.target.value)}
-        maxLength={200}
-        className={inputSize}
-      />
-    </div>
+      <div>
+        <Label htmlFor="address" className={`flex items-center gap-2 mb-2 ${labelSize}`}>
+          <MapPin className="w-4 h-4" />
+          Adresse
+        </Label>
+        <Input
+          id="address"
+          placeholder="123 Rue de la Rouge Chèvre, 59800 Lille"
+          value={formData.address}
+          onChange={(e) => handleFieldChange('address', e.target.value)}
+          maxLength={200}
+          className={inputSize}
+        />
+      </div>
 
       {/* Phone */}
       <div>
@@ -296,15 +291,8 @@ export function EstablishmentInfoFields({
           <p className="text-red-500 text-xs mt-1">{errors.instagram_url}</p>
         )}
       </div>
-
-      {/* Opening Hours */}
-      <OpeningHoursInput
-        schedule={openingHours}
-        onChange={onHoursChange}
-        primaryColor={primaryColor}
-      />
     </div>
   )
 }
 
-export default EstablishmentInfoFields
+export default ContactInfoFields

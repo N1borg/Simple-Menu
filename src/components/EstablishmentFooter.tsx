@@ -83,7 +83,7 @@ const EstablishmentFooter: React.FC<EstablishmentFooterProps> = ({
               )}
             </div>
 
-            {/* Social Media Icons under contact */}
+            {/* Social Media Icons under contact when there's contact info */}
             {(establishmentInfo.facebook_url || establishmentInfo.instagram_url) && (
               <div className="mt-4 pt-3 border-t" style={{ borderColor: (color || '#3a4fff') + '20' }}>
                 <div className="flex gap-4">
@@ -110,6 +110,36 @@ const EstablishmentFooter: React.FC<EstablishmentFooterProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Standalone Social Media section when no contact info */}
+        {!(establishmentInfo.address || establishmentInfo.phone || establishmentInfo.email) && 
+         (establishmentInfo.facebook_url || establishmentInfo.instagram_url) && (
+          <div>
+            <h4 className="font-semibold mb-3">Nous suivre</h4>
+            <div className="flex gap-4">
+              {establishmentInfo.facebook_url && (
+                <a
+                  href={establishmentInfo.facebook_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <FacebookIcon className="w-6 h-6" />
+                </a>
+              )}
+              {establishmentInfo.instagram_url && (
+                <a
+                  href={establishmentInfo.instagram_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <InstagramIcon className="w-6 h-6" />
+                </a>
+              )}
+            </div>
           </div>
         )}
 

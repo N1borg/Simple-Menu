@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { defaultWeekSchedule, convertLegacyHours, convertToLegacyHours, DaySchedule } from '@/lib/utils'
-import EstablishmentInfoFields, { EstablishmentFormData } from '@/components/EstablishmentInfoFields'
 import EstablishmentFooter from '@/components/EstablishmentFooter'
+import ContactInfoFields, { ContactFormData } from '@/components/ContactInfoFields'
+import OpeningHoursInput from '@/components/OpeningHoursInput'
 
 interface EstablishmentInfoFormProps {
   establishmentId: string
@@ -34,7 +35,7 @@ export function EstablishmentInfoForm({
   primaryColor,
   initialData 
 }: EstablishmentInfoFormProps) {
-  const [formData, setFormData] = useState<EstablishmentFormData>({
+  const [formData, setFormData] = useState<ContactFormData>({
     address: initialData?.address || '',
     phone: initialData?.phone || '',
     email: initialData?.email || '',
@@ -53,8 +54,22 @@ export function EstablishmentInfoForm({
     })
   }
 
-  const handleInputChange = (field: keyof EstablishmentFormData, value: string) => {
-    const newData = { ...formData, [field]: value }
+  const handleInputChange = (field: keyof ContactFormData, value: string) => {
+    let processedValue = value.trim()
+    
+    // Convert social media usernames to full URLs, but only if there's actually a value
+    if (field === 'facebook_url' && processedValue && !processedValue.startsWith('http')) {
+      processedValue = `https://www.facebook.com/${processedValue}`
+    } else if (field === 'instagram_url' && processedValue && !processedValue.startsWith('http')) {
+      processedValue = `https://www.instagram.com/${processedValue}`
+    }
+    
+    // If the field was cleared, make sure it's empty
+    if (!value.trim()) {
+      processedValue = ''
+    }
+    
+    const newData = { ...formData, [field]: processedValue }
     setFormData(newData)
     onDataChange({
       ...newData,
@@ -72,17 +87,33 @@ export function EstablishmentInfoForm({
 
   return (
     <div className="space-y-6">
-      <EstablishmentInfoFields
+      {/* Contact Information */}
+      <ContactInfoFields
         formData={formData}
-        openingHours={openingHours}
         onInputChange={handleInputChange}
-        onHoursChange={handleHoursChange}
         compact={true}
         className="rounded-xl bg-white border shadow-sm p-4 max-w-2xl mx-auto"
-        title="Informations de votre établissement"
-        description="Ces informations apparaîtront dans le pied de page de votre menu (optionnel)."
+        title="Informations de contact"
+        description="Adresse, téléphone, email et réseaux sociaux (optionnel)."
         primaryColor={primaryColor}
       />
+
+      {/* Opening Hours */}
+      <div className="rounded-xl bg-white border shadow-sm p-4 max-w-2xl mx-auto">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Horaires d'ouverture
+          </h3>
+          <p className="text-sm text-gray-600">
+            Configurez vos heures d'ouverture (optionnel).
+          </p>
+        </div>
+        <OpeningHoursInput
+          schedule={openingHours}
+          onChange={handleHoursChange}
+          primaryColor={primaryColor}
+        />
+      </div>
 
       {/* Preview */}
       <div className="max-w-2xl mx-auto">
@@ -125,7 +156,7 @@ export function validateEstablishmentInfo(data: {
 }): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
 
-  // Validate email if provided
+  // Validate email format if provided (not required to be filled)
   if (data.email && data.email.trim()) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(data.email)) {
@@ -133,23 +164,59 @@ export function validateEstablishmentInfo(data: {
     }
   }
 
-  // Validate URLs if provided
+  // Validate Facebook URL format if provided (not required to be filled)
   if (data.facebook_url && data.facebook_url.trim()) {
-    try {
-      new URL(data.facebook_url)
-    } catch {
-      errors.push('Veuillez entrer une URL Facebook valide')
+    // Accept both full URLs and just usernames
+    const facebookInput = data.facebook_url.trim()
+    if (facebookInput.startsWith('http')) {
+      try {
+        const url = new URL(facebookInput)
+        if (!url.hostname.includes('facebook.com')) {
+          errors.push('Veuillez entrer une URL Facebook valide')
+        }
+      } catch {
+        errors.push('Veuillez entrer une URL Facebook valide')
+      }
+    } else {
+      // If it's just a username, check basic format
+      const usernameRegex = /^[a-zA-Z0-9._-]+$/
+      if (!usernameRegex.test(facebookInput)) {
+        errors.push('Le nom de page Facebook ne peut contenir que des lettres, chiffres, points et tirets')
+      }
     }
   }
 
+  // Validate Instagram URL format if provided (not required to be filled)
   if (data.instagram_url && data.instagram_url.trim()) {
-    try {
-      new URL(data.instagram_url)
-    } catch {
-      errors.push('Veuillez entrer une URL Instagram valide')
+    // Accept both full URLs and just usernames
+    const instagramInput = data.instagram_url.trim()
+    if (instagramInput.startsWith('http')) {
+      try {
+        const url = new URL(instagramInput)
+        if (!url.hostname.includes('instagram.com')) {
+          errors.push('Veuillez entrer une URL Instagram valide')
+        }
+      } catch {
+        errors.push('Veuillez entrer une URL Instagram valide')
+      }
+    } else {
+      // If it's just a username, check basic format
+      const usernameRegex = /^[a-zA-Z0-9._]+$/
+      if (!usernameRegex.test(instagramInput)) {
+        errors.push('Le nom d\'utilisateur Instagram ne peut contenir que des lettres, chiffres, points et underscores')
+      }
     }
   }
 
+  // Phone validation if provided (not required to be filled)
+  if (data.phone && data.phone.trim()) {
+    const phoneRegex = /^[\d\s\+\-\.\(\)]+$/
+    if (!phoneRegex.test(data.phone)) {
+      errors.push('Le numéro de téléphone contient des caractères invalides')
+    }
+  }
+
+  // Always return valid: true if no format errors, regardless of completeness
   return {
     isValid: errors.length === 0,
     errors

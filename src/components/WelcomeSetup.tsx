@@ -118,9 +118,9 @@ export function WelcomeSetup({
       case 1: return !!logoUrl // Only valid if a logo is present
       case 2: return selectedColor !== ''
       case 3: 
-        // Validate establishment info if any data is provided
+        // Always allow progression if format validation passes (even if empty)
         const validation = validateEstablishmentInfo(establishmentInfo)
-        return validation.isValid
+        return validation.isValid // This will be true if no format errors, regardless of completeness
       default: return false
     }
   }
@@ -437,8 +437,11 @@ export function WelcomeSetup({
             <div
               key={index}
               className={`h-2 flex-1 rounded ${
-                index <= currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                index <= currentStep ? '' : 'bg-gray-200'
               }`}
+              style={index <= currentStep ? { 
+                backgroundColor: currentStep >= 2 ? selectedColor : '#3b82f6' 
+              } : {}}
             />
           ))}
         </div>
@@ -472,6 +475,7 @@ export function WelcomeSetup({
             onClick={handleNext}
             disabled={isLoading || !isStepValid()}
             className="cursor-pointer"
+            style={currentStep >= 2 ? { backgroundColor: selectedColor, borderColor: selectedColor } : {}}
           >
               {isLoading ? (
                 <div className="flex items-center">
