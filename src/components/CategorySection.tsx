@@ -35,6 +35,7 @@ const DISPLAY_STYLES = [
 interface CategorySectionProps {
   category: Category
   isDemo: boolean
+  isAdmin?: boolean
   editingCategoryId: string | null
   setEditingCategoryId: (id: string | null) => void
   originalCategory: Category | null
@@ -51,6 +52,7 @@ interface CategorySectionProps {
 export default function CategorySection({
   category,
   isDemo,
+  isAdmin = true,
   editingCategoryId,
   setEditingCategoryId,
   originalCategory,
@@ -450,6 +452,7 @@ export default function CategorySection({
                   deleteMenuItem={handleDeleteMenuItem}
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
+                  isAdmin={isAdmin}
                 />
               );
             case "compact":
@@ -465,6 +468,7 @@ export default function CategorySection({
                   deleteMenuItem={handleDeleteMenuItem}
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
+                  isAdmin={isAdmin}
                 />
               );
             case "table":
@@ -485,6 +489,7 @@ export default function CategorySection({
                   deleteMenuItem={handleDeleteMenuItem}
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
+                  isAdmin={isAdmin}
                 />
               );
           }
@@ -518,6 +523,7 @@ export default function CategorySection({
               deleteMenuItem={handleDeleteMenuItem}
               establishmentColor={establishmentColor}
               isDemo={isDemo}
+              isAdmin={isAdmin}
             />
           ) : category.display_style === "compact" ? (
             <MenuItemCompact
@@ -532,6 +538,7 @@ export default function CategorySection({
               deleteMenuItem={handleDeleteMenuItem}
               establishmentColor={establishmentColor}
               isDemo={isDemo}
+              isAdmin={isAdmin}
             />
           ) : (
             <MenuItemCard
@@ -546,6 +553,7 @@ export default function CategorySection({
               deleteMenuItem={handleDeleteMenuItem}
               establishmentColor={establishmentColor}
               isDemo={isDemo}
+              isAdmin={isAdmin}
             />
           )}
               </SortableItem>

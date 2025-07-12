@@ -14,7 +14,7 @@ const MenuItemSkeleton = ({ displayStyle }: MenuItemSkeletonProps) => {
             borderColor: 'transparent',
             outline: 'none'
         }}>
-          <Skeleton className="h-7 w-32.5 overflow-hidden whitespace-nowrap relative" />
+          <Skeleton className="h-6 w-32.5 overflow-hidden whitespace-nowrap relative" />
           <div className="relative min-h-[2.5em] max-h-[2.5em]">
             <div className="text-sm mt-1 select-none min-h-[2.5em] max-h-[2.5em]" style={{ color: "transparent", textDecoration: "none" }}>
               &nbsp;
@@ -34,10 +34,10 @@ const MenuItemSkeleton = ({ displayStyle }: MenuItemSkeletonProps) => {
             outline: 'none',
         }}>
           <div className="flex-1 min-w-0 flex items-center gap-2">
-            <Skeleton className="h-7 w-32.5" />
+            <Skeleton className="h-6 w-32.5" />
           </div>
           <div className="flex flex-col items-end min-w-[70px]">
-            <Skeleton className="h-7 w-12" />
+            <Skeleton className="h-6 w-12" />
           </div>
         </div>
       );
@@ -45,24 +45,23 @@ const MenuItemSkeleton = ({ displayStyle }: MenuItemSkeletonProps) => {
       return (
         <div className="relative group">
           <div
-            className="flex flex-col items-start gap-2 p-4 rounded-md shadow-md bg-white transition w-[120px] overflow-hidden"
+            className="flex flex-col items-start gap-2 p-3 rounded-md shadow-md bg-white transition h-full overflow-hidden"
             style={{
               boxShadow: "0 1px 4px 0 rgba(0,0,0,0.07)",
               borderColor: "transparent",
               outline: "none",
-              width: "100%",
             }}
             tabIndex={0}
           >
             <Skeleton
-              className="h-7 w-full max-w-[90%] rounded overflow-hidden whitespace-nowrap relative self-start"
+              className="h-6 w-full max-w-[90%] rounded overflow-hidden whitespace-nowrap relative self-start"
               style={{
                 textOverflow: "clip",
                 display: "inline-block",
                 position: "relative",
               }}
             />
-            <div className="w-full flex justify-end">
+            <div className="w-full flex justify-end mt-auto">
               <Skeleton className="h-6 w-10 rounded" />
             </div>
           </div>

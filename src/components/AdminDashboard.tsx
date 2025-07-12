@@ -246,6 +246,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                 <CategorySection
                   category={cat}
                   isDemo={isDemo}
+                  isAdmin={true}
                   editingCategoryId={editingCategoryId}
                   setEditingCategoryId={setEditingCategoryId}
                   originalCategory={originalCategory}

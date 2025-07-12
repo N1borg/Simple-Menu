@@ -1,11 +1,14 @@
 import type { Category, MenuItem } from '@/types/supabase_types'
+import Image from 'next/image'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { useEffect, useState } from 'react'
 import { toast } from "sonner"
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
@@ -15,12 +18,13 @@ interface MenuItemListProps {
   category: Category
   editingItem: string | null
   setEditingItem: (id: string | null) => void
-  handleItemChange: (catId: string, itemId: string, field: string, value: any) => void
+  handleItemChange?: (catId: string, itemId: string, field: string, value: any) => void
   saveItem: (item: MenuItem) => Promise<void>
   savingItemId: string | null
   loadingAction: string | null
   deleteMenuItem: (catId: string, itemId: string) => Promise<void>
   establishmentColor?: string
+  isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
 }
 
@@ -34,6 +38,7 @@ export default function MenuItemList({
   loadingAction,
   deleteMenuItem,
   establishmentColor,
+  isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false
 }: MenuItemListProps) {
   // Use the establishment color if provided, fallback to blue
@@ -85,7 +90,7 @@ export default function MenuItemList({
           onClick={() => setEditingItem(item.id)}
           tabIndex={0}
           role="button"
-          aria-label={`Modifier l'élément ${item.name}`}
+          aria-label={isAdmin ? `Modifier l'élément ${item.name}` : `Voir l'élément ${item.name}`}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingItem(item.id) }}
           onMouseEnter={e => {
             e.currentTarget.style.boxShadow = `0 0 0 2px ${ringColor}`
@@ -96,7 +101,7 @@ export default function MenuItemList({
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold max-w-[100%] text-base truncate" title={item.name}>{item.name}</span>
+              <span className="text-base font-semibold max-w-[100%] truncate" title={item.name}>{item.name}</span>
             </div>
             {item.description && (
               <div className="text-sm text-gray-500 truncate mt-1 relative" title={item.description}>
@@ -121,43 +126,69 @@ export default function MenuItemList({
           </div>
         </div>
 
-        {/* Dialog for editing item */}
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Modifier l'élément</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations de l'élément puis cliquez sur enregistrer.
-            </DialogDescription>
-          </DialogHeader>
-          <MenuItemDialogForm
-            item={item}
-            isDemo={isDemo}
-            savingItemId={savingItemId}
-            loadingAction={loadingAction}
-            onSubmit={async (updatedItem) => {
-              try {
-                await saveItem(updatedItem)
-              } catch (err) {
-                toast.error("Erreur lors de la sauvegarde de l'élément")
-              }
-              setInstantAvailable(!!updatedItem.is_available)
-              setEditingItem(null)
-            }}
-            onDelete={async () => {
-              if (isDemo) {
-                toast.info("Modification désactivée (mode démo).")
-                return
-              }
-              try {
-                await deleteMenuItem(category.id, item.id)
-              } catch (err) {
-                toast.error("Erreur lors de la suppression de l'élément")
-              }
-              setEditingItem(null)
-            }}
-            onCancel={() => setEditingItem(null)}
-          />
-        </DialogContent>
+        {/* Show admin dialog or public dialog based on isAdmin prop */}
+        {isAdmin ? (
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Modifier l'élément</DialogTitle>
+              <DialogDescription>
+                Modifiez les informations de l'élément puis cliquez sur enregistrer.
+              </DialogDescription>
+            </DialogHeader>
+            <MenuItemDialogForm
+              item={item}
+              isDemo={isDemo}
+              savingItemId={savingItemId}
+              loadingAction={loadingAction}
+              onSubmit={async (updatedItem) => {
+                try {
+                  await saveItem(updatedItem)
+                } catch (err) {
+                  toast.error("Erreur lors de la sauvegarde de l'élément")
+                }
+                setInstantAvailable(!!updatedItem.is_available)
+                setEditingItem(null)
+              }}
+              onDelete={async () => {
+                if (isDemo) {
+                  toast.info("Modification désactivée (mode démo).")
+                  return
+                }
+                try {
+                  await deleteMenuItem(category.id, item.id)
+                } catch (err) {
+                  toast.error("Erreur lors de la suppression de l'élément")
+                }
+                setEditingItem(null)
+              }}
+              onCancel={() => setEditingItem(null)}
+            />
+          </DialogContent>
+        ) : (
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{item.name}</DialogTitle>
+              <DialogDescription>
+                {item.description || 'Aucune description.'}
+              </DialogDescription>
+            </DialogHeader>
+            {item.image_url && (
+              <div className="flex justify-center">
+                <Image
+                  src={item.image_url}
+                  alt={item.name}
+                  width={300}
+                  height={200}
+                  className="rounded-lg object-cover max-h-48"
+                />
+              </div>
+            )}
+            <div className="mt-4 text-right font-bold text-lg">{item.price?.toFixed(2)}€</div>
+            <DialogClose asChild>
+              <Button variant="outline" className="mt-4 w-full">Fermer</Button>
+            </DialogClose>
+          </DialogContent>
+        )}
       </div>
     </Dialog>
   )

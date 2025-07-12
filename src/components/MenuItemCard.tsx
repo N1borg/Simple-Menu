@@ -1,26 +1,31 @@
 import type { Category, MenuItem } from '@/types/supabase_types'
+import Image from 'next/image'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { useEffect, useRef, useState } from 'react'
 import { toast } from "sonner"
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
+import { GripVertical } from "lucide-react"
 
 interface MenuItemCardProps {
   item: MenuItem
   category: Category
   editingItem: string | null
   setEditingItem: (id: string | null) => void
-  handleItemChange: (catId: string, itemId: string, field: string, value: any) => void
+  handleItemChange?: (catId: string, itemId: string, field: string, value: any) => void
   saveItem: (item: MenuItem) => Promise<void>
   savingItemId: string | null
   loadingAction: string | null
   deleteMenuItem: (catId: string, itemId: string) => Promise<void>
   establishmentColor?: string
+  isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
 }
 
@@ -34,6 +39,7 @@ export default function MenuItemCard({
   loadingAction,
   deleteMenuItem,
   establishmentColor,
+  isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false
 }: MenuItemCardProps) {
   // Use the establishment color if provided, fallback to blue
@@ -155,7 +161,7 @@ export default function MenuItemCard({
           onClick={() => setEditingItem(item.id)}
           tabIndex={0}
           role="button"
-          aria-label={`Modifier l'élément ${item.name}`}
+          aria-label={isAdmin ? `Modifier l'élément ${item.name}` : `Voir l'élément ${item.name}`}
           onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingItem(item.id) }}
           onMouseEnter={e => {
             e.currentTarget.style.boxShadow = `0 0 0 2px ${ringColor}`
@@ -166,7 +172,7 @@ export default function MenuItemCard({
         >
           <div className="flex justify-between items-start">
             <h3
-              className={`text-lg font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative`}
+              className={`text-base font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative`}
               title={item.name}
               style={{ textOverflow: 'clip' }}
             >
@@ -187,6 +193,17 @@ export default function MenuItemCard({
                 />
               </span>
             </h3>
+            {/* Only show drag handle in admin mode */}
+            {isAdmin && (
+              <button
+                type="button"
+                className="dnd-handle-item cursor-pointer p-0 flex items-center justify-center rounded hover:bg-gray-200 focus:outline-none w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Déplacer l'élément"
+                disabled={isDemo}
+              >
+                <GripVertical className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
           </div>
           {/* Content area with flex-1 to push price down */}
           <div className="flex-1 flex flex-col justify-between">
@@ -230,43 +247,69 @@ export default function MenuItemCard({
           </div>
         </div>
 
-        {/* Dialog for editing item */}
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Modifier l'élément</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations de l'élément puis cliquez sur enregistrer.
-            </DialogDescription>
-          </DialogHeader>
-          <MenuItemDialogForm
-            item={item}
-            isDemo={isDemo}
-            savingItemId={savingItemId}
-            loadingAction={loadingAction}
-            onSubmit={async (updatedItem) => {
-              try {
-                await saveItem(updatedItem)
-              } catch (err) {
-                toast.error("Erreur lors de la sauvegarde de l'élément")
-              }
-              setInstantAvailable(!!updatedItem.is_available)
-              setEditingItem(null)
-            }}
-            onDelete={async () => {
-              if (isDemo) {
-                toast.info("Modification désactivée (mode démo).")
-                return
-              }
-              try {
-                await deleteMenuItem(category.id, item.id)
-              } catch (err) {
-                toast.error("Erreur lors de la suppression de l'élément")
-              }
-              setEditingItem(null)
-            }}
-            onCancel={() => setEditingItem(null)}
-          />
-        </DialogContent>
+        {/* Show admin dialog or public dialog based on isAdmin prop */}
+        {isAdmin ? (
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Modifier l'élément</DialogTitle>
+              <DialogDescription>
+                Modifiez les informations de l'élément puis cliquez sur enregistrer.
+              </DialogDescription>
+            </DialogHeader>
+            <MenuItemDialogForm
+              item={item}
+              isDemo={isDemo}
+              savingItemId={savingItemId}
+              loadingAction={loadingAction}
+              onSubmit={async (updatedItem) => {
+                try {
+                  await saveItem(updatedItem)
+                } catch (err) {
+                  toast.error("Erreur lors de la sauvegarde de l'élément")
+                }
+                setInstantAvailable(!!updatedItem.is_available)
+                setEditingItem(null)
+              }}
+              onDelete={async () => {
+                if (isDemo) {
+                  toast.info("Modification désactivée (mode démo).")
+                  return
+                }
+                try {
+                  await deleteMenuItem(category.id, item.id)
+                } catch (err) {
+                  toast.error("Erreur lors de la suppression de l'élément")
+                }
+                setEditingItem(null)
+              }}
+              onCancel={() => setEditingItem(null)}
+            />
+          </DialogContent>
+        ) : (
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{item.name}</DialogTitle>
+              <DialogDescription>
+                {item.description || 'Aucune description.'}
+              </DialogDescription>
+            </DialogHeader>
+            {item.image_url && (
+              <div className="flex justify-center">
+                <Image
+                  src={item.image_url}
+                  alt={item.name}
+                  width={300}
+                  height={200}
+                  className="rounded-lg object-cover max-h-48"
+                />
+              </div>
+            )}
+            <div className="mt-4 text-right font-bold text-lg">{item.price?.toFixed(2)}€</div>
+            <DialogClose asChild>
+              <Button variant="outline" className="mt-4 w-full">Fermer</Button>
+            </DialogClose>
+          </DialogContent>
+        )}
       </div>
     </Dialog>
   )

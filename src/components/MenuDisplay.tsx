@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import type { MenuDisplayProps, Category, MenuItem } from '@/types/supabase_types'
+import MenuItemCard from '@/components/MenuItemCard'
+import MenuItemList from '@/components/MenuItemList'
+import MenuItemCompact from '@/components/MenuItemCompact'
 import {
   Dialog,
   DialogContent,
@@ -23,6 +26,17 @@ function MenuItemDialog({ item, open, onOpenChange }: { item: MenuItem, open: bo
             {item.description || 'Aucune description.'}
           </DialogDescription>
         </DialogHeader>
+        {item.image_url && (
+          <div className="flex justify-center">
+            <Image
+              src={item.image_url}
+              alt={item.name}
+              width={300}
+              height={200}
+              className="rounded-lg object-cover max-h-48"
+            />
+          </div>
+        )}
         <div className="mt-4 text-right font-bold text-lg">{item.price?.toFixed(2)}€</div>
         <DialogClose asChild>
           <Button variant="outline" className="mt-4 w-full">Fermer</Button>
@@ -32,42 +46,7 @@ function MenuItemDialog({ item, open, onOpenChange }: { item: MenuItem, open: bo
   )
 }
 
-function renderMenuItem(item: MenuItem, category: Category, establishmentColor?: string) {
-  const [open, setOpen] = useState(false)
-  const ringColor = establishmentColor || '#3a4fff'
-  return (
-    <div key={item.id}>
-      <div
-        className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group transition cursor-pointer"
-        style={{
-          boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
-          borderColor: 'transparent',
-          outline: 'none',
-        }}
-        tabIndex={0}
-        role="button"
-        aria-label={`Voir l'élément ${item.name}`}
-        onClick={() => setOpen(true)}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setOpen(true) }}
-        onMouseEnter={e => {
-          e.currentTarget.style.boxShadow = `0 0 0 2px ${ringColor}`
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)'
-        }}
-      >
-        <h3 className="text-lg font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative" title={item.name} style={{ textOverflow: 'clip' }}>{item.name}</h3>
-        {item.description && (
-          <p className="text-sm text-gray-500 mt-1 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', position: 'relative' }}>{item.description}</p>
-        )}
-        <div className="text-right font-bold mt-2">{item.price.toFixed(2)}€</div>
-      </div>
-      <MenuItemDialog item={item} open={open} onOpenChange={setOpen} />
-    </div>
-  )
-}
-
-function renderCardStyle(category: Category, establishmentColor?: string) {
+function renderCardStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-2xl font-bold mb-4">{category.name}</h2>
@@ -75,13 +54,28 @@ function renderCardStyle(category: Category, establishmentColor?: string) {
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => renderMenuItem(item, category, establishmentColor))}
+          .map(item => (
+            <MenuItemCard
+              key={item.id}
+              item={item}
+              category={category}
+              editingItem={editingItem || null}
+              setEditingItem={setEditingItem || (() => {})}
+              saveItem={async () => {}} // No-op for public view
+              savingItemId={null}
+              loadingAction={null}
+              deleteMenuItem={async () => {}} // No-op for public view
+              establishmentColor={establishmentColor}
+              isAdmin={false} // Public view
+              isDemo={false}
+            />
+          ))}
       </div>
     </section>
   )
 }
 
-function renderListStyle(category: Category, establishmentColor?: string) {
+function renderListStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-xl font-bold mb-2">{category.name}</h2>
@@ -91,7 +85,20 @@ function renderListStyle(category: Category, establishmentColor?: string) {
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
           .map(item => (
             <li key={item.id} className="list-none">
-              {renderMenuItem(item, category, establishmentColor)}
+              <MenuItemList
+                item={item}
+                category={category}
+                editingItem={editingItem || null}
+                setEditingItem={setEditingItem || (() => {})}
+                handleItemChange={() => {}} // No-op for public view
+                saveItem={async () => {}} // No-op for public view
+                savingItemId={null}
+                loadingAction={null}
+                deleteMenuItem={async () => {}} // No-op for public view
+                establishmentColor={establishmentColor}
+                isAdmin={false} // Public view
+                isDemo={false}
+              />
             </li>
           ))}
       </ul>
@@ -99,21 +106,36 @@ function renderListStyle(category: Category, establishmentColor?: string) {
   )
 }
 
-function renderCompactStyle(category: Category, establishmentColor?: string) {
+function renderCompactStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   return (
     <section key={category.id} className="max-w-2xl mx-auto px-2 py-4">
-      <h2 className="text-lg font-semibold mb-2">{category.name}</h2>
-      <div className="flex flex-wrap gap-2">
+      <h2 className="text-lg font-semibold mb-4">{category.name}</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full">
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => renderMenuItem(item, category, establishmentColor))}
+          .map(item => (
+            <MenuItemCompact
+              key={item.id}
+              item={item}
+              category={category}
+              editingItem={editingItem || null}
+              setEditingItem={setEditingItem || (() => {})}
+              saveItem={async () => {}} // No-op for public view
+              savingItemId={null}
+              loadingAction={null}
+              deleteMenuItem={async () => {}} // No-op for public view
+              establishmentColor={establishmentColor}
+              isAdmin={false} // Public view
+              isDemo={false}
+            />
+          ))}
       </div>
     </section>
   )
 }
 
-function renderTableStyle(category: Category, establishmentColor?: string) {
+function renderTableStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-xl font-bold mb-2">{category.name}</h2>
@@ -129,29 +151,44 @@ function renderTableStyle(category: Category, establishmentColor?: string) {
           {category.menu_items
             ?.filter((item: MenuItem) => item.is_available)
             .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map(item => renderMenuItem(item, category, establishmentColor))}
+            .map(item => (
+              <tr 
+                key={item.id}
+                className="cursor-pointer hover:bg-gray-50 transition"
+                onClick={() => setEditingItem?.(item.id)}
+                style={{
+                  boxShadow: editingItem === item.id ? `0 0 0 2px ${establishmentColor || '#3a4fff'}` : 'none'
+                }}
+              >
+                <td className="border-b p-2 font-medium">{item.name}</td>
+                <td className="border-b p-2 text-sm text-gray-600">{item.description || '-'}</td>
+                <td className="border-b p-2 text-right font-bold">{item.price?.toFixed(2)}€</td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </section>
   )
 }
 
-function renderCategoryByStyle(category: Category, establishmentColor?: string) {
+function renderCategoryByStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   switch (category.display_style) {
     case 'list':
-      return renderListStyle(category)
+      return renderListStyle(category, establishmentColor, editingItem, setEditingItem)
     case 'compact':
-      return renderCompactStyle(category)
+      return renderCompactStyle(category, establishmentColor, editingItem, setEditingItem)
     case 'table':
-      return renderTableStyle(category)
+      return renderTableStyle(category, establishmentColor, editingItem, setEditingItem)
     case 'card':
     default:
-      return renderCardStyle(category, establishmentColor)
+      return renderCardStyle(category, establishmentColor, editingItem, setEditingItem)
   }
 }
 
 export default function MenuDisplay({ establishment }: MenuDisplayProps) {
   const establishmentColor = establishment.primary_color || '#3a4fff'
+  const [editingItem, setEditingItem] = useState<string | null>(null)
+  
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
       <div className="text-center mb-6">
@@ -177,9 +214,25 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
               ...category,
               menu_items: category.menu_items?.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) || []
             };
-            return renderCategoryByStyle(sortedCategory, establishmentColor);
+            return renderCategoryByStyle(sortedCategory, establishmentColor, editingItem, setEditingItem);
           })}
       </div>
+      
+      {/* Show item dialog for table style when an item is selected */}
+      {editingItem && (
+        (() => {
+          const selectedItem = establishment.categories
+            ?.flatMap(cat => cat.menu_items || [])
+            .find(item => item.id === editingItem);
+          return selectedItem ? (
+            <MenuItemDialog 
+              item={selectedItem} 
+              open={!!editingItem} 
+              onOpenChange={(open) => !open && setEditingItem(null)} 
+            />
+          ) : null;
+        })()
+      )}
     </div>
   )
 }
