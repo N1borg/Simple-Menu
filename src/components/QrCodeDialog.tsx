@@ -261,15 +261,23 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-md w-full flex flex-col max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-md w-full flex flex-col max-h-[90vh] overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>QR Code personnalisé</DialogTitle>
           <DialogDescription>
             Personnalisez votre QR Code avec différents styles et couleurs.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 pb-6 -mx-6 -mb-6"
+             style={{ 
+               scrollbarWidth: 'thin',
+               scrollbarColor: 'rgba(0,0,0,0.2) transparent'
+             }}>
+          <div className="space-y-6 pr-2"
+               style={{
+                 maskImage: 'linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 8px), transparent 100%)'
+               }}>
           {/* Toggle Group for selecting QR code type */}
           {adminUrl && (
             <div>
@@ -463,9 +471,10 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
               💡 Conseil : Testez toujours votre QR code avec logo sur plusieurs appareils
             </p>
           </div>
+          </div>
         </div>
         
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <DialogClose asChild>
             <Button variant="outline">Annuler</Button>
           </DialogClose>
