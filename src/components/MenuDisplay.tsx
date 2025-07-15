@@ -1,51 +1,52 @@
+'use client'
+
+import { useState } from 'react'
 import Image from 'next/image'
 import type { MenuDisplayProps, Category, MenuItem } from '@/types/supabase_types'
+import MenuItemCard from '@/components/MenuItemCard'
+import MenuItemList from '@/components/MenuItemList'
+import MenuItemCompact from '@/components/MenuItemCompact'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
-function renderMenuItem(item: MenuItem, category: Category) {
-  const style = item.display_style || category.display_style || 'card'
-  switch (style) {
-    case 'list':
-      return (
-        <li key={item.id} className="flex justify-between border-b pb-1">
-          <span>{item.name}</span>
-          <span>{item.price.toFixed(2)}€</span>
-        </li>
-      )
-    case 'compact':
-      return (
-        <span
-          key={item.id}
-          className="bg-gray-100 rounded px-2 py-1 text-sm font-medium"
-          title={item.description || ''}
-        >
-          {item.name} <span className="text-green-700">{item.price.toFixed(2)}€</span>
-        </span>
-      )
-    case 'table':
-      return (
-        <tr key={item.id}>
-          <td className="border-b p-2">{item.name}</td>
-          <td className="border-b p-2">{item.description}</td>
-          <td className="border-b p-2 text-right">{item.price.toFixed(2)}€</td>
-        </tr>
-      )
-    case 'card':
-    default:
-      return (
-        <div key={item.id} className="bg-white rounded-xl shadow-md p-4 flex flex-col justify-between">
-          <h3 className="text-lg font-semibold">{item.name}</h3>
-          {item.description && (
-            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-          )}
-          <div className="text-right font-bold text-green-600 mt-2">
-            {item.price.toFixed(2)}€
+function MenuItemDialog({ item, open, onOpenChange }: { item: MenuItem, open: boolean, onOpenChange: (open: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{item.name}</DialogTitle>
+          <DialogDescription>
+            {item.description || 'Aucune description.'}
+          </DialogDescription>
+        </DialogHeader>
+        {item.image_url && (
+          <div className="flex justify-center">
+            <Image
+              src={item.image_url}
+              alt={item.name}
+              width={300}
+              height={200}
+              className="rounded-lg object-cover max-h-48"
+            />
           </div>
-        </div>
-      )
-  }
+        )}
+        <div className="mt-4 text-right font-bold text-lg">{item.price?.toFixed(2)}€</div>
+        <DialogClose asChild>
+          <Button variant="outline" className="mt-4 w-full">Fermer</Button>
+        </DialogClose>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
-function renderCardStyle(category: Category) {
+function renderCardStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-2xl font-bold mb-4">{category.name}</h2>
@@ -53,13 +54,28 @@ function renderCardStyle(category: Category) {
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => renderMenuItem(item, category))}
+          .map(item => (
+            <MenuItemCard
+              key={item.id}
+              item={item}
+              category={category}
+              editingItem={editingItem || null}
+              setEditingItem={setEditingItem || (() => {})}
+              saveItem={async () => {}} // No-op for public view
+              savingItemId={null}
+              loadingAction={null}
+              deleteMenuItem={async () => {}} // No-op for public view
+              establishmentColor={establishmentColor}
+              isAdmin={false} // Public view
+              isDemo={false}
+            />
+          ))}
       </div>
     </section>
   )
 }
 
-function renderListStyle(category: Category) {
+function renderListStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-xl font-bold mb-2">{category.name}</h2>
@@ -67,27 +83,59 @@ function renderListStyle(category: Category) {
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => renderMenuItem(item, category))}
+          .map(item => (
+            <li key={item.id} className="list-none">
+              <MenuItemList
+                item={item}
+                category={category}
+                editingItem={editingItem || null}
+                setEditingItem={setEditingItem || (() => {})}
+                handleItemChange={() => {}} // No-op for public view
+                saveItem={async () => {}} // No-op for public view
+                savingItemId={null}
+                loadingAction={null}
+                deleteMenuItem={async () => {}} // No-op for public view
+                establishmentColor={establishmentColor}
+                isAdmin={false} // Public view
+                isDemo={false}
+              />
+            </li>
+          ))}
       </ul>
     </section>
   )
 }
 
-function renderCompactStyle(category: Category) {
+function renderCompactStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   return (
     <section key={category.id} className="max-w-2xl mx-auto px-2 py-4">
-      <h2 className="text-lg font-semibold mb-2">{category.name}</h2>
-      <div className="flex flex-wrap gap-2">
+      <h2 className="text-lg font-semibold mb-4">{category.name}</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full">
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => renderMenuItem(item, category))}
+          .map(item => (
+            <MenuItemCompact
+              key={item.id}
+              item={item}
+              category={category}
+              editingItem={editingItem || null}
+              setEditingItem={setEditingItem || (() => {})}
+              saveItem={async () => {}} // No-op for public view
+              savingItemId={null}
+              loadingAction={null}
+              deleteMenuItem={async () => {}} // No-op for public view
+              establishmentColor={establishmentColor}
+              isAdmin={false} // Public view
+              isDemo={false}
+            />
+          ))}
       </div>
     </section>
   )
 }
 
-function renderTableStyle(category: Category) {
+function renderTableStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-xl font-bold mb-2">{category.name}</h2>
@@ -103,62 +151,88 @@ function renderTableStyle(category: Category) {
           {category.menu_items
             ?.filter((item: MenuItem) => item.is_available)
             .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map(item => renderMenuItem(item, category))}
+            .map(item => (
+              <tr 
+                key={item.id}
+                className="cursor-pointer hover:bg-gray-50 transition"
+                onClick={() => setEditingItem?.(item.id)}
+                style={{
+                  boxShadow: editingItem === item.id ? `0 0 0 2px ${establishmentColor || '#3a4fff'}` : 'none'
+                }}
+              >
+                <td className="border-b p-2 font-medium">{item.name}</td>
+                <td className="border-b p-2 text-sm text-gray-600">{item.description || '-'}</td>
+                <td className="border-b p-2 text-right font-bold">{item.price?.toFixed(2)}€</td>
+              </tr>
+            ))}
         </tbody>
       </table>
     </section>
   )
 }
 
-function renderCategoryByStyle(category: Category) {
+function renderCategoryByStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
   switch (category.display_style) {
     case 'list':
-      return renderListStyle(category)
+      return renderListStyle(category, establishmentColor, editingItem, setEditingItem)
     case 'compact':
-      return renderCompactStyle(category)
+      return renderCompactStyle(category, establishmentColor, editingItem, setEditingItem)
     case 'table':
-      return renderTableStyle(category)
+      return renderTableStyle(category, establishmentColor, editingItem, setEditingItem)
     case 'card':
     default:
-      return renderCardStyle(category)
+      return renderCardStyle(category, establishmentColor, editingItem, setEditingItem)
   }
 }
 
 export default function MenuDisplay({ establishment }: MenuDisplayProps) {
+  const establishmentColor = establishment.primary_color || '#3a4fff'
+  const [editingItem, setEditingItem] = useState<string | null>(null)
+  
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
-
-      <div className="bg-yellow-100 text-yellow-900 text-sm px-4 py-2 text-center font-semibold shadow-sm">
-        🍹 Happy Hour : -50% sur les cocktails de 17h à 19h, tous les jours !
-      </div>
-
-      <div className="bg-red-100 text-red-800 text-sm px-4 py-2 text-center font-bold shadow-md animate-pulse">
-        🚨 Fermeture exceptionnelle ce samedi 15 pour privatisation. Merci de votre compréhension !
-      </div>
-
-      <div className="fixed bottom-4 right-4 bg-green-100 border border-green-300 text-green-900 px-4 py-2 rounded-lg shadow-md text-sm">
-        ✅ Offre &quot;Apéro Duo&quot; activée jusqu&apos;à 20h.
-      </div>
-
       <div className="text-center mb-6">
         {establishment.logo_url && (
           <Image
             src={establishment.logo_url}
             alt="Logo"
-            width={80}
-            height={80}
-            className="mx-auto w-20 h-20 rounded-full mb-2"
+            width={160}
+            height={160}
+            className="mx-auto w-32 h-32 rounded-full mb-2 object-contain bg-white"
+            priority
+            quality={90}
+            sizes="(max-width: 600px) 100vw, 160px"
           />
         )}
         <h1 className="text-3xl font-bold">{establishment.name}</h1>
-        <p className="text-red-600 mt-2 font-semibold">🍹 Happy Hour : -50% sur les cocktails de 17h à 19h</p>
       </div>
-
       <div className="space-y-8">
         {establishment.categories
-          ?.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-          .map(renderCategoryByStyle)}
+          ?.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+          .map(category => {
+            const sortedCategory = {
+              ...category,
+              menu_items: category.menu_items?.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) || []
+            };
+            return renderCategoryByStyle(sortedCategory, establishmentColor, editingItem, setEditingItem);
+          })}
       </div>
+      
+      {/* Show item dialog for table style when an item is selected */}
+      {editingItem && (
+        (() => {
+          const selectedItem = establishment.categories
+            ?.flatMap(cat => cat.menu_items || [])
+            .find(item => item.id === editingItem);
+          return selectedItem ? (
+            <MenuItemDialog 
+              item={selectedItem} 
+              open={!!editingItem} 
+              onOpenChange={(open) => !open && setEditingItem(null)} 
+            />
+          ) : null;
+        })()
+      )}
     </div>
   )
 }

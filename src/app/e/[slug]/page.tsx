@@ -3,8 +3,8 @@ import { cookies } from 'next/headers'
 import MenuDisplay from '@/components/MenuDisplay'
 import NotFound from '@/app/not-found'
 import { jwtVerify } from 'jose'
-import Footer from '@/components/Footer'
 import AdminBanner from '@/components/AdminBanner'
+import MenuFooter from '@/components/MenuFooter'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,10 +20,10 @@ interface PageProps {
 
 export default async function MenuPage({ params }: PageProps) {
   const { slug } = await params
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = await getServerSupabase()
 
-  const token = (await cookieStore).get('admin-session')?.value
+  const token = cookieStore.get('admin-session')?.value
   let isAuthenticated = false
   let tokenSlug: string | undefined
 
@@ -55,11 +55,22 @@ export default async function MenuPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {isAuthenticated && <AdminBanner slug={slug} />}
+      {(isAuthenticated || slug === 'demo') && <AdminBanner slug={slug} color={establishment.primary_color ?? undefined} />}
       <main className="flex-grow">
         <MenuDisplay establishment={establishment} />
       </main>
-      <Footer />
+      <MenuFooter 
+        color={establishment.primary_color ?? undefined} 
+        establishmentInfo={{
+          address: establishment.address ?? undefined,
+          phone: establishment.phone ?? undefined,
+          email: establishment.email ?? undefined,
+          opening_hours: establishment.opening_hours as Array<{ day: string; hours: string }> ?? undefined,
+          facebook_url: establishment.facebook_url ?? undefined,
+          instagram_url: establishment.instagram_url ?? undefined,
+          google_maps_url: establishment.google_maps_url ?? undefined
+        }}
+      />
     </div>
   )
 }

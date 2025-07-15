@@ -1,11 +1,14 @@
 import { getServerSupabase } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
+import { redirect } from 'next/navigation'
 import AdminDashboard from '@/components/AdminDashboard'
 import AdminLoginForm from '@/components/AdminLoginForm'
-import { EstablishmentWithCategories } from '@/types/supabase'
-import Link from 'next/link'
+import { EstablishmentWithCategories } from '@/types/supabase_types'
+import AdminBanner from '@/components/AdminBanner'
+import MenuFooter from '@/components/MenuFooter'
 import Image from 'next/image'
+import NotFound from '@/app/not-found'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -19,7 +22,7 @@ interface PageProps {
 
 export default async function AdminPage({ params }: PageProps) {
   const { slug } = await params
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const supabase = await getServerSupabase()
 
   const { data: establishment, error } = await supabase
@@ -35,11 +38,10 @@ export default async function AdminPage({ params }: PageProps) {
     .single()
 
   if (error || !establishment) {
-    return <div className="p-8 text-center">Établissement non trouvé</div>
+    return NotFound()
   }
 
-  // Check single session cookie
-  const token = (await cookieStore).get('admin-session')?.value
+  const token = cookieStore.get('admin-session')?.value
   let isAuthenticated = false
   let tokenSlug: string | undefined
 
@@ -53,7 +55,7 @@ export default async function AdminPage({ params }: PageProps) {
     }
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && slug !== 'demo') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full space-y-8">
@@ -62,10 +64,12 @@ export default async function AdminPage({ params }: PageProps) {
               <Image
                 src={establishment.logo_url}
                 alt={`Logo de ${establishment.name}`}
-                width={100}
-                height={100}
-                className="mb-4 w-50 h-50 object-contain rounded-full"
+                width={120}
+                height={120}
+                className="mb-4 w-28 h-28 object-contain rounded-full bg-white"
                 priority
+                quality={90}
+                sizes="(max-width: 600px) 100vw, 120px"
               />
             )}
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -75,24 +79,41 @@ export default async function AdminPage({ params }: PageProps) {
               Connectez-vous pour gérer votre menu
             </p>
           </div>
-          <AdminLoginForm slug={slug} />
-        </div>
+            <AdminLoginForm slug={slug} color={establishment.primary_color ?? undefined} />
+          </div>
       </div>
     )
   }
 
+  // Check if setup is needed and redirect (only for authenticated users, not demo)
+  const needsSetup = !establishment.primary_color && slug !== 'demo' && isAuthenticated
+  if (needsSetup) {
+    redirect(`/e/${slug}/admin/setup`)
+  }
+
   return (
-    <div>
-      <div className="flex justify-end p-4">
-        <Link
-          href={`/e/${slug}`}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Voir la page menu publique
-        </Link>
+    <div className="min-h-screen flex flex-col">
+      {(isAuthenticated || slug === 'demo') && (
+        <div className="tutorial-admin-banner">
+          <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />
+        </div>
+      )}
+      <div className="flex-grow">
+        <AdminDashboard
+          establishment={establishment as EstablishmentWithCategories}
+        />
       </div>
-      <AdminDashboard
-        establishment={establishment as EstablishmentWithCategories}
+      <MenuFooter 
+        color={establishment.primary_color ?? undefined} 
+        establishmentInfo={{
+          address: establishment.address ?? undefined,
+          phone: establishment.phone ?? undefined,
+          email: establishment.email ?? undefined,
+          opening_hours: establishment.opening_hours as Array<{ day: string; hours: string }> ?? undefined,
+          facebook_url: establishment.facebook_url ?? undefined,
+          instagram_url: establishment.instagram_url ?? undefined,
+          google_maps_url: establishment.google_maps_url ?? undefined
+        }}
       />
     </div>
   )

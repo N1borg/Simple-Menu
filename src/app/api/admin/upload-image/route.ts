@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import cloudinary from "cloudinary"
 import sharp from "sharp"
 import { jwtVerify } from 'jose'
+import { auditLog } from '@/lib/security'
+import { sanitizeString, isDemoSlug } from '@/lib/validate'
+import { requireAdminAuth } from '@/lib/auth'
 
 cloudinary.v2.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -13,21 +16,11 @@ const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  try {
-    // Auth: get token from cookie or Authorization header
-    const token = req.cookies.get('admin-session')?.value || req.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json({ error: "Non autorisé - Token manquant" }, { status: 401 })
-    }
-    let slug = null
-    try {
-      const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET))
-      slug = payload.slug as string
-      if (!slug) throw new Error('Slug manquant dans le token')
-    } catch (e) {
-      return NextResponse.json({ error: "Token invalide" }, { status: 401 })
-    }
+  const auth = await requireAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
 
+  try {
     // Parse and validate request
     const contentType = req.headers.get('content-type')
     if (!contentType?.includes('application/json')) {
@@ -37,14 +30,23 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { file, folder = "logos" } = body
 
+    // Protection avancée mode démo
+    if (isDemoSlug(slug)) {
+      return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
+    }
+
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+
     // Validate file presence
     if (!file) {
+      auditLog({ action: 'upload_image_failed', ip, details: { error: 'Aucun fichier fourni' } })
       return NextResponse.json({ error: "Aucun fichier fourni" }, { status: 400 })
     }
 
     // Validate and extract image data
     const matches = /^data:(image\/(png|jpeg|jpg|webp|gif));base64,/.exec(file)
     if (!matches) {
+      auditLog({ action: 'upload_image_failed', ip, details: { error: 'Format invalide', file } })
       return NextResponse.json({ 
         error: "Format invalide. Formats acceptés: PNG, JPEG, WebP, GIF" 
       }, { status: 400 })
@@ -109,6 +111,9 @@ export async function POST(req: NextRequest) {
         stream.end(optimizedBuffer)
       })
 
+      // Success logging (after upload to cloudinary)
+      auditLog({ action: 'upload_image_success', ip, details: { slug, folder, cloudinaryUrl } })
+
       return NextResponse.json({ 
         url: cloudinaryUrl,
         message: "Image optimisée et uploadée avec succès"
@@ -116,22 +121,20 @@ export async function POST(req: NextRequest) {
 
     } catch (imageError: any) {
       console.error("Image processing error:", imageError)
-      
+      auditLog({ action: 'upload_image_failed', ip, details: { error: imageError.message } })
       if (imageError.message?.includes('Input buffer contains unsupported image format')) {
         return NextResponse.json({ 
           error: "Format d'image non supporté ou fichier corrompu" 
         }, { status: 400 })
       }
-      
       return NextResponse.json({ 
         error: "Impossible de traiter l'image. Vérifiez que c'est un fichier valide." 
       }, { status: 400 })
     }
-
   } catch (error: any) {
     console.error("Upload error:", error)
-    return NextResponse.json({ 
-      error: "Erreur interne du serveur" 
-    }, { status: 500 })
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+    auditLog({ action: 'upload_image_failed', ip, details: { error: error.message } })
+    return NextResponse.json({ error: error.message || 'Erreur serveur' }, { status: 500 })
   }
 }

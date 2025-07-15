@@ -124,4 +124,40 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Ensure all interactive elements have pointer cursor */
+  button,
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  select,
+  a[href],
+  [tabindex="0"],
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  
+  /* Override for disabled states */
+  button:disabled,
+  [role="button"]:disabled,
+  [type="button"]:disabled,
+  [type="submit"]:disabled,
+  [type="reset"]:disabled,
+  input:disabled,
+  select:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+.animate-gradient-slide {
+  animation: gradient-slide 16s linear infinite;
+}
+@keyframes gradient-slide {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
