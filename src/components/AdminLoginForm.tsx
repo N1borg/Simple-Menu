@@ -30,30 +30,32 @@ export default function AdminLoginForm({ slug, error }: AdminLoginFormProps) {
   }
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
-      <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-        Mot de passe administrateur
-      </label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        required
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
-      />
-      {formError && (
-        <div className="text-red-500 text-sm">{formError}</div>
-      )}
-      <button
-        type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-        disabled={loading}
-      >
-        {loading ? 'Connexion...' : 'Se connecter'}
-      </button>
-    </form>
+    <div className="w-full max-w-md mx-auto px-4">
+      <form className="space-y-6" onSubmit={handleSubmit}>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          Mot de passe administrateur
+        </label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+        />
+        {formError && (
+          <div className="text-red-500 text-sm">{formError}</div>
+        )}
+        <button
+          type="submit"
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          disabled={loading}
+        >
+          {loading ? 'Connexion...' : 'Se connecter'}
+        </button>
+      </form>
+    </div>
   )
 }

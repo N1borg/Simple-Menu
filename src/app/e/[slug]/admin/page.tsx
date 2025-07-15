@@ -64,7 +64,7 @@ export default async function AdminPage({ params }: PageProps) {
                 alt={`Logo de ${establishment.name}`}
                 width={100}
                 height={100}
-                className="mb-4 w-24 h-24 object-contain rounded-full"
+                className="mb-4 w-50 h-50 object-contain rounded-full"
                 priority
               />
             )}
