@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { jwtVerify } from 'jose'
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSupabase } from '@/lib/supabase'
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
@@ -23,4 +24,44 @@ export async function requireAdminAuth(req: NextRequest): Promise<{ slug: string
   } catch (e) {
     return NextResponse.json({ error: "Token invalide" }, { status: 401 })
   }
+}
+
+export async function requireSecureAdminAuth(req: NextRequest): Promise<{ slug: string; establishment: any } | NextResponse> {
+  // First check JWT authentication
+  const authResult = await requireAdminAuth(req)
+  if ('status' in authResult) {
+    return authResult // Return the error response
+  }
+  
+  const { slug } = authResult
+  
+  // Allow demo access
+  if (slug === 'demo') {
+    return { slug, establishment: { slug: 'demo', is_active: true, plan_status: 'active' } }
+  }
+  
+  // Check establishment payment status
+  const supabase = await getServerSupabase()
+  const { data: establishment, error } = await supabase
+    .from('establishments')
+    .select('id, slug, is_active, plan_status')
+    .eq('slug', slug)
+    .single()
+
+  if (error || !establishment) {
+    return NextResponse.json({ 
+      error: 'Établissement non trouvé' 
+    }, { status: 404 })
+  }
+
+  // Block access if not active or payment pending
+  if (!establishment.is_active || establishment.plan_status === 'pending_payment') {
+    return NextResponse.json({ 
+      error: 'Accès restreint - Paiement requis',
+      requirePayment: true,
+      slug 
+    }, { status: 402 })
+  }
+
+  return { slug, establishment }
 }

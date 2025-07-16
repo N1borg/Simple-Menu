@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Upload, Pencil } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from "sonner"
+import { getEstablishmentColor } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
@@ -32,11 +33,12 @@ export default function ImageUpload({
   establishmentId,
   folder = 'logos',
   className = '',
-  color = '#3a4fff',
+  color,
   onDeleteLogo,
   isDemo = false, // Ajout du paramètre isDemo
   slug,
 }: ImageUploadProps) {
+  const establishmentColor = getEstablishmentColor(color)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<UploadError | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -97,7 +99,6 @@ export default function ImageUpload({
 
       // Show file size info
       const fileSizeMB = (file.size / 1024 / 1024).toFixed(2)
-      console.log(`Uploading file: ${fileSizeMB}MB`)
 
       // Convert to base64
       const base64 = await convertToBase64(file)
@@ -143,7 +144,6 @@ export default function ImageUpload({
       }
 
     } catch (err) {
-      console.error('Upload error:', err)
       setError({
         message: 'Erreur de connexion. Vérifiez votre connexion internet.',
         type: 'network'
@@ -280,7 +280,7 @@ export default function ImageUpload({
             {isDemo ? (
             <div
               className="flex items-center justify-center border-2 border-dashed rounded-lg p-6 text-center min-h-[180px] bg-blue-50 w-full"
-              style={{ height: '180px', color: color }}
+              style={{ height: '180px', color: establishmentColor }}
             >
               Vous changez votre logo ici
             </div>
@@ -294,8 +294,8 @@ export default function ImageUpload({
                   `relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragActive ? '' : ''} ${isUploading ? 'opacity-50 pointer-events-none' : ''}`
                 }
                 style={{
-                  borderColor: dragActive ? color : '#d1d5db',
-                  backgroundColor: dragActive ? color + '20' : undefined,
+                  borderColor: dragActive ? establishmentColor : '#d1d5db',
+                  backgroundColor: dragActive ? establishmentColor + '20' : undefined,
                 }}
               >
                 <input
@@ -307,17 +307,17 @@ export default function ImageUpload({
                   disabled={isUploading}
                 />
                 <div className="space-y-3">
-                  <Upload className={`mx-auto h-12 w-12`} style={{ color: dragActive ? color : '#9ca3af' }} />
+                  <Upload className={`mx-auto h-12 w-12`} style={{ color: dragActive ? establishmentColor : '#9ca3af' }} />
                   {isUploading ? (
                     <div className="space-y-2">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderColor: color }}></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderColor: establishmentColor }}></div>
                       <p className="text-sm text-gray-600">Optimisation et upload...</p>
                       <p className="text-xs text-gray-500">L'image est automatiquement optimisée</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       <p className="text-sm text-gray-600">
-                        <span className="font-medium hover:underline" style={{ color }}>{'Cliquez pour sélectionner'}</span>
+                        <span className="font-medium hover:underline" style={{ color: establishmentColor }}>{'Cliquez pour sélectionner'}</span>
                         {' '}ou glissez-déposez votre image
                       </p>
                       <p className="text-xs text-gray-500">Tous formats acceptés • Optimisation automatique</p>

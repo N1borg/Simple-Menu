@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { defaultWeekSchedule, convertLegacyHours, convertToLegacyHours, DaySchedule } from '@/lib/utils'
+import { defaultWeekSchedule, convertLegacyHours, convertToLegacyHours, DaySchedule, getEstablishmentColor } from '@/lib/utils'
 import { Loader2, Clock } from 'lucide-react'
 import OpeningHoursInput from '@/components/OpeningHoursInput'
 import {
@@ -113,14 +113,14 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
           <Button 
             variant="outline" 
             className="w-full flex items-center gap-2"
-            style={primaryColor ? { 
-              borderColor: primaryColor, 
-              color: primaryColor 
-            } : {}}
+            style={{ 
+              borderColor: getEstablishmentColor(primaryColor), 
+              color: getEstablishmentColor(primaryColor) 
+            }}
           >
             <Clock 
               className="w-4 h-4" 
-              style={primaryColor ? { color: primaryColor } : {}}
+              style={{ color: getEstablishmentColor(primaryColor) }}
             />
             Horaires d'ouverture
           </Button>
@@ -130,7 +130,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
         <DialogHeader>
           <DialogTitle 
             className="text-lg"
-            style={primaryColor ? { color: primaryColor } : {}}
+            style={{ color: getEstablishmentColor(primaryColor) }}
           >
             Horaires d'ouverture
           </DialogTitle>
@@ -168,7 +168,10 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
           <Button 
             onClick={handleSave} 
             disabled={isSaving || isLoading || isDemo || !hasChanges()}
-            style={primaryColor ? { backgroundColor: primaryColor, borderColor: primaryColor } : {}}
+            style={{ 
+              backgroundColor: getEstablishmentColor(primaryColor), 
+              borderColor: getEstablishmentColor(primaryColor) 
+            }}
           >
             {isSaving ? (
               <div className="flex items-center">

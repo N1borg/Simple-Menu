@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from "sonner"
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
 import { GripVertical } from "lucide-react"
+import { getEstablishmentColor } from '@/lib/utils'
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -45,7 +46,7 @@ export default function MenuItemCard({
   isDemo = false
 }: MenuItemCardProps) {
   // Use the establishment color if provided, fallback to blue
-  const ringColor = establishmentColor || '#3a4fff'
+  const ringColor = getEstablishmentColor(establishmentColor)
 
   // Local state for dialog editing
   const [localName, setLocalName] = useState(item.name)

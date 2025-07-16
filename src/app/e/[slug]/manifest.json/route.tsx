@@ -19,6 +19,11 @@ export async function GET(
     return new Response('Establishment not found', { status: 404 })
   }
 
+  // Security check: Block access for inactive establishments (except demo)
+  if (slug !== 'demo' && (!establishment.is_active || establishment.plan_status === 'pending_payment')) {
+    return new Response('Access restricted - Payment required', { status: 402 })
+  }
+
   // Block demo from having PWA
   if (slug === 'demo') {
     return new Response(

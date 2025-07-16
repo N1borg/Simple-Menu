@@ -13,10 +13,30 @@ if (!JWT_SECRET) {
 export async function POST(req: NextRequest) {
   const { slug, password } = await req.json()
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
-  // Blocage des modifications en mode démo
+  
+  // Allow demo login but with demo password
   if (slug === 'demo') {
-    auditLog({ action: 'login_attempt_demo_blocked', ip, user: slug, details: { slug } })
-    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
+    if (password !== 'demo') {
+      auditLog({ action: 'demo_login_failed', ip, user: slug, details: { reason: 'wrong_password' } })
+      return NextResponse.json({ error: 'Mot de passe incorrect' }, { status: 401 })
+    }
+    
+    // Create JWT for demo
+    const token = await new SignJWT({ slug: 'demo' })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('24h')
+      .sign(new TextEncoder().encode(JWT_SECRET))
+
+    auditLog({ action: 'demo_login_success', ip, user: slug })
+    
+    const response = NextResponse.json({ success: true, message: 'Connexion demo réussie' })
+    response.cookies.set('admin-session', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 86400 // 24 hours
+    })
+    return response
   }
   const supabase = await getServerSupabase()
 

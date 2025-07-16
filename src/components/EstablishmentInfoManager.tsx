@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl, convertToLegacyHours } from '@/lib/utils'
+import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl, convertToLegacyHours, getEstablishmentColor } from '@/lib/utils'
 import { Loader2, MapPin } from 'lucide-react'
 import {
   Dialog,
@@ -240,7 +240,10 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
           <Button 
             onClick={handleSave} 
             disabled={isSaving || isLoading || isDemo || !hasChanges()}
-            style={primaryColor ? { backgroundColor: primaryColor, borderColor: primaryColor } : {}}
+            style={{ 
+              backgroundColor: getEstablishmentColor(primaryColor), 
+              borderColor: getEstablishmentColor(primaryColor) 
+            }}
           >
             {isSaving ? (
               <div className="flex items-center">

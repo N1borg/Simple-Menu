@@ -67,6 +67,7 @@ export type Database = {
           id: string
           instagram_url: string | null
           is_active: boolean | null
+          is_active: boolean | null
           logo_url: string | null
           name: string
           opening_hours: Json | null
@@ -74,8 +75,10 @@ export type Database = {
           plan: string
           plan_status: string | null
           plan_type: string | null
+          plan_status: string | null
           postal_code: string | null
           primary_color: string | null
+          secondary_color: string | null
           secondary_color: string | null
           slug: string
           stripe_customer_id: string | null
@@ -83,6 +86,10 @@ export type Database = {
           subscription_started_at: string | null
           temp_password: string | null
           temp_password_expires_at: string | null
+          trial_ends_at: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_started_at: string | null
           trial_ends_at: string | null
         }
         Insert: {
@@ -102,6 +109,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_active?: boolean | null
+          is_active?: boolean | null
           logo_url?: string | null
           name: string
           opening_hours?: Json | null
@@ -109,8 +117,10 @@ export type Database = {
           plan?: string
           plan_status?: string | null
           plan_type?: string | null
+          plan_status?: string | null
           postal_code?: string | null
           primary_color?: string | null
+          secondary_color?: string | null
           secondary_color?: string | null
           slug: string
           stripe_customer_id?: string | null
@@ -118,6 +128,10 @@ export type Database = {
           subscription_started_at?: string | null
           temp_password?: string | null
           temp_password_expires_at?: string | null
+          trial_ends_at?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_started_at?: string | null
           trial_ends_at?: string | null
         }
         Update: {
@@ -144,8 +158,10 @@ export type Database = {
           plan?: string
           plan_status?: string | null
           plan_type?: string | null
+          plan_status?: string | null
           postal_code?: string | null
           primary_color?: string | null
+          secondary_color?: string | null
           secondary_color?: string | null
           slug?: string
           stripe_customer_id?: string | null
@@ -153,6 +169,10 @@ export type Database = {
           subscription_started_at?: string | null
           temp_password?: string | null
           temp_password_expires_at?: string | null
+          trial_ends_at?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_started_at?: string | null
           trial_ends_at?: string | null
         }
         Relationships: []

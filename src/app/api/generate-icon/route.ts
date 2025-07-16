@@ -56,8 +56,6 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error generating icon:', error)
-    
     // Fallback to default icon
     const defaultIconResponse = await fetch(`${req.nextUrl.origin}/icons/icon-${size}.png`)
     if (defaultIconResponse.ok) {

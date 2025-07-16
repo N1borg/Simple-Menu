@@ -26,12 +26,18 @@ export function checkRateLimit(ip: string): boolean {
 
 // Simple audit logger (logs to console, can be extended to DB/file)
 export function auditLog({ action, user, ip, details }: { action: string, user?: string, ip?: string, details?: any }) {
-  // In production, send to a log service or DB
-  console.log(`[AUDIT]`, {
+  // In production, this would send to a log service or database
+  // For now, we keep a simple timestamp record
+  const logEntry = {
     timestamp: new Date().toISOString(),
     action,
     user,
     ip,
     details
-  });
+  }
+  
+  // In development, you could optionally log to console
+  if (process.env.NODE_ENV === 'development') {
+    // console.log(`[AUDIT]`, logEntry)
+  }
 }

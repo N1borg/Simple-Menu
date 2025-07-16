@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdminAuth } from '@/lib/auth'
+import { requireSecureAdminAuth } from '@/lib/auth'
 import { getServerSupabase } from '@/lib/supabase'
 
 export async function GET(req: NextRequest) {
   try {
-    const adminAuth = await requireAdminAuth(req)
+    const adminAuth = await requireSecureAdminAuth(req)
     if ('status' in adminAuth) {
       return adminAuth
     }
@@ -45,7 +45,6 @@ export async function GET(req: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in establishment-info API:', error)
     return NextResponse.json({ error: 'Erreur interne serveur' }, { status: 500 })
   }
 }

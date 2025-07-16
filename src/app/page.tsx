@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Mail, CircleCheck } from "lucide-react"
+import { Mail, CircleCheck, X } from "lucide-react"
 import { motion, useScroll, useTransform, useInView, useAnimation } from 'framer-motion'
 import { useRef } from 'react'
 import {
@@ -12,8 +12,7 @@ import {
   DialogTitle,
   DialogDescription
 } from '@/components/ui/dialog'
-// @ts-ignore
-import confetti from 'canvas-confetti'
+import { SignupForm } from '@/components/SignupForm'
 
 // Dots pattern background component
 function DotsPattern({ className = "" }: { className?: string }) {
@@ -156,6 +155,7 @@ function ParallaxBackground() {
 
 export default function HomePage() {
   const [showContactPopup, setShowContactPopup] = useState(false)
+  const [showSignupForm, setShowSignupForm] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [showContent, setShowContent] = useState(false)
   const { scrollY } = useScroll()
@@ -173,19 +173,16 @@ export default function HomePage() {
 
   const handlePlanClick = (plan: string) => {
     setSelectedPlan(plan)
-    setShowContactPopup(true)
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      scalar: 0.8,
-      zIndex: 9999,
-      colors: ['#3b82f6', '#22d3ee', '#22c55e']
-    })
+    setShowSignupForm(true)
   }
 
   const closePopup = () => {
     setShowContactPopup(false)
+    setSelectedPlan(null)
+  }
+
+  const closeSignupForm = () => {
+    setShowSignupForm(false)
     setSelectedPlan(null)
   }
 
@@ -221,7 +218,7 @@ export default function HomePage() {
             >
               🔥
             </motion.span>
-            <span className="font-semibold">OFFRE DE LANCEMENT : 1 mois gratuit + -50% pendant trois mois !</span>
+            <span className="font-semibold">OFFRE DE LANCEMENT : 2 semaines gratuites + -50% pendant trois mois !</span>
           </motion.div>
         </GlassCard>
         
@@ -395,22 +392,23 @@ export default function HomePage() {
             >
               🔥
             </motion.span>
-              <span className="font-bold text-lg">OFFRE DE LANCEMENT : 1 mois gratuit + -50% pour les trois premiers mois sur tous les abonnements !</span>
+              <span className="font-bold text-lg">OFFRE DE LANCEMENT : 2 semaines gratuites + -50% pour les trois premiers mois sur tous les abonnements !</span>
             </motion.div>
           </GlassCard>
           
-          <motion.div 
+          <motion.div
             className="grid md:grid-cols-3 gap-10 text-left pt-12 items-stretch"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
           >
+          </motion.div>
             {/* Essentiel */}
             <motion.div 
               className="group relative bg-gradient-to-br from-white via-blue-50/30 to-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-700 cursor-pointer border border-blue-200/50 hover:border-blue-300/70 backdrop-blur-sm overflow-hidden h-full"
               variants={fadeInUp}
-              onClick={() => handlePlanClick('Essentiel')} 
+              onClick={() => handlePlanClick('essentiel')} 
               tabIndex={0} 
               role="button" 
               aria-label="Sélectionner la formule Essentiel"
@@ -421,6 +419,7 @@ export default function HomePage() {
               }}
               whileTap={{ scale: 0.98 }}
             >
+            </motion.div>
               <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 via-transparent to-cyan-400/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               
               <div className="relative z-10 flex flex-col h-full">
@@ -450,7 +449,7 @@ export default function HomePage() {
                 <motion.div 
                   className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 text-sm px-4 py-2 rounded-full mb-6 inline-block font-semibold shadow-sm"
                 >
-                  + 1 mois gratuit
+                  + 2 semaines gratuites
                 </motion.div>
                 
                 <ul className="text-gray-700 mb-8 space-y-3 flex-1">
@@ -484,7 +483,17 @@ export default function HomePage() {
                   Je suis intéressé
                 </motion.button>
               </div>
-            </motion.div>
+              <ul className="text-sm text-gray-700 mb-6 space-y-1 flex-1">
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> 5 catégories • 50 produits</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Menu digital responsive</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Accès administrateur</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes personnalisés</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Modifications en temps réel</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Support email</li>
+              </ul>
+              <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer mt-auto">
+                Je suis intéressé
+              </span>
 
             {/* Pro */}
             <motion.div 
@@ -591,13 +600,27 @@ export default function HomePage() {
                   🚀 Je passe au Pro
                 </motion.button>
               </div>
-            </motion.div>
+              <ul className="text-sm text-gray-700 mb-6 space-y-1 flex-1">
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> 15 catégories • 200 produits</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Menu digital responsive</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Accès administrateur</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes personnalisés</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Modifications en temps réel</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Support email & téléphonique</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> QR codes imprimés (10 unités)</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Application mobile</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Gestion des stocks</li>
+                <li className="flex items-center"><CircleCheck className="text-green-600 w-4 h-4 mr-2" /> Photos personnalisées</li>
+              </ul>
+              <span className="block text-center bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer mt-auto">
+                Je passe au Pro
+              </span>
 
             {/* Premium */}
             <motion.div 
               className="group relative bg-gradient-to-br from-white via-emerald-50/30 to-purple-50/20 rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-700 cursor-pointer border border-emerald-200/50 hover:border-emerald-300/70 backdrop-blur-sm overflow-hidden h-full"
               variants={fadeInUp}
-              onClick={() => handlePlanClick('Premium')} 
+              onClick={() => handlePlanClick('premium')} 
               tabIndex={0} 
               role="button" 
               aria-label="Sélectionner la formule Premium"
@@ -636,7 +659,7 @@ export default function HomePage() {
                 <motion.div 
                   className="bg-gradient-to-r from-emerald-100 via-green-100 to-cyan-100 text-emerald-800 text-sm px-4 py-2 rounded-full mb-6 inline-block font-semibold shadow-sm"
                 >
-                  + 1 mois gratuit + Setup complet offert
+                  + 2 semaines gratuites + Setup complet offert
                 </motion.div>
                 
                 <ul className="text-gray-700 mb-8 space-y-3 flex-1">
@@ -747,7 +770,7 @@ export default function HomePage() {
                     transition={{ delay: 0.2 }}
                   >
                     <p className="font-semibold">Formule {selectedPlan}</p>
-                    <p className="text-sm">1 mois gratuit + réduction de 50%</p>
+                    <p className="text-sm">2 semaines gratuites + réduction de 50%</p>
                   </motion.div>
                 </DialogDescription>
               </DialogHeader>
@@ -888,7 +911,7 @@ export default function HomePage() {
           style={{ backgroundColor: 'rgba(134, 239, 172, 0.95)' }}
         >
           <p className="text-green-800 font-bold mb-2 text-xl">🎯 OFFRE DE LANCEMENT LIMITÉE</p>
-          <p className="text-gray-700 font-medium text-lg">1 mois gratuit + 50% de réduction sur vos trois premiers mois</p>
+          <p className="text-gray-700 font-medium text-lg">2 semaines gratuites + 50% de réduction sur vos trois premiers mois</p>
         </motion.div>
         <motion.div 
           className="flex flex-col gap-4"
@@ -919,6 +942,61 @@ export default function HomePage() {
        >
          © {new Date().getFullYear()} Simple-Menu — Conçu avec passion 🧑‍🍳
        </motion.footer>
+
+      {/* Signup Form Modal */}
+      <Dialog open={showSignupForm} onOpenChange={setShowSignupForm}>
+        <DialogContent className="max-w-6xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 pb-6 -mx-6 -mb-6"
+               style={{ 
+                 scrollbarWidth: 'thin',
+                 scrollbarColor: 'rgba(0,0,0,0.2) transparent'
+               }}>
+            <div className="space-y-6 pr-2">
+              <SignupForm 
+                onClose={closeSignupForm} 
+                selectedPlan={selectedPlan || 'pro'} 
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contact popup using shadcn/ui Dialog */}
+      <Dialog open={showContactPopup} onOpenChange={setShowContactPopup}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl font-bold text-blue-700">
+              🎉 Excellent choix !
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Vous avez sélectionné le plan <strong>{selectedPlan}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="text-center space-y-4">
+            <p className="text-gray-700">
+              Contactez-nous pour profiter de l'offre de lancement avec <strong>2 semaines gratuites + 50% de réduction</strong> !
+            </p>
+            
+            <a 
+              href={`mailto:contact.simplemenu@gmail.com?subject=Simple%20Menu%20-%20Plan%20${selectedPlan}&body=Bonjour%20Robin,%20je%20suis%20intéressé%20par%20le%20plan%20${selectedPlan}%20avec%20l'offre%20de%20lancement%20!`}
+              className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition"
+              onClick={closePopup}
+            >
+              <Mail className="w-5 h-5" />
+              Nous contacter
+            </a>
+            
+            <button
+              onClick={closePopup}
+              className="block w-full text-gray-500 hover:text-gray-700 transition mt-3"
+            >
+              Fermer
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
      </main>
   )
 }
