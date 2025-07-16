@@ -47,6 +47,7 @@ interface CategorySectionProps {
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>
   saveCategory: (cat: any) => Promise<void>
   establishmentColor?: string
+  textColor?: string
   deleteCategory: (catId: string) => Promise<void>
   subscription?: SubscriptionLimits
   isAddingItemGlobally?: boolean
@@ -67,6 +68,7 @@ export default function CategorySection({
   setCategories,
   saveCategory,
   establishmentColor,
+  textColor,
   deleteCategory,
   subscription,
   isAddingItemGlobally = false,
@@ -509,6 +511,7 @@ export default function CategorySection({
                   loadingAction={loadingAction}
                   deleteMenuItem={handleDeleteMenuItem}
                   establishmentColor={establishmentColor}
+                  textColor={textColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
                 />
@@ -525,6 +528,7 @@ export default function CategorySection({
                   loadingAction={loadingAction}
                   deleteMenuItem={handleDeleteMenuItem}
                   establishmentColor={establishmentColor}
+                  textColor={textColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
                 />
@@ -580,6 +584,7 @@ export default function CategorySection({
               loadingAction={loadingAction}
               deleteMenuItem={handleDeleteMenuItem}
               establishmentColor={establishmentColor}
+              textColor={textColor}
               isDemo={isDemo}
               isAdmin={isAdmin}
             />
@@ -595,6 +600,7 @@ export default function CategorySection({
               loadingAction={loadingAction}
               deleteMenuItem={handleDeleteMenuItem}
               establishmentColor={establishmentColor}
+              textColor={textColor}
               isDemo={isDemo}
               isAdmin={isAdmin}
             />
@@ -610,6 +616,7 @@ export default function CategorySection({
               loadingAction={loadingAction}
               deleteMenuItem={handleDeleteMenuItem}
               establishmentColor={establishmentColor}
+              textColor={textColor}
               isDemo={isDemo}
               isAdmin={isAdmin}
             />

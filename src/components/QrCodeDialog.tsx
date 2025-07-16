@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { QRCodeSVG } from "qrcode.react";
 import { QrCode, Download, Globe, Settings, Palette, Image } from "lucide-react";
 import { ColorPicker, useColor } from 'react-color-palette'
@@ -38,6 +39,54 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
   const [showLogo, setShowLogo] = useState<boolean>(false);
   const [showColorPicker, setShowColorPicker] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [hexInput, setHexInput] = useState<string>("#000000");
+  
+  // Function to handle hex color input
+  const handleHexInputChange = (value: string) => {
+    setHexInput(value);
+    // Validate hex color format
+    const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (hexRegex.test(value)) {
+      setCustomColor({ hex: value, rgb: hexToRgb(value), hsv: hexToHsv(value) });
+    }
+  };
+  
+  // Helper function to convert hex to RGB
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+      a: 1
+    } : { r: 0, g: 0, b: 0, a: 1 };
+  };
+  
+  // Helper function to convert hex to HSV
+  const hexToHsv = (hex: string) => {
+    const rgb = hexToRgb(hex);
+    const r = rgb.r / 255;
+    const g = rgb.g / 255;
+    const b = rgb.b / 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const diff = max - min;
+    
+    let h = 0;
+    if (diff !== 0) {
+      if (max === r) h = ((g - b) / diff) % 6;
+      else if (max === g) h = (b - r) / diff + 2;
+      else h = (r - g) / diff + 4;
+    }
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+    
+    const s = max === 0 ? 0 : Math.round((diff / max) * 100);
+    const v = Math.round(max * 100);
+    
+    return { h, s, v, a: 1 };
+  };
   
   // Determine which URL to use based on selection
   const currentUrl = selectedType === "admin" && adminUrl ? adminUrl : url;
@@ -270,7 +319,7 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto px-6 pb-6 -mx-6 -mb-6"
+        <div className="flex-1 overflow-y-auto space-y-6 p-2"
              style={{ 
                scrollbarWidth: 'thin',
                scrollbarColor: 'rgba(0,0,0,0.2) transparent'
@@ -353,8 +402,26 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
               </ToggleGroup>
               
               {showColorPicker && (
-                <div className="border rounded-lg p-3">
-                  <ColorPicker color={customColor} onChange={setCustomColor} hideInput />
+                <div className="border rounded-lg p-3 space-y-3">
+                  <ColorPicker 
+                    color={customColor} 
+                    onChange={(color: any) => {
+                      setCustomColor(color);
+                      setHexInput(color.hex);
+                    }} 
+                    hideInput 
+                  />
+                  <div>
+                    <Label htmlFor="hex-input" className="text-xs font-medium mb-1 block">HEX</Label>
+                    <Input
+                      id="hex-input"
+                      value={hexInput}
+                      onChange={(e) => handleHexInputChange(e.target.value)}
+                      placeholder="#000000"
+                      className="text-sm"
+                      maxLength={7}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -466,7 +533,6 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
             <p className="text-xs text-muted-foreground mb-2">
               💡 Conseil : Testez toujours votre QR code avec logo sur plusieurs appareils
             </p>
-          </div>
           </div>
         </div>
         

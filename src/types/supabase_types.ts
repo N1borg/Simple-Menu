@@ -13,6 +13,7 @@ export type Establishment = Database['public']['Tables']['establishments']['Row'
 
 export type MenuDisplayProps = {
   establishment: Establishment
+  textColor?: string
 }
 
 export type EstablishmentWithCategories = Database['public']['Tables']['establishments']['Row'] & {

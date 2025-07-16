@@ -53,6 +53,12 @@ export type Database = {
         Row: {
           address: string | null
           admin_hash: string | null
+          billing_address: string | null
+          billing_city: string | null
+          billing_country: string | null
+          billing_email: string | null
+          billing_name: string | null
+          billing_postal_code: string | null
           city: string | null
           created_at: string | null
           email: string | null
@@ -61,16 +67,26 @@ export type Database = {
           id: string
           instagram_url: string | null
           is_active: boolean | null
+          is_active: boolean | null
           logo_url: string | null
           name: string
           opening_hours: Json | null
           phone: string | null
           plan: string
           plan_status: string | null
+          plan_type: string | null
+          plan_status: string | null
           postal_code: string | null
           primary_color: string | null
           secondary_color: string | null
+          secondary_color: string | null
           slug: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_started_at: string | null
+          temp_password: string | null
+          temp_password_expires_at: string | null
+          trial_ends_at: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_started_at: string | null
@@ -79,6 +95,12 @@ export type Database = {
         Insert: {
           address?: string | null
           admin_hash?: string | null
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_country?: string | null
+          billing_email?: string | null
+          billing_name?: string | null
+          billing_postal_code?: string | null
           city?: string | null
           created_at?: string | null
           email?: string | null
@@ -87,16 +109,26 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_active?: boolean | null
+          is_active?: boolean | null
           logo_url?: string | null
           name: string
           opening_hours?: Json | null
           phone?: string | null
           plan?: string
           plan_status?: string | null
+          plan_type?: string | null
+          plan_status?: string | null
           postal_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          secondary_color?: string | null
           slug: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_started_at?: string | null
+          temp_password?: string | null
+          temp_password_expires_at?: string | null
+          trial_ends_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_started_at?: string | null
@@ -105,6 +137,12 @@ export type Database = {
         Update: {
           address?: string | null
           admin_hash?: string | null
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_country?: string | null
+          billing_email?: string | null
+          billing_name?: string | null
+          billing_postal_code?: string | null
           city?: string | null
           created_at?: string | null
           email?: string | null
@@ -119,10 +157,19 @@ export type Database = {
           phone?: string | null
           plan?: string
           plan_status?: string | null
+          plan_type?: string | null
+          plan_status?: string | null
           postal_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          secondary_color?: string | null
           slug?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_started_at?: string | null
+          temp_password?: string | null
+          temp_password_expires_at?: string | null
+          trial_ends_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_started_at?: string | null
