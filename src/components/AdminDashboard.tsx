@@ -192,6 +192,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
               id: establishment.id,
               slug: establishment.slug,
               primary_color: establishment.primary_color ?? undefined,
+              secondary_color: establishment.secondary_color ?? undefined,
               plan: establishment.plan,
               logo_url: establishment.logo_url ?? undefined,
             }}
@@ -213,7 +214,12 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           }}
           isDemo={isDemo}
         />
-        <h1 className="text-3xl font-bold text-center mt-2">{establishment.name}</h1>
+        <h1 
+          className="text-3xl font-bold text-center mt-2"
+          style={{ color: establishment.secondary_color || undefined }}
+        >
+          {establishment.name}
+        </h1>
       </div>
 
       {/* Show only one button when there are no categories */}
@@ -257,6 +263,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   setCategories={setCategories}
                   saveCategory={handleSaveCategory}
                   establishmentColor={establishment.primary_color ?? undefined}
+                  textColor={establishment.secondary_color ?? undefined}
                   deleteCategory={handleDeleteCategory}
                 />
               </SortableCategory>

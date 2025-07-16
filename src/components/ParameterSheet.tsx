@@ -30,6 +30,7 @@ interface ParameterSheetProps {
     id: string;
     slug: string;
     primary_color?: string;
+    secondary_color?: string;
     plan?: string;
     logo_url?: string;
   };
@@ -42,12 +43,21 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
   const [colorDialogOpen, setColorDialogOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState(establishment.primary_color || '#3b82f6');
   const [isSavingColor, setIsSavingColor] = useState(false);
+  const [textColorDialogOpen, setTextColorDialogOpen] = useState(false);
+  const [currentTextColor, setCurrentTextColor] = useState(establishment.secondary_color || '#1f2937');
+  const [isSavingTextColor, setIsSavingTextColor] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPWAInstall, setShowPWAInstall] = useState(false);
 
   // Check if PWA is allowed for this establishment
   const plan = establishment?.plan || 'essentiel';
   const isPwaAllowed = (plan === 'pro' || plan === 'premium') && !isDemo;
+
+  // Update colors when establishment data changes
+  React.useEffect(() => {
+    setCurrentColor(establishment.primary_color || '#3b82f6');
+    setCurrentTextColor(establishment.secondary_color || '#1f2937');
+  }, [establishment.primary_color, establishment.secondary_color]);
 
   React.useEffect(() => {
     if (!isPwaAllowed) return;
@@ -107,6 +117,35 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
       toast.error('Erreur lors de la mise à jour de la couleur');
     } finally {
       setIsSavingColor(false);
+    }
+  };
+
+  const handleTextColorSave = async () => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).");
+      return;
+    }
+
+    setIsSavingTextColor(true);
+    try {
+      const response = await fetch('/api/admin/update-text-color', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textColor: currentTextColor })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour de la couleur du texte');
+      }
+      
+      toast.success('Couleur du texte mise à jour avec succès !');
+      setTextColorDialogOpen(false);
+      setTimeout(() => window.location.reload(), 500);
+    } catch (error) {
+      console.error('Error saving text color:', error);
+      toast.error('Erreur lors de la mise à jour de la couleur du texte');
+    } finally {
+      setIsSavingTextColor(false);
     }
   };
 
@@ -171,6 +210,58 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                     disabled={isSavingColor}
                   >
                     {isSavingColor ? (
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        </div>
+                        Sauvegarde...
+                      </div>
+                    ) : (
+                      'Enregistrer'
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className="px-4">
+            <Dialog open={textColorDialogOpen} onOpenChange={setTextColorDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full flex items-center gap-2">
+                  <span
+                    className="w-4 h-4 rounded-full border"
+                    style={{
+                      backgroundColor: establishment.secondary_color || '#1f2937',
+                      display: 'inline-block',
+                    }}
+                  />
+                  Modifier la couleur du texte
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Modifier la couleur du texte</DialogTitle>
+                </DialogHeader>
+                <ColorSelector
+                  currentColor={currentTextColor}
+                  onColorChange={setCurrentTextColor}
+                  establishmentId={establishment.id}
+                  isDemo={isDemo}
+                  showPreview={true}
+                  showSaveButton={false}
+                  title=""
+                  description="Modifiez la couleur du texte de votre établissement."
+                  className="mt-2"
+                />
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Annuler</Button>
+                  </DialogClose>
+                  <Button 
+                    onClick={handleTextColorSave}
+                    disabled={isSavingTextColor}
+                  >
+                    {isSavingTextColor ? (
                       <div className="flex items-center">
                         <div className="w-4 h-4 mr-2 flex items-center justify-center">
                           <Loader2 className="w-4 h-4 animate-spin" />

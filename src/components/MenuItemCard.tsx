@@ -25,6 +25,7 @@ interface MenuItemCardProps {
   loadingAction: string | null
   deleteMenuItem: (catId: string, itemId: string) => Promise<void>
   establishmentColor?: string
+  textColor?: string
   isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
 }
@@ -39,6 +40,7 @@ export default function MenuItemCard({
   loadingAction,
   deleteMenuItem,
   establishmentColor,
+  textColor,
   isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false
 }: MenuItemCardProps) {
@@ -174,7 +176,7 @@ export default function MenuItemCard({
             <h3
               className={`text-base font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative`}
               title={item.name}
-              style={{ textOverflow: 'clip' }}
+              style={{ textOverflow: 'clip', color: textColor || undefined }}
             >
               <span ref={titleSpanRef} className={!instantAvailable ? 'line-through' : ''} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
                 {item.name}
@@ -241,7 +243,10 @@ export default function MenuItemCard({
                 <div className="text-sm mt-1 select-none min-h-[2.5em] max-h-[2.5em]" style={{color: 'transparent', textDecoration: 'none'}}>&nbsp;</div>
               )}
             </div>
-            <div className={`text-right font-bold mt-2${!instantAvailable ? ' line-through' : ''}`}>
+            <div 
+              className={`text-right font-bold mt-2${!instantAvailable ? ' line-through' : ''}`}
+              style={{ color: textColor || undefined }}
+            >
               {item.price?.toFixed(2)}€
             </div>
           </div>

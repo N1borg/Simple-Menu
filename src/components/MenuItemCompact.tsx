@@ -23,6 +23,7 @@ interface MenuItemCompactProps {
   loadingAction: string | null;
   deleteMenuItem: (catId: string, itemId: string) => Promise<void>;
   establishmentColor?: string;
+  textColor?: string;
   isAdmin?: boolean; // New prop to control admin features
   isDemo?: boolean;
 }
@@ -37,6 +38,7 @@ export default function MenuItemCompact({
   loadingAction,
   deleteMenuItem,
   establishmentColor,
+  textColor,
   isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false,
 }: MenuItemCompactProps) {
@@ -110,6 +112,7 @@ export default function MenuItemCompact({
               display: "inline-block",
               width: "100%",
               position: "relative",
+              color: textColor || undefined,
             }}
           >
             {item.name}
@@ -128,7 +131,12 @@ export default function MenuItemCompact({
             />
           </span>
           <div className="w-full flex justify-end mt-auto">
-            <span className="font-bold">{item.price?.toFixed(2)}€</span>
+            <span 
+              className="font-bold"
+              style={{ color: textColor || undefined }}
+            >
+              {item.price?.toFixed(2)}€
+            </span>
           </div>
         </div>
 

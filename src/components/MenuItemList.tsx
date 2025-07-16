@@ -24,6 +24,7 @@ interface MenuItemListProps {
   loadingAction: string | null
   deleteMenuItem: (catId: string, itemId: string) => Promise<void>
   establishmentColor?: string
+  textColor?: string
   isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
 }
@@ -38,6 +39,7 @@ export default function MenuItemList({
   loadingAction,
   deleteMenuItem,
   establishmentColor,
+  textColor,
   isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false
 }: MenuItemListProps) {
@@ -101,7 +103,13 @@ export default function MenuItemList({
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-base font-semibold max-w-[100%] truncate" title={item.name}>{item.name}</span>
+              <span 
+                className="text-base font-semibold max-w-[100%] truncate" 
+                title={item.name}
+                style={{ color: textColor || undefined }}
+              >
+                {item.name}
+              </span>
             </div>
             {item.description && (
               <div className="text-sm text-gray-500 truncate mt-1 relative" title={item.description}>
@@ -122,7 +130,12 @@ export default function MenuItemList({
             )}
           </div>
           <div className="flex flex-col items-end min-w-[70px]">
-            <span className="font-bold">{item.price?.toFixed(2)}€</span>
+            <span 
+              className="font-bold"
+              style={{ color: textColor || undefined }}
+            >
+              {item.price?.toFixed(2)}€
+            </span>
           </div>
         </div>
 
