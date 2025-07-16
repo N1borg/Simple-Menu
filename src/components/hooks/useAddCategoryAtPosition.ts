@@ -67,11 +67,24 @@ export function useAddCategoryAtPosition({
         ))
         toast.success("Catégorie créée")
       } else {
-        throw new Error('Failed to create category')
+        if (data?.code === 'SUBSCRIPTION_LIMIT_REACHED') {
+          toast.error(data.error || "Limite d'abonnement atteinte")
+          // Open upgrade dialog
+          setTimeout(() => {
+            window.open(
+              'mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur%20pour%20ajouter%20plus%20de%20catégories.',
+              '_blank'
+            )
+          }, 1000)
+        } else {
+          throw new Error('Failed to create category')
+        }
       }
     } catch (error) {
       setCategories(categories.filter(cat => cat.id !== tempId))
-      toast.error("Erreur lors de la création de la catégorie")
+      if (!(error instanceof Error && error.message.includes('SUBSCRIPTION_LIMIT_REACHED'))) {
+        toast.error("Erreur lors de la création de la catégorie")
+      }
     } finally {
       setLoadingAction(null)
     }

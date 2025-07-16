@@ -3,13 +3,13 @@ import { getServerSupabase } from '@/lib/supabase'
 import { auditLog } from '@/lib/security'
 import { sanitizeString, isValidUUID, isDemoSlug } from '@/lib/validate'
 import { jwtVerify } from 'jose'
-import { requireAdminAuth } from '@/lib/auth'
+import { requireSecureAdminAuth } from '@/lib/auth'
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdminAuth(req)
+  const auth = await requireSecureAdminAuth(req)
   if ('slug' in auth === false) return auth as NextResponse
   const slug = (auth as { slug: string }).slug
 
@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     auditLog({ action: 'menu_item_delete_failed', ip, details: { id, error } })
-    console.error('Erreur suppression menu_item:', error)
     return NextResponse.json({ success: false, error }, { status: 500 })
   }
   auditLog({ action: 'menu_item_delete', ip, details: { id } })

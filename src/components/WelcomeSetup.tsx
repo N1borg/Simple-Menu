@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { convertToLegacyHours, sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl } from '@/lib/utils'
+import { convertToLegacyHours, sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl, getEstablishmentColor } from '@/lib/utils'
 import { Eye, EyeOff, CheckCircle2, Upload, Loader2 } from 'lucide-react'
 import ImageUpload from '@/components/ImageUpload'
 import ColorSelector from '@/components/ColorSelector'
@@ -66,8 +66,8 @@ export function WelcomeSetup({
 
   const [logoUrl, setLogoUrl] = useState(currentLogo || '')
   
-  // Color selection
-  const [selectedColor, setSelectedColor] = useState('#3b82f6')
+  // Color selection - Start with empty so WelcomeSetup guides user through color selection
+  const [selectedColor, setSelectedColor] = useState('')
 
   // Establishment info
   const [establishmentInfo, setEstablishmentInfo] = useState({
@@ -440,7 +440,7 @@ export function WelcomeSetup({
                 index <= currentStep ? '' : 'bg-gray-200'
               }`}
               style={index <= currentStep ? { 
-                backgroundColor: currentStep >= 2 ? selectedColor : '#3b82f6' 
+                backgroundColor: getEstablishmentColor(currentStep >= 2 ? selectedColor : null)
               } : {}}
             />
           ))}
@@ -475,7 +475,13 @@ export function WelcomeSetup({
             onClick={handleNext}
             disabled={isLoading || !isStepValid()}
             className="cursor-pointer"
-            style={currentStep >= 2 ? { backgroundColor: selectedColor, borderColor: selectedColor } : {}}
+            style={currentStep >= 2 ? { 
+              backgroundColor: getEstablishmentColor(selectedColor), 
+              borderColor: getEstablishmentColor(selectedColor) 
+            } : { 
+              backgroundColor: getEstablishmentColor(null), 
+              borderColor: getEstablishmentColor(null) 
+            }}
           >
               {isLoading ? (
                 <div className="flex items-center">

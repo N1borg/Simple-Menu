@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import AdminPasswordForm from "@/components/AdminPasswordForm";
 import ColorSelector from "@/components/ColorSelector";
+import { SubscriptionBanner } from "@/components/SubscriptionBanner";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -34,10 +35,11 @@ interface ParameterSheetProps {
     logo_url?: string;
   };
   isDemo: boolean;
+  subscription: any; // Add subscription prop
   onTutorialStart?: () => void;
 }
 
-const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, onTutorialStart }) => {
+const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, subscription, onTutorialStart }) => {
   const [loggingOut, setLoggingOut] = useState(false);
   const [colorDialogOpen, setColorDialogOpen] = useState(false);
   const [currentColor, setCurrentColor] = useState(establishment.primary_color || '#3b82f6');
@@ -103,7 +105,6 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
       setColorDialogOpen(false);
       setTimeout(() => window.location.reload(), 500);
     } catch (error) {
-      console.error('Error saving color:', error);
       toast.error('Erreur lors de la mise à jour de la couleur');
     } finally {
       setIsSavingColor(false);
@@ -133,6 +134,18 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
         </SheetHeader>
         <div className="flex-1 overflow-y-auto min-h-0 pb-4">
           <div className="grid auto-rows-min gap-6 px-1">
+          
+          {/* Subscription Plan Information */}
+          {!isDemo && (
+            <div className="px-4">
+              <SubscriptionBanner 
+                subscription={subscription} 
+                className="mb-2"
+                establishmentColor={establishment.primary_color}
+              />
+            </div>
+          )}
+          
           <div className="px-4 tutorial-color-settings">
             <Dialog open={colorDialogOpen} onOpenChange={setColorDialogOpen}>
               <DialogTrigger asChild>

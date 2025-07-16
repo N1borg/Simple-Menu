@@ -60,14 +60,21 @@ export type Database = {
           google_maps_url: string | null
           id: string
           instagram_url: string | null
+          is_active: boolean | null
           logo_url: string | null
           name: string
           opening_hours: Json | null
           phone: string | null
           plan: string
+          plan_status: string | null
           postal_code: string | null
           primary_color: string | null
+          secondary_color: string | null
           slug: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_started_at: string | null
+          trial_ends_at: string | null
         }
         Insert: {
           address?: string | null
@@ -79,14 +86,21 @@ export type Database = {
           google_maps_url?: string | null
           id?: string
           instagram_url?: string | null
+          is_active?: boolean | null
           logo_url?: string | null
           name: string
           opening_hours?: Json | null
           phone?: string | null
           plan?: string
+          plan_status?: string | null
           postal_code?: string | null
           primary_color?: string | null
+          secondary_color?: string | null
           slug: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_started_at?: string | null
+          trial_ends_at?: string | null
         }
         Update: {
           address?: string | null
@@ -98,14 +112,21 @@ export type Database = {
           google_maps_url?: string | null
           id?: string
           instagram_url?: string | null
+          is_active?: boolean | null
           logo_url?: string | null
           name?: string
           opening_hours?: Json | null
           phone?: string | null
           plan?: string
+          plan_status?: string | null
           postal_code?: string | null
           primary_color?: string | null
+          secondary_color?: string | null
           slug?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_started_at?: string | null
+          trial_ends_at?: string | null
         }
         Relationships: []
       }

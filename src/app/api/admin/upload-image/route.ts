@@ -4,7 +4,7 @@ import sharp from "sharp"
 import { jwtVerify } from 'jose'
 import { auditLog } from '@/lib/security'
 import { sanitizeString, isDemoSlug } from '@/lib/validate'
-import { requireAdminAuth } from '@/lib/auth'
+import { requireSecureAdminAuth } from '@/lib/auth'
 
 cloudinary.v2.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAdminAuth(req)
+  const auth = await requireSecureAdminAuth(req)
   if ('slug' in auth === false) return auth as NextResponse
   const slug = (auth as { slug: string }).slug
 
@@ -56,9 +56,6 @@ export async function POST(req: NextRequest) {
     
     try {
       const buffer = Buffer.from(base64Data, 'base64')
-      
-      // No file size limit - we'll optimize any image
-      console.log(`Processing image: ${(buffer.length / 1024 / 1024).toFixed(2)}MB`)
 
       // 6. Process and optimize image server-side
       // First, get image metadata to handle orientation
@@ -81,8 +78,6 @@ export async function POST(req: NextRequest) {
         })
         .toBuffer()
 
-      console.log(`Optimized image: ${(optimizedBuffer.length / 1024).toFixed(0)}KB`)
-
       // 7. Upload to Cloudinary with establishment-specific folder
       const cloudinaryUrl = await new Promise<string>((resolve, reject) => {
         const stream = cloudinary.v2.uploader.upload_stream(
@@ -102,7 +97,6 @@ export async function POST(req: NextRequest) {
           },
           (error, result) => {
             if (error || !result) {
-              console.error('Cloudinary error:', error)
               return reject(error || new Error("Échec de l'upload Cloudinary"))
             }
             resolve(result.secure_url)
@@ -120,7 +114,6 @@ export async function POST(req: NextRequest) {
       })
 
     } catch (imageError: any) {
-      console.error("Image processing error:", imageError)
       auditLog({ action: 'upload_image_failed', ip, details: { error: imageError.message } })
       if (imageError.message?.includes('Input buffer contains unsupported image format')) {
         return NextResponse.json({ 
@@ -132,7 +125,6 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
   } catch (error: any) {
-    console.error("Upload error:", error)
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
     auditLog({ action: 'upload_image_failed', ip, details: { error: error.message } })
     return NextResponse.json({ error: error.message || 'Erreur serveur' }, { status: 500 })

@@ -19,6 +19,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { QrCode, Download, Globe, Settings, Palette, Image } from "lucide-react";
 import { ColorPicker, useColor } from 'react-color-palette'
 import 'react-color-palette/css'
+import { getEstablishmentColor } from '@/lib/utils'
 
 interface QrCodeDialogProps {
   url: string;
@@ -45,7 +46,7 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
   const getQrColor = () => {
     switch (selectedColorType) {
       case "establishment":
-        return establishmentColor || "#000000";
+        return getEstablishmentColor(establishmentColor);
       case "custom":
         return customColor.hex;
       case "black":
@@ -274,10 +275,7 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
                scrollbarWidth: 'thin',
                scrollbarColor: 'rgba(0,0,0,0.2) transparent'
              }}>
-          <div className="space-y-6 pr-2"
-               style={{
-                 maskImage: 'linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 8px), transparent 100%)'
-               }}>
+          <div className="space-y-6 pr-2">
           {/* Toggle Group for selecting QR code type */}
           {adminUrl && (
             <div>
@@ -311,9 +309,9 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
                   variant={selectedStyle === style.id ? "default" : "outline"}
                   className="h-auto p-3 flex flex-col items-start text-left"
                   onClick={() => setSelectedStyle(style.id)}
-                  style={selectedStyle === style.id && establishmentColor ? { 
-                    backgroundColor: establishmentColor, 
-                    borderColor: establishmentColor 
+                  style={selectedStyle === style.id ? { 
+                    backgroundColor: getEstablishmentColor(establishmentColor), 
+                    borderColor: getEstablishmentColor(establishmentColor) 
                   } : {}}
                 >
                   <span className="font-medium text-sm">{style.name}</span>
@@ -341,15 +339,13 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
                   <div className="w-4 h-4 bg-black rounded mr-2"></div>
                   Noir
                 </ToggleGroupItem>
-                {establishmentColor && (
-                  <ToggleGroupItem value="establishment" aria-label="Couleur établissement" className="flex-1">
-                    <div 
-                      className="w-4 h-4 rounded mr-2" 
-                      style={{ backgroundColor: establishmentColor }}
-                    ></div>
-                    Établissement
-                  </ToggleGroupItem>
-                )}
+                <ToggleGroupItem value="establishment" aria-label="Couleur établissement" className="flex-1">
+                  <div 
+                    className="w-4 h-4 rounded mr-2" 
+                    style={{ backgroundColor: getEstablishmentColor(establishmentColor) }}
+                  ></div>
+                  Établissement
+                </ToggleGroupItem>
                 <ToggleGroupItem value="custom" aria-label="Personnalisé" className="flex-1">
                   <Palette className="h-4 w-4 mr-2" />
                   Personnalisé
@@ -372,9 +368,9 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
                 variant={showLogo ? "default" : "outline"}
                 className="w-full flex items-center gap-2"
                 onClick={() => setShowLogo(!showLogo)}
-                style={showLogo && establishmentColor ? { 
-                  backgroundColor: establishmentColor, 
-                  borderColor: establishmentColor 
+                style={showLogo ? { 
+                  backgroundColor: getEstablishmentColor(establishmentColor), 
+                  borderColor: getEstablishmentColor(establishmentColor) 
                 } : {}}
               >
                 <Image className="w-4 h-4" />
@@ -482,10 +478,10 @@ const QrCodeDialog = ({ url, adminUrl, triggerButton, establishmentColor, logoUr
             type="button"
             onClick={handleDownload}
             disabled={isDownloading}
-            style={establishmentColor ? { 
-              backgroundColor: establishmentColor, 
-              borderColor: establishmentColor 
-            } : {}}
+            style={{ 
+              backgroundColor: getEstablishmentColor(establishmentColor), 
+              borderColor: getEstablishmentColor(establishmentColor) 
+            }}
           >
             <Download className="w-4 h-4 mr-2" /> 
             {isDownloading ? "Téléchargement..." : "Télécharger"}

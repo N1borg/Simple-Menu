@@ -17,6 +17,8 @@ import { EstablishmentControls } from '@/components/EstablishmentControls'
 import { Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { useSubscription } from '@/hooks/useSubscription'
+
 
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
@@ -24,11 +26,13 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const isDemo = establishment.slug === 'demo'
+  const subscription = useSubscription(establishment)
   const [demoLogoUrl, setDemoLogoUrl] = useState<string | undefined>(
     isDemo ? (establishment.logo_url ?? undefined) : undefined
   )
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [isAddingItemGlobally, setIsAddingItemGlobally] = useState(false)
 
   const { startTutorial, tutorialCompleted } = useDashboardTutorial()
 
@@ -196,6 +200,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
               logo_url: establishment.logo_url ?? undefined,
             }}
             isDemo={isDemo}
+            subscription={subscription}
             onTutorialStart={startTutorial}
           />
         </div>
@@ -223,6 +228,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           disabled={loadingAction !== null}
           loading={loadingAction?.startsWith('adding-category')}
           className="flex justify-center mt-4"
+          subscription={subscription}
         />
       ) : (
         <AddCategoryButton
@@ -230,6 +236,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           disabled={loadingAction !== null}
           loading={loadingAction?.startsWith('adding-category')}
           className="flex justify-center mt-4"
+          subscription={subscription}
         />
       )}
 
@@ -258,6 +265,9 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   saveCategory={handleSaveCategory}
                   establishmentColor={establishment.primary_color ?? undefined}
                   deleteCategory={handleDeleteCategory}
+                  subscription={subscription}
+                  isAddingItemGlobally={isAddingItemGlobally}
+                  setIsAddingItemGlobally={setIsAddingItemGlobally}
                 />
               </SortableCategory>
             ))}
@@ -271,6 +281,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           disabled={loadingAction !== null}
           loading={loadingAction?.startsWith('adding-category')}
           className="flex justify-center mt-8"
+          subscription={subscription}
         />
       )}
       

@@ -1,5 +1,5 @@
 import { getServerSupabase } from '@/lib/supabase'
-import { requireAdminAuth } from '@/lib/auth'
+import { requireSecureAdminAuth } from '@/lib/auth'
 import { auditLog } from '@/lib/security'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const supabase = await getServerSupabase()
   
   // Verify admin authentication
-  const authResult = await requireAdminAuth(req)
+  const authResult = await requireSecureAdminAuth(req)
   if ('status' in authResult) {
     return authResult
   }
@@ -102,7 +102,6 @@ export async function POST(req: NextRequest) {
       .eq('slug', slug)
 
     if (error) {
-      console.error('Error updating color:', error)
       await auditLog({
         action: 'update_color_failed',
         user: slug,
@@ -131,7 +130,6 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in update-color API:', error)
     await auditLog({
       action: 'update_color_error',
       user: slug || 'unknown',

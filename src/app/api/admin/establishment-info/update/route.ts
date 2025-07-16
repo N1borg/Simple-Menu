@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdminAuth } from '@/lib/auth'
+import { requireSecureAdminAuth } from '@/lib/auth'
 import { getServerSupabase } from '@/lib/supabase'
 import { z } from 'zod'
 
@@ -17,7 +17,7 @@ const EstablishmentInfoSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const adminAuth = await requireAdminAuth(req)
+    const adminAuth = await requireSecureAdminAuth(req)
     if ('status' in adminAuth) {
       return adminAuth
     }
@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
       .eq('slug', slug)
 
     if (error) {
-      console.error('Error updating establishment info:', error)
       return NextResponse.json(
         { error: 'Erreur lors de la mise à jour des informations' },
         { status: 500 }
@@ -59,7 +58,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
 
   } catch (error) {
-    console.error('Establishment info update error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Données invalides', details: error.errors },

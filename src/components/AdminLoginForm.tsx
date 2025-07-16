@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from "lucide-react"
+import { getEstablishmentColor } from '@/lib/utils'
 
 interface AdminLoginFormProps {
   slug: string
@@ -99,7 +100,11 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
             type="submit"
             className="w-full flex justify-center py-2 px-4"
             disabled={loading}
-            style={color ? { backgroundColor: color, borderColor: color, color: '#fff' } : {}}
+            style={{ 
+              backgroundColor: getEstablishmentColor(color), 
+              borderColor: getEstablishmentColor(color), 
+              color: '#fff' 
+            }}
           >
             {loading ? (
               <div className="flex items-center">

@@ -63,7 +63,18 @@ export function useMenuItems(
     const data = await res.json()
     // Ensure toast is only called once per operation
     if (!res.ok || !data || !data.item) {
-      toast.error("Erreur lors de la création de l'élément")
+      if (data?.code === 'SUBSCRIPTION_LIMIT_REACHED') {
+        toast.error(data.error || "Limite d'abonnement atteinte")
+        // Open upgrade dialog
+        setTimeout(() => {
+          window.open(
+            'mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur%20pour%20ajouter%20plus%20d\'éléments%20de%20menu.',
+            '_blank'
+          )
+        }, 1000)
+      } else {
+        toast.error("Erreur lors de la création de l'élément")
+      }
       return
     }
     const newCategories = categories.map((cat: Category) =>

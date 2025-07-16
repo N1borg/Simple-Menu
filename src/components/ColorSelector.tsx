@@ -32,7 +32,9 @@ export function ColorSelector({
   description = "Sélectionnez la couleur principale qui représentera votre établissement.",
   className = ""
 }: ColorSelectorProps) {
-  const [color, setColor] = useColor(currentColor)
+  // Use default color if currentColor is empty
+  const initialColor = currentColor || '#3b82f6'
+  const [color, setColor] = useColor(initialColor)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleColorChange = (newColor: any) => {
@@ -57,7 +59,6 @@ export function ColorSelector({
       await onColorSave(color.hex)
       toast.success('Couleur mise à jour avec succès !')
     } catch (error) {
-      console.error('Error saving color:', error)
       toast.error('Erreur lors de la mise à jour de la couleur')
     } finally {
       setIsLoading(false)
@@ -89,7 +90,6 @@ export function ColorSelector({
       // Optional: refresh page to see changes
       setTimeout(() => window.location.reload(), 500)
     } catch (error) {
-      console.error('Error saving color:', error)
       toast.error('Erreur lors de la mise à jour de la couleur')
     } finally {
       setIsLoading(false)

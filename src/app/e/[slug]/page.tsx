@@ -5,6 +5,7 @@ import NotFound from '@/app/not-found'
 import { jwtVerify } from 'jose'
 import AdminBanner from '@/components/AdminBanner'
 import MenuFooter from '@/components/MenuFooter'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +51,16 @@ export default async function MenuPage({ params }: PageProps) {
     .single()
 
   if (!establishment) {
+    return NotFound()
+  }
+
+  // 🚨 SECURITY CHECK: Block access to inactive or unpaid establishments
+  if (slug !== 'demo' && (!establishment.is_active || establishment.plan_status === 'pending_payment')) {
+    redirect(`/payment-required?slug=${slug}`)
+  }
+
+  // Block access if subscription canceled/inactive
+  if (slug !== 'demo' && (establishment.plan_status === 'canceled' || establishment.plan_status === 'inactive')) {
     return NotFound()
   }
 

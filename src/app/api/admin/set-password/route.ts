@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
 import { auditLog } from '@/lib/security'
-import { requireAdminAuth } from '@/lib/auth'
+import { requireSecureAdminAuth } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   try {
     // Verify admin authentication
-    const auth = await requireAdminAuth(req)
+    const auth = await requireSecureAdminAuth(req)
     if ('slug' in auth === false) return auth as NextResponse
     const slug = (auth as { slug: string }).slug
 
@@ -77,7 +77,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
 
   } catch (error) {
-    console.error('Error in set-password API:', error)
     auditLog({ 
       action: 'set_password_failed', 
       user: 'unknown', 

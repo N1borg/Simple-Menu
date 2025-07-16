@@ -7,6 +7,8 @@ import AdminLoginForm from '@/components/AdminLoginForm'
 import { EstablishmentWithCategories } from '@/types/supabase_types'
 import AdminBanner from '@/components/AdminBanner'
 import MenuFooter from '@/components/MenuFooter'
+import { PaymentStatusBanner } from '@/components/PaymentStatusBanner'
+import { PaymentStatusToast } from '@/components/PaymentStatusToast'
 import Image from 'next/image'
 import NotFound from '@/app/not-found'
 
@@ -18,12 +20,18 @@ if (!JWT_SECRET) {
 
 interface PageProps {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export default async function AdminPage({ params }: PageProps) {
+export default async function AdminPage({ params, searchParams }: PageProps) {
   const { slug } = await params
+  const searchParamsResolved = await searchParams
   const cookieStore = await cookies()
   const supabase = await getServerSupabase()
+
+  // Check for payment status in URL params
+  const paymentStatus = searchParamsResolved.payment as string
+  const sessionId = searchParamsResolved.session_id as string
 
   const { data: establishment, error } = await supabase
     .from('establishments')
@@ -38,6 +46,16 @@ export default async function AdminPage({ params }: PageProps) {
     .single()
 
   if (error || !establishment) {
+    return NotFound()
+  }
+
+  // 🚨 SECURITY CHECK: Block access to inactive or unpaid establishments
+  if (slug !== 'demo' && (!establishment.is_active || establishment.plan_status === 'pending_payment')) {
+    redirect(`/payment-required?slug=${slug}`)
+  }
+
+  // Block access if subscription canceled/inactive
+  if (slug !== 'demo' && (establishment.plan_status === 'canceled' || establishment.plan_status === 'inactive')) {
     return NotFound()
   }
 
@@ -93,10 +111,23 @@ export default async function AdminPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <PaymentStatusToast />
       {(isAuthenticated || slug === 'demo') && (
-        <div className="tutorial-admin-banner">
-          <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />
-        </div>
+        <>
+          <div className="tutorial-admin-banner">
+            <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />
+          </div>
+          {/* Payment Status Banner */}
+          {paymentStatus && (
+            <div className="max-w-6xl mx-auto px-4 mt-4">
+              <PaymentStatusBanner 
+                paymentStatus={paymentStatus}
+                sessionId={sessionId}
+                establishmentSlug={slug}
+              />
+            </div>
+          )}
+        </>
       )}
       <div className="flex-grow">
         <AdminDashboard

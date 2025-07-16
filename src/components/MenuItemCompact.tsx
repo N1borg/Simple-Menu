@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useRef, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm";
+import { getEstablishmentColor } from '@/lib/utils';
 
 interface MenuItemCompactProps {
   item: MenuItem;
@@ -40,7 +41,7 @@ export default function MenuItemCompact({
   isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false,
 }: MenuItemCompactProps) {
-  const ringColor = establishmentColor || "#3a4fff";
+  const ringColor = getEstablishmentColor(establishmentColor);
 
   const [instantAvailable, setInstantAvailable] = useState(!!item.is_available);
 

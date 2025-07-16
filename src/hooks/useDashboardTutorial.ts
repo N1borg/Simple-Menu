@@ -44,10 +44,8 @@ export const useDashboardTutorial = () => {
 
   const waitForElement = (selector: string, timeout = 10000): Promise<Element> => {
     return new Promise((resolve, reject) => {
-      console.log(`Waiting for element: ${selector}`)
       const element = document.querySelector(selector)
       if (element) {
-        console.log(`Element ${selector} found immediately`)
         resolve(element)
         return
       }
@@ -55,7 +53,6 @@ export const useDashboardTutorial = () => {
       const observer = new MutationObserver(() => {
         const element = document.querySelector(selector)
         if (element) {
-          console.log(`Element ${selector} found via observer`)
           observer.disconnect()
           resolve(element)
         }
@@ -68,7 +65,6 @@ export const useDashboardTutorial = () => {
 
       setTimeout(() => {
         observer.disconnect()
-        console.log(`Timeout waiting for element: ${selector}`)
         reject(new Error(`Element ${selector} not found within ${timeout}ms`))
       }, timeout)
     })
@@ -76,12 +72,10 @@ export const useDashboardTutorial = () => {
 
   const waitForCategoryCreation = async (driverObj: any) => {
     return new Promise<void>((resolve) => {
-      console.log('Waiting for category creation...')
       
       const checkCategoryExists = () => {
         const categoryElement = document.querySelector('.category-section')
         if (categoryElement) {
-          console.log('Category section found!')
           resolve()
           return true
         }
@@ -109,12 +103,10 @@ export const useDashboardTutorial = () => {
 
   const waitForItemCreation = async (driverObj: any) => {
     return new Promise<void>((resolve) => {
-      console.log('Waiting for item creation...')
       
       const checkItemExists = () => {
         const itemElement = document.querySelector('.menu-item-card')
         if (itemElement) {
-          console.log('Menu item found!')
           resolve()
           return true
         }
@@ -142,12 +134,10 @@ export const useDashboardTutorial = () => {
 
   const waitForParameterSheetOpen = async (driverObj: any) => {
     return new Promise<void>((resolve) => {
-      console.log('Waiting for parameter sheet to open...')
       
       const checkSheetOpen = () => {
         const sheetElement = document.querySelector('[data-state="open"]')
         if (sheetElement) {
-          console.log('Parameter sheet opened!')
           resolve()
           return true
         }
@@ -178,13 +168,11 @@ export const useDashboardTutorial = () => {
 
   const waitForParameterSheetClose = async () => {
     return new Promise<void>((resolve) => {
-      console.log('Waiting for parameter sheet to close...')
       
       const checkSheetClosed = () => {
         // Check that no sheet with data-state="open" exists
         const openSheet = document.querySelector('[data-state="open"]')
         if (!openSheet) {
-          console.log('Parameter sheet closed!')
           resolve()
           return true
         }
@@ -215,13 +203,10 @@ export const useDashboardTutorial = () => {
 
   const startTutorial = useCallback(() => {
     try {
-      console.log('Starting tutorial...')
       
       // Check if tutorial elements exist
       const welcomeElement = document.querySelector('.tutorial-welcome')
       const addCategoryElement = document.querySelector('.tutorial-add-category')
-      
-      console.log('Tutorial elements:', { welcomeElement, addCategoryElement })
       
       if (!welcomeElement) {
         console.error('Welcome element not found!')
@@ -374,7 +359,6 @@ export const useDashboardTutorial = () => {
     })
 
       driverObj.drive()
-      console.log('Tutorial started successfully')
       return driverObj
     } catch (error) {
       console.error('Error starting tutorial:', error)
@@ -392,8 +376,6 @@ export const useDashboardTutorial = () => {
     const shouldStartTutorial = urlParams.get('tutorial') === 'start'
     
     if (shouldStartTutorial && !tutorialCompleted) {
-      console.log('URL parameter detected - auto-starting tutorial after setup completion')
-      
       // Remove the parameter from URL without page refresh
       const newUrl = window.location.pathname
       window.history.replaceState({}, '', newUrl)

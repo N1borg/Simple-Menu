@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { GripVertical, Plus, Pencil, Loader2 } from "lucide-react"
+import { GripVertical, Plus, Pencil, Loader2, Crown } from "lucide-react"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableItem } from '@/components/SortableItem'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
@@ -15,6 +15,7 @@ import { useMenuItems } from '@/components/hooks/useMenuItems'
 import { toast } from "sonner"
 import CategorySkeleton from "@/components/CategorySkeleton"
 import MenuItemSkeleton from "@/components/MenuItemSkeleton";
+import { SubscriptionLimits } from '@/hooks/useSubscription'
 import {
   Select,
   SelectContent,
@@ -47,6 +48,9 @@ interface CategorySectionProps {
   saveCategory: (cat: any) => Promise<void>
   establishmentColor?: string
   deleteCategory: (catId: string) => Promise<void>
+  subscription?: SubscriptionLimits
+  isAddingItemGlobally?: boolean
+  setIsAddingItemGlobally?: (adding: boolean) => void
 }
 
 export default function CategorySection({
@@ -64,6 +68,9 @@ export default function CategorySection({
   saveCategory,
   establishmentColor,
   deleteCategory,
+  subscription,
+  isAddingItemGlobally = false,
+  setIsAddingItemGlobally,
 }: CategorySectionProps) {
   // Use useMenuItems hook for item actions
   const {
@@ -76,7 +83,6 @@ export default function CategorySection({
 
   // Local state for editing item
   const [editingItem, setEditingItem] = useState<string | null>(null)
-  const [addingItem, setAddingItem] = useState<boolean>(false)
 
   // Add item handler using the hook, with demo mode protection
   const handleAddMenuItem = async (catId: string) => {
@@ -85,8 +91,20 @@ export default function CategorySection({
       return;
     }
 
-    // Set loading state to disable button
-    setAddingItem(true)
+    // Check subscription limits before creating
+    if (subscription && !subscription.canCreateMenuItem) {
+      const maxItems = subscription.planConfig?.features.maxItems
+      toast.error(`Limite d'éléments atteinte (${maxItems} max pour le plan ${subscription.planConfig?.name}). Passez à un plan supérieur pour ajouter plus d'éléments.`)
+      // Open upgrade dialog
+      window.open(
+        'mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur%20pour%20ajouter%20plus%20d\'éléments%20de%20menu.',
+        '_blank'
+      )
+      return;
+    }
+
+    // Set global loading state to disable all add buttons
+    setIsAddingItemGlobally?.(true)
 
     // Add a temporary skeleton item
     const newCategories = categories.map((cat) =>
@@ -148,8 +166,8 @@ export default function CategorySection({
       );
       toast.error("Erreur lors de l'ajout de l'élément");
     } finally {
-      // Reset loading state
-      setAddingItem(false);
+      // Reset global loading state
+      setIsAddingItemGlobally?.(false);
     }
   }
 
@@ -217,6 +235,10 @@ export default function CategorySection({
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            if (isDemo) {
+              toast.info("Modification désactivée (mode démo).");
+              return;
+            }
             if (
               originalCategory &&
               category.name === originalCategory.name &&
@@ -232,21 +254,31 @@ export default function CategorySection({
           <Input
             value={category.name}
             onChange={(e) => {
+              if (isDemo) {
+                toast.info("Modification désactivée (mode démo).");
+                return;
+              }
               const newCategories = categories.map((c) =>
                 c.id === category.id ? { ...c, name: e.target.value } : c
               );
               setCategories(newCategories);
             }}
             className="w-40"
+            disabled={isDemo}
           />
           <Select
             onValueChange={(value) => {
+              if (isDemo) {
+                toast.info("Modification désactivée (mode démo).");
+                return;
+              }
               const newCategories = categories.map((c) =>
                 c.id === category.id ? { ...c, display_style: value } : c
               );
               setCategories(newCategories);
             }}
             value={category.display_style || ""}
+            disabled={isDemo}
           >
             <Tooltip>
               <TooltipTrigger asChild>
@@ -272,8 +304,15 @@ export default function CategorySection({
           <Button
             type="submit"
             size="sm"
-            disabled={savingCategoryId === category.id || loadingAction !== null}
+            disabled={savingCategoryId === category.id || loadingAction !== null || isDemo}
             className="cursor-pointer"
+            onClick={(e) => {
+              if (isDemo) {
+                e.preventDefault();
+                toast.info("Modification désactivée (mode démo).");
+                return;
+              }
+            }}
           >
             {savingCategoryId === category.id || loadingAction === `saveCategory-${category.id}` ? (
               <div className="flex items-center">
@@ -310,6 +349,10 @@ export default function CategorySection({
         </h2>
         <Select
           onValueChange={async (value) => {
+            if (isDemo) {
+              toast.info("Modification désactivée (mode démo).");
+              return;
+            }
             const newCategories = categories.map((c) =>
               c.id === category.id ? { ...c, display_style: value } : c
             );
@@ -317,6 +360,7 @@ export default function CategorySection({
             await saveCategory({ ...category, display_style: value });
           }}
           value={category.display_style || ""}
+          disabled={isDemo}
         >
           <Tooltip>
             <TooltipTrigger asChild>
@@ -347,12 +391,16 @@ export default function CategorySection({
                 variant="ghost"
                 size="icon"
                 title="Nouvel élément"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative"
-                disabled={category.id.startsWith("temp-") || addingItem}
+                className={`bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative ${
+                  subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
+                }`}
+                disabled={category.id.startsWith("temp-") || isAddingItemGlobally}
               >
                 <div className="w-5 h-5 flex items-center justify-center">
-                  {addingItem ? (
+                  {isAddingItemGlobally ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : subscription && !subscription.canCreateMenuItem ? (
+                    <Crown className="w-5 h-5" />
                   ) : (
                     <Plus className="w-5 h-5" />
                   )}
@@ -360,7 +408,17 @@ export default function CategorySection({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{addingItem ? "Ajout en cours..." : "Ajouter un élément"}</p>
+              {isAddingItemGlobally ? (
+                <p>Ajout en cours...</p>
+              ) : subscription && !subscription.canCreateMenuItem ? (
+                <div className="text-center">
+                  <p className="mb-1">Limite d'éléments atteinte</p>
+                  <p className="text-xs">({subscription.planConfig?.features.maxItems} max pour le plan {subscription.planConfig?.name})</p>
+                  <p className="text-xs text-blue-200 mt-1">Passez à un plan supérieur</p>
+                </div>
+              ) : (
+                <p>Ajouter un élément</p>
+              )}
             </TooltipContent>
           </Tooltip>
         </div>

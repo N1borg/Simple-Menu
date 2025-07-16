@@ -6,6 +6,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Gets the establishment color or returns default blue if null/undefined
+ */
+export function getEstablishmentColor(color: string | null | undefined): string {
+  return color || '#3b82f6'; // Default to blue-600
+}
+
+/**
  * Sanitizes and formats an email address
  */
 export function sanitizeEmail(
