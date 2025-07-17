@@ -4,12 +4,13 @@ import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-ki
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { ReactNode, useState } from 'react';
 
-export function DndKitWrapper({ items, onDragEnd, children, modifiers, renderOverlay }: {
+export function DndKitWrapper({ items, onDragEnd, children, modifiers, renderOverlay, id }: {
   items: any[],
   onDragEnd: (oldIndex: number, newIndex: number) => void,
   children: ReactNode,
   modifiers?: any[],
-  renderOverlay?: (activeId: string|null) => ReactNode
+  renderOverlay?: (activeId: string|null) => ReactNode,
+  id?: string
 }) {
   const [activeId, setActiveId] = useState<string|null>(null);
   const sensors = useSensors(
@@ -22,6 +23,7 @@ export function DndKitWrapper({ items, onDragEnd, children, modifiers, renderOve
 
   return (
     <DndContext
+      id={id}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={event => setActiveId(event.active.id as string)}

@@ -85,13 +85,14 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo, estab
                 <FormLabel>Mot de passe actuel</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input type={showCurrent ? "text" : "password"} autoComplete="current-password" placeholder="Mot de passe actuel" {...field} autoFocus={false} />
+                    <Input type={showCurrent ? "text" : "password"} autoComplete="current-password" placeholder="Mot de passe actuel" {...field} autoFocus={false} disabled={isDemo} />
                     <button
                       type="button"
                       tabIndex={-1}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
                       onClick={() => setShowCurrent(v => !v)}
                       aria-label={showCurrent ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      disabled={isDemo}
                     >
                       {showCurrent ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -109,13 +110,14 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo, estab
                 <FormLabel>Nouveau mot de passe</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input type={showNew ? "text" : "password"} autoComplete="new-password" placeholder="Nouveau mot de passe" {...field} />
+                    <Input type={showNew ? "text" : "password"} autoComplete="new-password" placeholder="Nouveau mot de passe" {...field} disabled={isDemo} />
                     <button
                       type="button"
                       tabIndex={-1}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
                       onClick={() => setShowNew(v => !v)}
                       aria-label={showNew ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      disabled={isDemo}
                     >
                       {showNew ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -133,13 +135,14 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo, estab
                 <FormLabel>Confirmer le nouveau mot de passe</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Input type={showConfirm ? "text" : "password"} autoComplete="new-password" placeholder="Confirmer le mot de passe" {...field} />
+                    <Input type={showConfirm ? "text" : "password"} autoComplete="new-password" placeholder="Confirmer le mot de passe" {...field} disabled={isDemo} />
                     <button
                       type="button"
                       tabIndex={-1}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer"
                       onClick={() => setShowConfirm(v => !v)}
                       aria-label={showConfirm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      disabled={isDemo}
                     >
                       {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -151,7 +154,7 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo, estab
           />
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || isDemo}
             className="w-full mt-2 cursor-pointer"
             style={{
               backgroundColor: establishmentColor || '#3b82f6',

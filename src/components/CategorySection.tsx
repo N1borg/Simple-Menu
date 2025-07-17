@@ -380,6 +380,7 @@ export default function CategorySection({
 
       {/* Menu Items with Drag & Drop */}
       <DndKitWrapper
+        id={`category-${category.id}`}
         items={category.menu_items}
         modifiers={[restrictToParentElement]}
         onDragEnd={handleItemDragEnd}

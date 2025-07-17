@@ -71,6 +71,7 @@ export function MenuItemDialogForm({
           value={localName}
           onChange={e => setLocalName(e.target.value)}
           placeholder="Nom de l'article"
+          disabled={isDemo}
         />
       </div>
       <div>
@@ -79,6 +80,7 @@ export function MenuItemDialogForm({
           value={localDescription}
           onChange={e => setLocalDescription(e.target.value)}
           placeholder="Description détaillée de l'article"
+          disabled={isDemo}
         />
       </div>
       <div>
@@ -93,6 +95,7 @@ export function MenuItemDialogForm({
             const val = e.target.value.replace(/[^0-9.,]/g, '')
             setLocalPrice(val)
           }}
+          disabled={isDemo}
         />
       </div>
       <div>
@@ -101,6 +104,7 @@ export function MenuItemDialogForm({
             checked={localAvailable}
             onCheckedChange={handleAvailableChange}
             className="cursor-pointer"
+            disabled={isDemo}
           />
           Disponible
         </Label>

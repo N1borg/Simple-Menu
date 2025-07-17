@@ -244,6 +244,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       )}
 
       <DndKitWrapper
+        id="categories-dnd"
         items={categories}
         modifiers={[restrictToParentElement]}
         onDragEnd={handleCategoryDragEnd}
