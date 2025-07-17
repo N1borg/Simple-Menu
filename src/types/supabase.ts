@@ -21,6 +21,7 @@ export type Database = {
           display_style: string | null
           establishment_id: string | null
           id: string
+          is_available: boolean | null
           name: string
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           display_style?: string | null
           establishment_id?: string | null
           id?: string
+          is_available?: boolean | null
           name: string
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           display_style?: string | null
           establishment_id?: string | null
           id?: string
+          is_available?: boolean | null
           name?: string
         }
         Relationships: [

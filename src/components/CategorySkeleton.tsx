@@ -7,7 +7,6 @@ const CategorySkeleton = () => {
       <Skeleton className="h-8 w-55" />
       <Skeleton className="h-9 w-9" />
       <Skeleton className="h-9 w-9" />
-      <Skeleton className="h-9 w-9" />
     </div>
   );
 };

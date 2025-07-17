@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { DialogClose, DialogFooter } from "@/components/ui/dialog"
 import { Loader2 } from "lucide-react"
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
@@ -46,10 +47,12 @@ export function CategoryDialogForm({
 }: CategoryDialogFormProps) {
   const [localName, setLocalName] = useState(category.name)
   const [localDisplayStyle, setLocalDisplayStyle] = useState(category.display_style || 'card')
+  const [localAvailable, setLocalAvailable] = useState(category.is_available ?? true)
 
   useEffect(() => {
     setLocalName(category.name)
     setLocalDisplayStyle(category.display_style || 'card')
+    setLocalAvailable(category.is_available ?? true)
   }, [category])
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -63,6 +66,7 @@ export function CategoryDialogForm({
       ...category,
       name: localName,
       display_style: localDisplayStyle,
+      is_available: localAvailable,
     }
     await onSubmit(updatedCategory)
   }
@@ -100,6 +104,18 @@ export function CategoryDialogForm({
             </SelectGroup>
           </SelectContent>
         </Select>
+      </div>
+
+      <div>
+        <Label className="flex items-center gap-2">
+          <Switch
+            checked={localAvailable}
+            onCheckedChange={setLocalAvailable}
+            disabled={isDemo}
+            className="cursor-pointer"
+          />
+          Disponible
+        </Label>
       </div>
 
       <DialogFooter>

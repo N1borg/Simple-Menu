@@ -226,14 +226,20 @@ export default function CategorySection({
 
   // Handle category dialog form submission
   const handleCategorySubmit = async (updatedCategory: Category) => {
-    // Update local state immediately for instant UI feedback
-    const newCategories = categories.map((c) =>
-      c.id === category.id ? updatedCategory : c
-    )
-    setCategories(newCategories)
-    
-    await saveCategory(updatedCategory)
-    setIsCategoryDialogOpen(false)
+    try {
+      // Save to backend first
+      await saveCategory(updatedCategory)
+      
+      // Only update local state after successful save
+      const newCategories = categories.map((c) =>
+        c.id === category.id ? updatedCategory : c
+      )
+      setCategories(newCategories)
+      setIsCategoryDialogOpen(false)
+    } catch (error) {
+      // Error handling is done in saveCategory, don't update UI
+      console.error('Failed to save category:', error)
+    }
   }
 
   // Handle category deletion
@@ -256,10 +262,14 @@ export default function CategorySection({
 
   // Simplified category header render function
   const renderCategoryHeader = () => {
+    const categoryUnavailable = category.is_available === false
+    
     return (
       <>
         <h2
-          className="text-2xl font-bold mr-2 mb-2 sm:mb-0 overflow-hidden whitespace-nowrap"
+          className={`text-2xl font-bold mr-2 mb-2 sm:mb-0 overflow-hidden whitespace-nowrap ${
+            categoryUnavailable ? 'text-gray-400 line-through' : ''
+          }`}
           style={{ textOverflow: "clip", maxWidth: "100%" }}
           title={category.name}
         >

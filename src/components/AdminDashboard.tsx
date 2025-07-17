@@ -105,6 +105,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       created_at: new Date().toISOString(),
       display_order,
       establishment_id: establishment.id,
+      is_available: true,
       menu_items: [],
       isLoading: true,
     };

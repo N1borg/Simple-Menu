@@ -29,6 +29,7 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
         created_at: new Date().toISOString(),
         display_order: categories.length,
         establishment_id: establishment.id,
+        is_available: true,
         menu_items: [],
       }
       setCategories([newCat, ...categories])
@@ -46,6 +47,7 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
       created_at: new Date().toISOString(),
       display_order: categories.length,
       establishment_id: establishment.id,
+      is_available: true,
       menu_items: [],
       isLoading: true,
     }
@@ -132,6 +134,7 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
           name: cat.name,
           display_style: cat.display_style,
           display_order: cat.display_order,
+          is_available: cat.is_available,
         }),
       })
       

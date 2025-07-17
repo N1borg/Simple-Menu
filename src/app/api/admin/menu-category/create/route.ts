@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('categories')
-    .insert([{ name: safeName, display_style: safeStyle, display_order: safeOrder, establishment_id }])
+    .insert([{ name: safeName, display_style: safeStyle, display_order: safeOrder, establishment_id, is_available: true }])
     .select()
     .single()
 

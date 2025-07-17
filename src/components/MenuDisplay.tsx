@@ -214,6 +214,7 @@ export default function MenuDisplay({ establishment, isAdminView = false, basket
         </div>
         <div className="space-y-8">
           {establishment.categories
+            ?.filter(category => category.is_available !== false) // Hide only explicitly disabled categories (false)
             ?.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
             .map(category => {
               const sortedCategory = {
@@ -228,6 +229,7 @@ export default function MenuDisplay({ establishment, isAdminView = false, basket
         {editingItem && (
           (() => {
             const selectedItem = establishment.categories
+              ?.filter(category => category.is_available !== false) // Only consider available categories
               ?.flatMap(cat => cat.menu_items || [])
               .find(item => item.id === editingItem);
             return selectedItem ? (
