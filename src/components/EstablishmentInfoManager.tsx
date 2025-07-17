@@ -8,6 +8,7 @@ import { Loader2, MapPin } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -205,6 +206,9 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
           >
             Informations de contact
           </DialogTitle>
+          <DialogDescription>
+            Configurez les informations de contact de votre établissement.
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (

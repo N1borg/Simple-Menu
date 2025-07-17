@@ -70,6 +70,7 @@ export function MenuItemDialogForm({
         <Input
           value={localName}
           onChange={e => setLocalName(e.target.value)}
+          placeholder="Nom de l'article"
         />
       </div>
       <div>
@@ -77,6 +78,7 @@ export function MenuItemDialogForm({
         <Input
           value={localDescription}
           onChange={e => setLocalDescription(e.target.value)}
+          placeholder="Description détaillée de l'article"
         />
       </div>
       <div>

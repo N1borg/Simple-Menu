@@ -268,6 +268,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   subscription={subscription}
                   isAddingItemGlobally={isAddingItemGlobally}
                   setIsAddingItemGlobally={setIsAddingItemGlobally}
+                  basketEnabled={establishment.basket_enabled ?? true}
                 />
               </SortableCategory>
             ))}

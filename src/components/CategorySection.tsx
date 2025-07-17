@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { GripVertical, Plus, Pencil, Loader2, Crown } from "lucide-react"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableItem } from '@/components/SortableItem'
@@ -17,21 +16,13 @@ import CategorySkeleton from "@/components/CategorySkeleton"
 import MenuItemSkeleton from "@/components/MenuItemSkeleton";
 import { SubscriptionLimits } from '@/hooks/useSubscription'
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-const DISPLAY_STYLES = [
-  { value: 'card', label: 'Carte' },
-  { value: 'list', label: 'Liste' },
-  { value: 'compact', label: 'Compact' },
-  { value: 'table', label: 'Tableau' },
-]
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { CategoryDialogForm } from "./CategoryDialogForm"
 
 interface CategorySectionProps {
   category: Category
@@ -51,6 +42,7 @@ interface CategorySectionProps {
   subscription?: SubscriptionLimits
   isAddingItemGlobally?: boolean
   setIsAddingItemGlobally?: (adding: boolean) => void
+  basketEnabled?: boolean
 }
 
 export default function CategorySection({
@@ -71,6 +63,7 @@ export default function CategorySection({
   subscription,
   isAddingItemGlobally = false,
   setIsAddingItemGlobally,
+  basketEnabled = false,
 }: CategorySectionProps) {
   // Use useMenuItems hook for item actions
   const {
@@ -83,6 +76,9 @@ export default function CategorySection({
 
   // Local state for editing item
   const [editingItem, setEditingItem] = useState<string | null>(null)
+  
+  // State for category dialog
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
 
   // Add item handler using the hook, with demo mode protection
   const handleAddMenuItem = async (catId: string) => {
@@ -228,116 +224,38 @@ export default function CategorySection({
     }
   }
 
-  // Removed fade logic for category title
-  const renderCategoryHeader = () => {
-    if (editingCategoryId === category.id) {
-      return (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (isDemo) {
-              toast.info("Modification désactivée (mode démo).");
-              return;
-            }
-            if (
-              originalCategory &&
-              category.name === originalCategory.name &&
-              category.display_style === originalCategory.display_style
-            ) {
-              setEditingCategoryId(null);
-              return;
-            }
-            saveCategory(category);
-          }}
-          className="flex items-center gap-2 flex-wrap"
-        >
-          <Input
-            value={category.name}
-            onChange={(e) => {
-              if (isDemo) {
-                toast.info("Modification désactivée (mode démo).");
-                return;
-              }
-              const newCategories = categories.map((c) =>
-                c.id === category.id ? { ...c, name: e.target.value } : c
-              );
-              setCategories(newCategories);
-            }}
-            className="w-40"
-            disabled={isDemo}
-          />
-          <Select
-            onValueChange={(value) => {
-              if (isDemo) {
-                toast.info("Modification désactivée (mode démo).");
-                return;
-              }
-              const newCategories = categories.map((c) =>
-                c.id === category.id ? { ...c, display_style: value } : c
-              );
-              setCategories(newCategories);
-            }}
-            value={category.display_style || ""}
-            disabled={isDemo}
-          >
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <SelectTrigger className="w-[120px] bg-white cursor-pointer">
-                  <SelectValue placeholder="Style" />
-                </SelectTrigger>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Sélectionnez un style</p>
-              </TooltipContent>
-            </Tooltip>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Styles</SelectLabel>
-                {DISPLAY_STYLES.map((style) => (
-                  <SelectItem key={style.value} value={style.value}>
-                    {style.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={savingCategoryId === category.id || loadingAction !== null || isDemo}
-            className="cursor-pointer"
-            onClick={(e) => {
-              if (isDemo) {
-                e.preventDefault();
-                toast.info("Modification désactivée (mode démo).");
-                return;
-              }
-            }}
-          >
-            {savingCategoryId === category.id || loadingAction === `saveCategory-${category.id}` ? (
-              <div className="flex items-center">
-                <div className="w-4 h-4 mr-2 flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                </div>
-                Enregistrement...
-              </div>
-            ) : (
-              "Enregistrer"
-            )}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={() => setEditingCategoryId(null)}
-            className="cursor-pointer"
-          >
-            Annuler
-          </Button>
-        </form>
-      );
-    }
+  // Handle category dialog form submission
+  const handleCategorySubmit = async (updatedCategory: Category) => {
+    // Update local state immediately for instant UI feedback
+    const newCategories = categories.map((c) =>
+      c.id === category.id ? updatedCategory : c
+    )
+    setCategories(newCategories)
+    
+    await saveCategory(updatedCategory)
+    setIsCategoryDialogOpen(false)
+  }
 
+  // Handle category deletion
+  const handleCategoryDelete = async () => {
+    await deleteCategory(category.id)
+    setIsCategoryDialogOpen(false)
+  }
+
+  // Handle category dialog cancel
+  const handleCategoryCancel = () => {
+    setIsCategoryDialogOpen(false)
+    // Reset any changes if needed
+    if (originalCategory) {
+      const newCategories = categories.map((c) =>
+        c.id === category.id ? originalCategory : c
+      )
+      setCategories(newCategories)
+    }
+  }
+
+  // Simplified category header render function
+  const renderCategoryHeader = () => {
     return (
       <>
         <h2
@@ -347,42 +265,6 @@ export default function CategorySection({
         >
           {category.name}
         </h2>
-        <Select
-          onValueChange={async (value) => {
-            if (isDemo) {
-              toast.info("Modification désactivée (mode démo).");
-              return;
-            }
-            const newCategories = categories.map((c) =>
-              c.id === category.id ? { ...c, display_style: value } : c
-            );
-            setCategories(newCategories);
-            await saveCategory({ ...category, display_style: value });
-          }}
-          value={category.display_style || ""}
-          disabled={isDemo}
-        >
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <SelectTrigger className="w-[120px] bg-white cursor-pointer">
-                <SelectValue placeholder="Style" />
-              </SelectTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Sélectionnez un style</p>
-            </TooltipContent>
-          </Tooltip>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Styles</SelectLabel>
-              {DISPLAY_STYLES.map((style) => (
-                <SelectItem key={style.value} value={style.value}>
-                  {style.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
         <div className="tutorial-add-item">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -428,8 +310,8 @@ export default function CategorySection({
               size="icon"
               variant="ghost"
               onClick={() => {
-                setEditingCategoryId(category.id);
-                setOriginalCategory({ ...category });
+                setOriginalCategory({ ...category })
+                setIsCategoryDialogOpen(true)
               }}
               title="Modifier la catégorie"
               className="cursor-pointer"
@@ -511,6 +393,7 @@ export default function CategorySection({
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
+                  basketEnabled={basketEnabled}
                 />
               );
             case "compact":
@@ -527,6 +410,7 @@ export default function CategorySection({
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
+                  basketEnabled={basketEnabled}
                 />
               );
             case "table":
@@ -548,6 +432,7 @@ export default function CategorySection({
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
+                  basketEnabled={basketEnabled}
                 />
               );
           }
@@ -582,6 +467,7 @@ export default function CategorySection({
               establishmentColor={establishmentColor}
               isDemo={isDemo}
               isAdmin={isAdmin}
+              basketEnabled={basketEnabled}
             />
           ) : category.display_style === "compact" ? (
             <MenuItemCompact
@@ -597,6 +483,7 @@ export default function CategorySection({
               establishmentColor={establishmentColor}
               isDemo={isDemo}
               isAdmin={isAdmin}
+              basketEnabled={basketEnabled}
             />
           ) : (
             <MenuItemCard
@@ -612,12 +499,34 @@ export default function CategorySection({
               establishmentColor={establishmentColor}
               isDemo={isDemo}
               isAdmin={isAdmin}
+              basketEnabled={basketEnabled}
             />
           )}
               </SortableItem>
             ))}
         </div>
       </DndKitWrapper>
+
+      {/* Category Edit Dialog */}
+      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Modifier la catégorie</DialogTitle>
+            <DialogDescription>
+              Modifiez le nom et le style d'affichage de votre catégorie.
+            </DialogDescription>
+          </DialogHeader>
+          <CategoryDialogForm
+            category={category}
+            isDemo={isDemo}
+            savingCategoryId={savingCategoryId}
+            loadingAction={loadingAction}
+            onSubmit={handleCategorySubmit}
+            onDelete={handleCategoryDelete}
+            onCancel={handleCategoryCancel}
+          />
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

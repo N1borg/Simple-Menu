@@ -18,6 +18,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -249,6 +250,9 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Modifier la couleur principale</DialogTitle>
+                  <DialogDescription>
+                    Personnalisez la couleur principale de votre menu.
+                  </DialogDescription>
                 </DialogHeader>
                 <ColorSelector
                   currentColor={currentColor}

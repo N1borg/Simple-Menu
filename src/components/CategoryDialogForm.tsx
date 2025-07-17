@@ -1,0 +1,156 @@
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { DialogClose, DialogFooter } from "@/components/ui/dialog"
+import { Loader2 } from "lucide-react"
+import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { toast } from "sonner"
+import type { Category } from '@/types/supabase_types'
+import { useState, useEffect } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+const DISPLAY_STYLES = [
+  { value: 'card', label: 'Carte' },
+  { value: 'list', label: 'Liste' },
+  { value: 'compact', label: 'Compact' },
+  { value: 'table', label: 'Tableau' },
+]
+
+interface CategoryDialogFormProps {
+  category: Category
+  isDemo: boolean
+  savingCategoryId: string | null
+  loadingAction: string | null
+  onSubmit: (updatedCategory: Category) => Promise<void>
+  onDelete: () => Promise<void>
+  onCancel: () => void
+}
+
+export function CategoryDialogForm({
+  category,
+  isDemo,
+  savingCategoryId,
+  loadingAction,
+  onSubmit,
+  onDelete,
+  onCancel,
+}: CategoryDialogFormProps) {
+  const [localName, setLocalName] = useState(category.name)
+  const [localDisplayStyle, setLocalDisplayStyle] = useState(category.display_style || 'card')
+
+  useEffect(() => {
+    setLocalName(category.name)
+    setLocalDisplayStyle(category.display_style || 'card')
+  }, [category])
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return
+    }
+
+    const updatedCategory = {
+      ...category,
+      name: localName,
+      display_style: localDisplayStyle,
+    }
+    await onSubmit(updatedCategory)
+  }
+
+  return (
+    <form onSubmit={handleFormSubmit} className="space-y-4">
+      <div>
+        <Label>Nom de la catégorie</Label>
+        <Input
+          value={localName}
+          onChange={e => setLocalName(e.target.value)}
+          placeholder="Ex: Entrées, Plats, Desserts..."
+          disabled={isDemo}
+        />
+      </div>
+      
+      <div>
+        <Label>Style d'affichage</Label>
+        <Select
+          value={localDisplayStyle}
+          onValueChange={setLocalDisplayStyle}
+          disabled={isDemo}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Sélectionner un style" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Styles d'affichage</SelectLabel>
+              {DISPLAY_STYLES.map((style) => (
+                <SelectItem key={style.value} value={style.value}>
+                  {style.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <DialogFooter>
+        <div className="flex w-full justify-between gap-2">
+          <div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <ConfirmDeleteDialog
+                    onConfirm={onDelete}
+                    title="Supprimer la catégorie ?"
+                    description="Cette action supprimera la catégorie et tous ses éléments. Voulez-vous continuer ?"
+                    triggerButtonClassName="mr-auto flex items-center justify-center"
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Supprimer la catégorie</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <div className="flex gap-2">
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                className="cursor-pointer"
+              >
+                Annuler
+              </Button>
+            </DialogClose>
+            <Button
+              type="submit"
+              disabled={savingCategoryId === category.id || loadingAction !== null || isDemo}
+              className="cursor-pointer"
+            >
+              {savingCategoryId === category.id ? (
+                <div className="flex items-center">
+                  <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
+                  Enregistrement...
+                </div>
+              ) : (
+                'Enregistrer'
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogFooter>
+    </form>
+  )
+}

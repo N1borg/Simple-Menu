@@ -9,6 +9,7 @@ import OpeningHoursInput from '@/components/OpeningHoursInput'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -134,6 +135,9 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
           >
             Horaires d'ouverture
           </DialogTitle>
+          <DialogDescription>
+            Configurez les heures d'ouverture de votre établissement.
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
