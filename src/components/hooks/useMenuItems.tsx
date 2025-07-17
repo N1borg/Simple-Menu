@@ -231,6 +231,20 @@ export function useMenuItems(
         toast.error(data?.error || "Erreur lors de la sauvegarde de l'élément")
         return
       }
+      
+      // Update the categories state with the saved item data
+      const updatedCategories = categories.map((cat: Category) =>
+        cat.id === item.category_id
+          ? {
+              ...cat,
+              menu_items: cat.menu_items.map((i: MenuItem) =>
+                i.id === item.id ? item : i
+              ),
+            }
+          : cat
+      )
+      setCategories(updatedCategories)
+      
       toast.success("Élément sauvegardé !")
     } catch (error) {
       // Revert changes on network error

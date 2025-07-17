@@ -26,7 +26,7 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const isDemo = establishment.slug === 'demo'
-  const subscription = useSubscription(establishment)
+  
   const [demoLogoUrl, setDemoLogoUrl] = useState<string | undefined>(
     isDemo ? (establishment.logo_url ?? undefined) : undefined
   )
@@ -49,12 +49,11 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     setOriginalCategory,
     setLoadingAction
   } = useCategories(establishment, isDemo)
+  
+  // Initialize subscription hook with current categories for real-time count updates
+  const subscription = useSubscription(establishment, categories)
 
   const {
-    addMenuItem,
-    deleteMenuItem,
-    saveItem,
-    handleItemChange,
     savingItemId,
     editingItem,
     setEditingItem
