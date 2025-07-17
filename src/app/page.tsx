@@ -56,17 +56,6 @@ function AnimatedBlob({ className = "", delay = 0 }: { className?: string, delay
   return (
     <motion.div
       className={`absolute rounded-full filter blur-3xl ${className}`}
-      animate={{
-        x: [0, 100, -50, 0],
-        y: [0, -100, 50, 0],
-        scale: [1, 1.2, 0.8, 1],
-      }}
-      transition={{
-        duration: 20,
-        repeat: Infinity,
-        delay: delay,
-        ease: "linear"
-      }}
     />
   )
 }
