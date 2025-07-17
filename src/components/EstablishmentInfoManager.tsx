@@ -161,8 +161,10 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
         body: JSON.stringify(sanitizedData)
       })
 
+      const responseData = await response.json()
+
       if (!response.ok) {
-        throw new Error('Erreur lors de la sauvegarde')
+        throw new Error(responseData?.error || 'Erreur lors de la sauvegarde')
       }
 
       toast.success('Informations mises à jour avec succès!')
@@ -172,6 +174,7 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
       setTimeout(() => window.location.reload(), 500)
     } catch (error) {
       console.error('Error saving establishment data:', error)
+      // Keep the user's edits - don't revert form data on error
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde')
     } finally {
       setIsSaving(false)

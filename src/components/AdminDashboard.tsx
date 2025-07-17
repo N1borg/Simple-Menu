@@ -135,11 +135,24 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         ));
         toast.success("Catégorie créée");
       } else {
+        // Handle specific API errors
+        if (data?.code === 'SUBSCRIPTION_LIMIT_REACHED') {
+          toast.error(data.error || "Limite d'abonnement atteinte")
+          // Open upgrade dialog
+          setTimeout(() => {
+            window.open(
+              'mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur%20pour%20ajouter%20plus%20de%20catégories.',
+              '_blank'
+            )
+          }, 1000)
+        } else {
+          toast.error(data?.error || "Erreur lors de la création de la catégorie")
+        }
         throw new Error('Failed to create category');
       }
     } catch (error) {
       setCategories(cats => cats.filter(cat => cat.id !== tempCat.id));
-      toast.error("Erreur lors de la création de la catégorie");
+      // Don't show additional toast here as we already showed specific error above
     } finally {
       setLoadingAction(null);
     }

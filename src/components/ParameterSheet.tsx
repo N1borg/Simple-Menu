@@ -10,6 +10,7 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -218,6 +219,9 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
       <SheetContent side="right" className="max-w-md w-full flex flex-col h-full">
         <SheetHeader className="flex-shrink-0">
             <SheetTitle>Paramètres administrateur</SheetTitle>
+            <SheetDescription>
+              Gérez les paramètres de votre établissement, modifiez votre mot de passe et personnalisez votre menu.
+            </SheetDescription>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto min-h-0 pb-4">
           <div className="grid auto-rows-min gap-6 px-1">

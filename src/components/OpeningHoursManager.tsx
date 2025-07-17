@@ -101,6 +101,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
       setTimeout(() => window.location.reload(), 500)
     } catch (error) {
       console.error('Error saving opening hours:', error)
+      // Keep the user's edits - don't revert opening hours on error
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde')
     } finally {
       setIsSaving(false)

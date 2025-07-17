@@ -62,7 +62,22 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     auditLog({ action: 'category_create_failed', ip, details: { name, error } })
-    return NextResponse.json({ success: false, error }, { status: 500 })
+    
+    // Return more specific error messages
+    let errorMessage = 'Erreur lors de la création de la catégorie'
+    
+    if (error.code === '23503') { // Foreign key constraint violation
+      errorMessage = 'Établissement introuvable'
+    } else if (error.code === '23505') { // Unique constraint violation
+      errorMessage = 'Une catégorie avec ce nom existe déjà'
+    } else if (error.message && error.message.includes('establishment')) {
+      errorMessage = 'Établissement introuvable'
+    } else if (error.message) {
+      // Use the actual error message if it's descriptive
+      errorMessage = error.message
+    }
+    
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
   }
   
   auditLog({ 

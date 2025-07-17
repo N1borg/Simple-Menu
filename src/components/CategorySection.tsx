@@ -160,7 +160,7 @@ export default function CategorySection({
             : cat
         )
       );
-      toast.error("Erreur lors de l'ajout de l'élément");
+      // Don't show toast here as addMenuItem already handles specific error messages
     } finally {
       // Reset global loading state
       setIsAddingItemGlobally?.(false);
@@ -183,16 +183,6 @@ export default function CategorySection({
       return
     }
     await saveItem(updatedItem)
-    setCategories(categories.map((cat: Category) =>
-      cat.id === category.id
-        ? {
-            ...cat,
-            menu_items: cat.menu_items.map((item: MenuItem) =>
-              item.id === updatedItem.id ? { ...item, ...updatedItem } : item
-            )
-          }
-        : cat
-    ))
   }
 
   const handleItemDragEnd = (oldIndex: number, newIndex: number) => {

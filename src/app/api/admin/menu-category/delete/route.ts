@@ -38,7 +38,22 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     auditLog({ action: 'category_delete_failed', ip, details: { id, error } })
-    return NextResponse.json({ success: false, error }, { status: 500 })
+    
+    // Return more specific error messages
+    let errorMessage = 'Erreur lors de la suppression de la catégorie'
+    
+    if (error.code === '23503') { // Foreign key constraint violation
+      errorMessage = 'Impossible de supprimer cette catégorie car elle contient des éléments'
+    } else if (error.code === '42P01') { // Table doesn't exist
+      errorMessage = 'Service temporairement indisponible'
+    } else if (error.message && error.message.includes('establishment')) {
+      errorMessage = 'Établissement introuvable'
+    } else if (error.message) {
+      // Use the actual error message if it's descriptive
+      errorMessage = error.message
+    }
+    
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
   }
   auditLog({ action: 'category_delete', ip, details: { id } })
   return NextResponse.json({ success: true }, { status: 200 })

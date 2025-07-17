@@ -46,8 +46,23 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     auditLog({ action: 'menu_item_update_failed', ip, details: { item, error } })
-    return NextResponse.json(false, { status: 500 })
+    
+    // Return more specific error messages
+    let errorMessage = 'Erreur lors de la mise à jour de l\'élément'
+    
+    if (error.code === '23503') { // Foreign key constraint violation
+      errorMessage = 'Catégorie introuvable'
+    } else if (error.code === '23505') { // Unique constraint violation
+      errorMessage = 'Un élément avec ce nom existe déjà dans cette catégorie'
+    } else if (error.message && error.message.includes('establishment')) {
+      errorMessage = 'Établissement introuvable'
+    } else if (error.message) {
+      // Use the actual error message if it's descriptive
+      errorMessage = error.message
+    }
+    
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
   }
   auditLog({ action: 'menu_item_update', ip, details: { item } })
-  return NextResponse.json(true, { status: 200 })
+  return NextResponse.json({ success: true }, { status: 200 })
 }
