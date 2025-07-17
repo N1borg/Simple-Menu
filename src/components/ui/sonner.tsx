@@ -2,9 +2,11 @@
 
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, ToasterProps } from "sonner"
+import { useEstablishmentTheme } from "@/contexts/EstablishmentThemeContext"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
+  const { primaryColor } = useEstablishmentTheme()
 
   return (
     <Sonner
@@ -15,6 +17,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-bg": "var(--popover)",
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
+          "--success-bg": primaryColor,
+          "--success-text": "#ffffff",
+          "--info-bg": primaryColor,
+          "--info-text": "#ffffff",
         } as React.CSSProperties
       }
       {...props}

@@ -286,10 +286,10 @@ export default function CategorySection({
                 className={`bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative ${
                   subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
                 }`}
-                disabled={category.id.startsWith("temp-") || isAddingItemGlobally}
+                disabled={category.id.startsWith("temp-") || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
               >
                 <div className="w-5 h-5 flex items-center justify-center">
-                  {isAddingItemGlobally ? (
+                  {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : subscription && !subscription.canCreateMenuItem ? (
                     <Crown className="w-5 h-5" />
@@ -300,7 +300,7 @@ export default function CategorySection({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {isAddingItemGlobally ? (
+              {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
                 <p>Ajout en cours...</p>
               ) : subscription && !subscription.canCreateMenuItem ? (
                 <div className="text-center">

@@ -6,6 +6,7 @@ import { jwtVerify } from 'jose'
 import AdminBanner from '@/components/AdminBanner'
 import MenuFooter from '@/components/MenuFooter'
 import { redirect } from 'next/navigation'
+import { EstablishmentThemeProvider } from '@/contexts/EstablishmentThemeContext'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,27 +66,29 @@ export default async function MenuPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {(isAuthenticated || slug === 'demo') && <AdminBanner slug={slug} color={establishment.primary_color ?? undefined} />}
-      <main className="flex-grow">
-        <MenuDisplay 
-          establishment={establishment} 
-          isAdminView={isAuthenticated || slug === 'demo'}
-          basketEnabled={establishment.basket_enabled ?? true}
+    <EstablishmentThemeProvider primaryColor={establishment.primary_color}>
+      <div className="min-h-screen flex flex-col">
+        {(isAuthenticated || slug === 'demo') && <AdminBanner slug={slug} color={establishment.primary_color ?? undefined} />}
+        <main className="flex-grow">
+          <MenuDisplay 
+            establishment={establishment} 
+            isAdminView={isAuthenticated || slug === 'demo'}
+            basketEnabled={establishment.basket_enabled ?? true}
+          />
+        </main>
+        <MenuFooter 
+          color={establishment.primary_color ?? undefined} 
+          establishmentInfo={{
+            address: establishment.address ?? undefined,
+            phone: establishment.phone ?? undefined,
+            email: establishment.email ?? undefined,
+            opening_hours: establishment.opening_hours as Array<{ day: string; hours: string }> ?? undefined,
+            facebook_url: establishment.facebook_url ?? undefined,
+            instagram_url: establishment.instagram_url ?? undefined,
+            google_maps_url: establishment.google_maps_url ?? undefined
+          }}
         />
-      </main>
-      <MenuFooter 
-        color={establishment.primary_color ?? undefined} 
-        establishmentInfo={{
-          address: establishment.address ?? undefined,
-          phone: establishment.phone ?? undefined,
-          email: establishment.email ?? undefined,
-          opening_hours: establishment.opening_hours as Array<{ day: string; hours: string }> ?? undefined,
-          facebook_url: establishment.facebook_url ?? undefined,
-          instagram_url: establishment.instagram_url ?? undefined,
-          google_maps_url: establishment.google_maps_url ?? undefined
-        }}
-      />
-    </div>
+      </div>
+    </EstablishmentThemeProvider>
   )
 }

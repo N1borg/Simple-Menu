@@ -244,10 +244,6 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
           <Button 
             onClick={handleSave} 
             disabled={isSaving || isLoading || isDemo || !hasChanges()}
-            style={{ 
-              backgroundColor: getEstablishmentColor(primaryColor), 
-              borderColor: getEstablishmentColor(primaryColor) 
-            }}
           >
             {isSaving ? (
               <div className="flex items-center">

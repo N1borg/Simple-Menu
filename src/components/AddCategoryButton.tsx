@@ -9,6 +9,7 @@ interface AddCategoryButtonProps {
   loading?: boolean
   className?: string
   subscription?: SubscriptionLimits
+  isAddingItemGlobally?: boolean
 }
 
 export function AddCategoryButton({ 
@@ -16,13 +17,14 @@ export function AddCategoryButton({
   disabled, 
   loading, 
   className, 
-  subscription 
+  subscription,
+  isAddingItemGlobally = false
 }: AddCategoryButtonProps) {
   const isSubscriptionDisabled = subscription && !subscription.canCreateCategory
-  const isDisabled = disabled || loading || isSubscriptionDisabled
+  const isDisabled = disabled || loading || isSubscriptionDisabled || isAddingItemGlobally
 
   const getTooltipContent = () => {
-    if (loading) return "Création en cours..."
+    if (loading || isAddingItemGlobally) return "Création en cours..."
     if (isSubscriptionDisabled && subscription) {
       const maxCategories = subscription.planConfig?.features.maxCategories
       return (
@@ -61,10 +63,10 @@ export function AddCategoryButton({
               className={`bg-gray-100 hover:bg-gray-200 text-gray-600 relative ${
                 isSubscriptionDisabled ? 'opacity-60 hover:opacity-80' : ''
               }`}
-              disabled={disabled || loading}
+              disabled={disabled || loading || isAddingItemGlobally}
             >
               <div className="w-6 h-6 flex items-center justify-center">
-                {loading ? (
+                {(loading || isAddingItemGlobally) ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : isSubscriptionDisabled ? (
                   <Crown className="w-6 h-6" />

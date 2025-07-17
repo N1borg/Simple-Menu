@@ -230,6 +230,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           loading={loadingAction?.startsWith('adding-category')}
           className="flex justify-center mt-4"
           subscription={subscription}
+          isAddingItemGlobally={isAddingItemGlobally}
         />
       ) : (
         <AddCategoryButton
@@ -238,6 +239,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           loading={loadingAction?.startsWith('adding-category')}
           className="flex justify-center mt-4"
           subscription={subscription}
+          isAddingItemGlobally={isAddingItemGlobally}
         />
       )}
 
@@ -284,6 +286,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           loading={loadingAction?.startsWith('adding-category')}
           className="flex justify-center mt-8"
           subscription={subscription}
+          isAddingItemGlobally={isAddingItemGlobally}
         />
       )}
       

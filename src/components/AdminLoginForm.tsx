@@ -100,11 +100,6 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
             type="submit"
             className="w-full flex justify-center py-2 px-4"
             disabled={loading}
-            style={{ 
-              backgroundColor: getEstablishmentColor(color), 
-              borderColor: getEstablishmentColor(color), 
-              color: '#fff' 
-            }}
           >
             {loading ? (
               <div className="flex items-center">
