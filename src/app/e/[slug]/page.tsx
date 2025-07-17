@@ -68,7 +68,11 @@ export default async function MenuPage({ params }: PageProps) {
     <div className="min-h-screen flex flex-col">
       {(isAuthenticated || slug === 'demo') && <AdminBanner slug={slug} color={establishment.primary_color ?? undefined} />}
       <main className="flex-grow">
-        <MenuDisplay establishment={establishment} />
+        <MenuDisplay 
+          establishment={establishment} 
+          isAdminView={isAuthenticated || slug === 'demo'}
+          basketEnabled={establishment.basket_enabled ?? true}
+        />
       </main>
       <MenuFooter 
         color={establishment.primary_color ?? undefined} 

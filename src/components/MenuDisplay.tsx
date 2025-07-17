@@ -6,6 +6,8 @@ import type { MenuDisplayProps, Category, MenuItem } from '@/types/supabase_type
 import MenuItemCard from '@/components/MenuItemCard'
 import MenuItemList from '@/components/MenuItemList'
 import MenuItemCompact from '@/components/MenuItemCompact'
+import Basket from '@/components/Basket'
+import { CartProvider } from '@/components/hooks/useCart'
 import {
   Dialog,
   DialogContent,
@@ -46,7 +48,7 @@ function MenuItemDialog({ item, open, onOpenChange }: { item: MenuItem, open: bo
   )
 }
 
-function renderCardStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
+function renderCardStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-2xl font-bold mb-4">{category.name}</h2>
@@ -68,6 +70,7 @@ function renderCardStyle(category: Category, establishmentColor?: string, editin
               establishmentColor={establishmentColor}
               isAdmin={false} // Public view
               isDemo={false}
+              basketEnabled={basketEnabled}
             />
           ))}
       </div>
@@ -75,7 +78,7 @@ function renderCardStyle(category: Category, establishmentColor?: string, editin
   )
 }
 
-function renderListStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
+function renderListStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <h2 className="text-xl font-bold mb-2">{category.name}</h2>
@@ -98,6 +101,7 @@ function renderListStyle(category: Category, establishmentColor?: string, editin
                 establishmentColor={establishmentColor}
                 isAdmin={false} // Public view
                 isDemo={false}
+                basketEnabled={basketEnabled}
               />
             </li>
           ))}
@@ -106,7 +110,7 @@ function renderListStyle(category: Category, establishmentColor?: string, editin
   )
 }
 
-function renderCompactStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
+function renderCompactStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
   return (
     <section key={category.id} className="max-w-2xl mx-auto px-2 py-4">
       <h2 className="text-lg font-semibold mb-4">{category.name}</h2>
@@ -128,6 +132,7 @@ function renderCompactStyle(category: Category, establishmentColor?: string, edi
               establishmentColor={establishmentColor}
               isAdmin={false} // Public view
               isDemo={false}
+              basketEnabled={basketEnabled}
             />
           ))}
       </div>
@@ -171,68 +176,77 @@ function renderTableStyle(category: Category, establishmentColor?: string, editi
   )
 }
 
-function renderCategoryByStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
+function renderCategoryByStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
   switch (category.display_style) {
     case 'list':
-      return renderListStyle(category, establishmentColor, editingItem, setEditingItem)
+      return renderListStyle(category, establishmentColor, editingItem, setEditingItem, basketEnabled)
     case 'compact':
-      return renderCompactStyle(category, establishmentColor, editingItem, setEditingItem)
+      return renderCompactStyle(category, establishmentColor, editingItem, setEditingItem, basketEnabled)
     case 'table':
       return renderTableStyle(category, establishmentColor, editingItem, setEditingItem)
     case 'card':
     default:
-      return renderCardStyle(category, establishmentColor, editingItem, setEditingItem)
+      return renderCardStyle(category, establishmentColor, editingItem, setEditingItem, basketEnabled)
   }
 }
 
-export default function MenuDisplay({ establishment }: MenuDisplayProps) {
+export default function MenuDisplay({ establishment, isAdminView = false, basketEnabled = true }: MenuDisplayProps & { isAdminView?: boolean; basketEnabled?: boolean }) {
   const establishmentColor = establishment.primary_color || '#3a4fff'
   const [editingItem, setEditingItem] = useState<string | null>(null)
   
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-      <div className="text-center mb-6">
-        {establishment.logo_url && (
-          <Image
-            src={establishment.logo_url}
-            alt="Logo"
-            width={160}
-            height={160}
-            className="mx-auto w-32 h-32 rounded-full mb-2 object-contain bg-white"
-            priority
-            quality={90}
-            sizes="(max-width: 600px) 100vw, 160px"
-          />
-        )}
-        <h1 className="text-3xl font-bold">{establishment.name}</h1>
-      </div>
-      <div className="space-y-8">
-        {establishment.categories
-          ?.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(category => {
-            const sortedCategory = {
-              ...category,
-              menu_items: category.menu_items?.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) || []
-            };
-            return renderCategoryByStyle(sortedCategory, establishmentColor, editingItem, setEditingItem);
-          })}
-      </div>
-      
-      {/* Show item dialog for table style when an item is selected */}
-      {editingItem && (
-        (() => {
-          const selectedItem = establishment.categories
-            ?.flatMap(cat => cat.menu_items || [])
-            .find(item => item.id === editingItem);
-          return selectedItem ? (
-            <MenuItemDialog 
-              item={selectedItem} 
-              open={!!editingItem} 
-              onOpenChange={(open) => !open && setEditingItem(null)} 
+    <CartProvider>
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="text-center mb-6">
+          {establishment.logo_url && (
+            <Image
+              src={establishment.logo_url}
+              alt="Logo"
+              width={160}
+              height={160}
+              className="mx-auto w-32 h-32 rounded-full mb-2 object-contain bg-white"
+              priority
+              quality={90}
+              sizes="(max-width: 600px) 100vw, 160px"
             />
-          ) : null;
-        })()
-      )}
-    </div>
+          )}
+          <h1 className="text-3xl font-bold">{establishment.name}</h1>
+        </div>
+        <div className="space-y-8">
+          {establishment.categories
+            ?.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+            .map(category => {
+              const sortedCategory = {
+                ...category,
+                menu_items: category.menu_items?.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) || []
+              };
+              return renderCategoryByStyle(sortedCategory, establishmentColor, editingItem, setEditingItem, basketEnabled);
+            })}
+        </div>
+        
+        {/* Show item dialog for table style when an item is selected */}
+        {editingItem && (
+          (() => {
+            const selectedItem = establishment.categories
+              ?.flatMap(cat => cat.menu_items || [])
+              .find(item => item.id === editingItem);
+            return selectedItem ? (
+              <MenuItemDialog 
+                item={selectedItem} 
+                open={!!editingItem} 
+                onOpenChange={(open) => !open && setEditingItem(null)} 
+              />
+            ) : null;
+          })()
+        )}
+        
+        {/* Shopping basket with style tester */}
+        <Basket 
+          establishmentColor={establishmentColor} 
+          isAdminView={isAdminView}
+          basketEnabled={basketEnabled}
+        />
+      </div>
+    </CartProvider>
   )
 }

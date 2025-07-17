@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
 import AdminPasswordForm from "@/components/AdminPasswordForm";
 import ColorSelector from "@/components/ColorSelector";
@@ -46,6 +47,9 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
   const [isSavingColor, setIsSavingColor] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPWAInstall, setShowPWAInstall] = useState(false);
+  const [basketEnabled, setBasketEnabled] = useState(true);
+  const [isLoadingBasket, setIsLoadingBasket] = useState(true);
+  const [isSavingBasket, setIsSavingBasket] = useState(false);
 
   // Check if PWA is allowed for this establishment
   const plan = establishment?.plan || 'essentiel';
@@ -108,6 +112,88 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
       toast.error('Erreur lors de la mise à jour de la couleur');
     } finally {
       setIsSavingColor(false);
+    }
+  };
+
+  // Load basket setting on component mount
+  useEffect(() => {
+    const loadBasketSetting = async () => {
+      if (isDemo) {
+        setIsLoadingBasket(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/admin/basket-toggle`);
+        if (response.ok) {
+          const data = await response.json();
+          setBasketEnabled(data.basketEnabled);
+        } else if (response.status === 500) {
+          // Likely missing basket_enabled column, default to true
+          setBasketEnabled(true);
+          console.warn('Basket setting not available - database migration needed');
+        } else {
+          console.error('Failed to load basket setting');
+        }
+      } catch (error) {
+        console.error('Error loading basket setting:', error);
+        // Default to enabled if there's an error
+        setBasketEnabled(true);
+      } finally {
+        setIsLoadingBasket(false);
+      }
+    };
+
+    loadBasketSetting();
+  }, [isDemo]);
+
+  // Handle basket toggle
+  const handleBasketToggle = async (enabled: boolean) => {
+    if (isDemo) {
+      toast.error('Fonctionnalité non disponible en mode démo');
+      return;
+    }
+
+    // Prevent spam requests - exit early if already saving
+    if (isSavingBasket) {
+      return;
+    }
+
+    const previousState = basketEnabled;
+    setIsSavingBasket(true);
+    setBasketEnabled(enabled); // Optimistically update the UI
+    
+    try {
+      const response = await fetch(`/api/admin/basket-toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ basketEnabled: enabled }),
+      });
+
+      if (!response.ok) {
+        // Revert to previous state on error
+        setBasketEnabled(previousState);
+        
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.migration_needed) {
+          toast.error('Fonctionnalité panier non configurée. Veuillez exécuter la migration de base de données.');
+        } else {
+          toast.error(errorData.error || 'Erreur lors de la mise à jour du panier');
+        }
+        return;
+      }
+
+      // Success - keep the new state and show success message
+      toast.success(enabled ? 'Panier activé !' : 'Panier désactivé !');
+    } catch (error) {
+      // Revert to previous state on error
+      setBasketEnabled(previousState);
+      toast.error('Erreur lors de la mise à jour du panier');
+      console.error('Error toggling basket:', error);
+    } finally {
+      setIsSavingBasket(false);
     }
   };
 
@@ -198,6 +284,36 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
               </DialogContent>
             </Dialog>
           </div>
+          
+          {/* Basket Toggle Section */}
+          <div className="px-4">
+            <Label className="text-md gap-1.5 pt-4 pb-2 block">Panier de commande</Label>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex-1">
+                <div className="font-medium text-sm">Activer le panier</div>
+                <div className="text-xs text-gray-600 mt-1">
+                  Permet aux clients d'ajouter des articles à leur commande
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={basketEnabled}
+                  onCheckedChange={handleBasketToggle}
+                  disabled={isDemo || isLoadingBasket || isSavingBasket}
+                  style={{
+                    '--switch-bg': basketEnabled ? (establishment.primary_color || '#3b82f6') : '#e5e7eb'
+                  } as React.CSSProperties}
+                  className="data-[state=checked]:bg-[var(--switch-bg)]"
+                />
+              </div>
+            </div>
+            {isDemo && (
+              <p className="text-xs text-gray-500 mt-2 px-3">
+                Fonctionnalité non disponible en mode démo
+              </p>
+            )}
+          </div>
+          
           <div className="px-4 tutorial-qr-code">
             {/* QR Code Button and Dialog */}
             <QrCodeDialog 
@@ -211,6 +327,10 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
             <div className="px-4">
                 <Button
                 className="w-full flex items-center gap-2"
+                style={{
+                  backgroundColor: establishment.primary_color || '#3b82f6',
+                  color: 'white'
+                }}
                 onClick={handlePWAInstall}
                 >
                 <Smartphone className="w-4 h-4" />
@@ -227,6 +347,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
               establishmentId={establishment.id}
               slug={establishment.slug}
               isDemo={isDemo}
+              establishmentColor={establishment.primary_color}
               />
           </div>
           {onTutorialStart && (

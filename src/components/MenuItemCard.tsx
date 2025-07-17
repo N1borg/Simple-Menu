@@ -9,11 +9,13 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useEffect, useRef, useState } from 'react'
 import { toast } from "sonner"
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
 import { GripVertical } from "lucide-react"
 import { getEstablishmentColor } from '@/lib/utils'
+import { useCart } from '@/components/hooks/useCart'
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -28,6 +30,7 @@ interface MenuItemCardProps {
   establishmentColor?: string
   isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
+  basketEnabled?: boolean // New prop to control basket checkbox visibility
 }
 
 export default function MenuItemCard({
@@ -41,10 +44,17 @@ export default function MenuItemCard({
   deleteMenuItem,
   establishmentColor,
   isAdmin = true, // Default to admin mode for backward compatibility
-  isDemo = false
+  isDemo = false,
+  basketEnabled = true // Default to enabled for backward compatibility
 }: MenuItemCardProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = getEstablishmentColor(establishmentColor)
+  
+  // Cart functionality - only use in non-admin mode
+  const cartHook = !isAdmin ? useCart() : null
+  const addToCart = cartHook?.addToCart
+  const removeFromCart = cartHook?.removeFromCart
+  const isInCart = cartHook?.isInCart
 
   // Local state for dialog editing
   const [localName, setLocalName] = useState(item.name)
@@ -242,8 +252,24 @@ export default function MenuItemCard({
                 <div className="text-sm mt-1 select-none min-h-[2.5em] max-h-[2.5em]" style={{color: 'transparent', textDecoration: 'none'}}>&nbsp;</div>
               )}
             </div>
-            <div className={`text-right font-bold mt-2${!instantAvailable ? ' line-through' : ''}`}>
-              {item.price?.toFixed(2)}€
+            <div className={`flex items-center justify-between mt-2${!instantAvailable ? ' line-through' : ''}`}>
+              <div className="text-right font-bold">
+                {item.price?.toFixed(2)}€
+              </div>
+              {!isAdmin && basketEnabled && (
+                <Checkbox
+                  checked={isInCart?.(item.id) || false}
+                  onCheckedChange={(checked) => {
+                    if (checked && addToCart) {
+                      addToCart(item)
+                    } else if (!checked && removeFromCart) {
+                      removeFromCart(item.id)
+                    }
+                  }}
+                  accentColor={establishmentColor}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              )}
             </div>
           </div>
         </div>

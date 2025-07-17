@@ -53,6 +53,7 @@ export type Database = {
         Row: {
           address: string | null
           admin_hash: string | null
+          basket_enabled: boolean | null
           city: string | null
           created_at: string | null
           email: string | null
@@ -79,6 +80,7 @@ export type Database = {
         Insert: {
           address?: string | null
           admin_hash?: string | null
+          basket_enabled?: boolean | null
           city?: string | null
           created_at?: string | null
           email?: string | null
@@ -105,6 +107,7 @@ export type Database = {
         Update: {
           address?: string | null
           admin_hash?: string | null
+          basket_enabled?: boolean | null
           city?: string | null
           created_at?: string | null
           email?: string | null

@@ -20,6 +20,7 @@ interface AdminPasswordFormProps {
   establishmentId: string
   slug: string
   isDemo: boolean
+  establishmentColor?: string
 }
 
 const FormSchema = z.object({
@@ -32,7 +33,7 @@ const FormSchema = z.object({
   path: ['confirmPassword'],
 })
 
-export default function AdminPasswordForm({ establishmentId, slug, isDemo }: AdminPasswordFormProps) {
+export default function AdminPasswordForm({ establishmentId, slug, isDemo, establishmentColor }: AdminPasswordFormProps) {
   const [loading, setLoading] = useState(false)
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
@@ -152,6 +153,10 @@ export default function AdminPasswordForm({ establishmentId, slug, isDemo }: Adm
             type="submit"
             disabled={loading}
             className="w-full mt-2 cursor-pointer"
+            style={{
+              backgroundColor: establishmentColor || '#3b82f6',
+              color: 'white'
+            }}
           >
             {loading ? (
               <div className="flex items-center">

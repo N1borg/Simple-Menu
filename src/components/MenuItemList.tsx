@@ -9,9 +9,11 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useEffect, useState } from 'react'
 import { toast } from "sonner"
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
+import { useCart } from '@/components/hooks/useCart'
 
 interface MenuItemListProps {
   item: MenuItem
@@ -26,6 +28,7 @@ interface MenuItemListProps {
   establishmentColor?: string
   isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
+  basketEnabled?: boolean // New prop to control basket checkbox visibility
 }
 
 export default function MenuItemList({
@@ -39,10 +42,17 @@ export default function MenuItemList({
   deleteMenuItem,
   establishmentColor,
   isAdmin = true, // Default to admin mode for backward compatibility
-  isDemo = false
+  isDemo = false,
+  basketEnabled = true // Default to enabled for backward compatibility
 }: MenuItemListProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = establishmentColor || '#3a4fff'
+  
+  // Cart functionality - only use in non-admin mode
+  const cartHook = !isAdmin ? useCart() : null
+  const addToCart = cartHook?.addToCart
+  const removeFromCart = cartHook?.removeFromCart
+  const isInCart = cartHook?.isInCart
 
   // Local state for dialog editing
   const [localName, setLocalName] = useState(item.name)
@@ -121,8 +131,22 @@ export default function MenuItemList({
               </div>
             )}
           </div>
-          <div className="flex flex-col items-end min-w-[70px]">
+          <div className="flex flex-col items-end min-w-[70px] gap-2">
             <span className="font-bold">{item.price?.toFixed(2)}€</span>
+            {!isAdmin && basketEnabled && (
+              <Checkbox
+                checked={isInCart?.(item.id) || false}
+                onCheckedChange={(checked) => {
+                  if (checked && addToCart) {
+                    addToCart(item)
+                  } else if (!checked && removeFromCart) {
+                    removeFromCart(item.id)
+                  }
+                }}
+                accentColor={establishmentColor}
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
           </div>
         </div>
 
