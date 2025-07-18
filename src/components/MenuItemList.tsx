@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react'
 import { toast } from "sonner"
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
 import { useCart } from '@/components/hooks/useCart'
+import MenuItemDialog from '@/components/MenuItemDialog'
 
 interface MenuItemListProps {
   item: MenuItem
@@ -150,69 +151,24 @@ export default function MenuItemList({
           </div>
         </div>
 
-        {/* Show admin dialog or public dialog based on isAdmin prop */}
-        {isAdmin ? (
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Modifier l'élément</DialogTitle>
-              <DialogDescription>
-                Modifiez les informations de l'élément puis cliquez sur enregistrer.
-              </DialogDescription>
-            </DialogHeader>
-            <MenuItemDialogForm
-              item={item}
-              isDemo={isDemo}
-              savingItemId={savingItemId}
-              loadingAction={loadingAction}
-              onSubmit={async (updatedItem) => {
-                try {
-                  await saveItem(updatedItem)
-                } catch (err) {
-                  toast.error("Erreur lors de la sauvegarde de l'élément")
-                }
-                setInstantAvailable(!!updatedItem.is_available)
-                setEditingItem(null)
-              }}
-              onDelete={async () => {
-                if (isDemo) {
-                  toast.info("Modification désactivée (mode démo).")
-                  return
-                }
-                try {
-                  await deleteMenuItem(category.id, item.id)
-                } catch (err) {
-                  toast.error("Erreur lors de la suppression de l'élément")
-                }
-                setEditingItem(null)
-              }}
-              onCancel={() => setEditingItem(null)}
-            />
-          </DialogContent>
-        ) : (
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{item.name}</DialogTitle>
-              <DialogDescription>
-                {item.description || 'Aucune description.'}
-              </DialogDescription>
-            </DialogHeader>
-            {item.image_url && (
-              <div className="flex justify-center">
-                <Image
-                  src={item.image_url}
-                  alt={item.name}
-                  width={300}
-                  height={200}
-                  className="rounded-lg object-cover max-h-48"
-                />
-              </div>
-            )}
-            <div className="mt-4 text-right font-bold text-lg">{item.price?.toFixed(2)}€</div>
-            <DialogClose asChild>
-              <Button variant="outline" className="mt-4 w-full">Fermer</Button>
-            </DialogClose>
-          </DialogContent>
-        )}
+        {/* Show admin dialog or public dialog using reusable component */}
+        <MenuItemDialog
+          item={item}
+          category={category}
+          isAdmin={isAdmin}
+          isDemo={isDemo}
+          savingItemId={savingItemId}
+          loadingAction={loadingAction}
+          saveItem={saveItem}
+          deleteMenuItem={deleteMenuItem}
+          setEditingItem={setEditingItem}
+          setInstantAvailable={setInstantAvailable}
+          basketEnabled={basketEnabled}
+          isInCart={isInCart}
+          addToCart={addToCart}
+          removeFromCart={removeFromCart}
+          establishmentColor={establishmentColor}
+        />
       </div>
     </Dialog>
   )

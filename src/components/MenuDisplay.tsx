@@ -18,35 +18,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
-function MenuItemDialog({ item, open, onOpenChange }: { item: MenuItem, open: boolean, onOpenChange: (open: boolean) => void }) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{item.name}</DialogTitle>
-          <DialogDescription>
-            {item.description || 'Aucune description.'}
-          </DialogDescription>
-        </DialogHeader>
-        {item.image_url && (
-          <div className="flex justify-center">
-            <Image
-              src={item.image_url}
-              alt={item.name}
-              width={300}
-              height={200}
-              className="rounded-lg object-cover max-h-48"
-            />
-          </div>
-        )}
-        <div className="mt-4 text-right font-bold text-lg">{item.price?.toFixed(2)}€</div>
-        <DialogClose asChild>
-          <Button variant="outline" className="mt-4 w-full">Fermer</Button>
-        </DialogClose>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 function renderCardStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
   return (
@@ -224,24 +195,7 @@ export default function MenuDisplay({ establishment, isAdminView = false, basket
               return renderCategoryByStyle(sortedCategory, establishmentColor, editingItem, setEditingItem, basketEnabled);
             })}
         </div>
-        
-        {/* Show item dialog for table style when an item is selected */}
-        {editingItem && (
-          (() => {
-            const selectedItem = establishment.categories
-              ?.filter(category => category.is_available !== false) // Only consider available categories
-              ?.flatMap(cat => cat.menu_items || [])
-              .find(item => item.id === editingItem);
-            return selectedItem ? (
-              <MenuItemDialog 
-                item={selectedItem} 
-                open={!!editingItem} 
-                onOpenChange={(open) => !open && setEditingItem(null)} 
-              />
-            ) : null;
-          })()
-        )}
-        
+
         {/* Shopping basket with style tester */}
         <Basket 
           establishmentColor={establishmentColor} 
