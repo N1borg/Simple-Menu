@@ -1,4 +1,48 @@
-import { getServerSupabase } from '@/lib/supabase'
+import type { Metadata } from "next";
+import { getServerSupabase } from '@/lib/supabase';
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug;
+  const supabase = await getServerSupabase();
+  const { data: establishment } = await supabase
+    .from('establishments')
+    .select('name')
+    .eq('slug', slug)
+    .single();
+
+  const name = establishment?.name || slug;
+
+  return {
+    title: `${name} | Simple-Menu`,
+    description: `Découvrez le menu digital de ${name} sur Simple-Menu.`,
+    openGraph: {
+      title: `${name} | Simple-Menu`,
+      description: `Découvrez le menu digital de ${name} sur Simple-Menu.`,
+      url: `https://simple-menu.niborgpro.fr/e/${slug}`,
+      siteName: "Simple-Menu",
+      locale: "fr_FR",
+      type: "website",
+      images: [
+        {
+          url: "https://simple-menu.niborgpro.fr/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: "Simple-Menu - Menu digital",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${name} | Simple-Menu`,
+      description: `Découvrez le menu digital de ${name} sur Simple-Menu.`,
+      images: ["https://simple-menu.niborgpro.fr/og-image.jpg"],
+    },
+    alternates: {
+      canonical: `https://simple-menu.niborgpro.fr/e/${slug}`,
+    },
+  };
+}
 import { cookies } from 'next/headers'
 import MenuDisplay from '@/components/MenuDisplay'
 import NotFound from '@/app/not-found'
