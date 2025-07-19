@@ -187,32 +187,34 @@ export default function MenuItemCard({
         >
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0">
-              <h3
-                className={`text-base font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative`}
-                title={item.name}
-                style={{ textOverflow: 'clip' }}
-              >
-                <span ref={titleSpanRef} className={!instantAvailable ? 'line-through' : ''} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
-                  {item.name}
-                  <span
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: 0,
-                      width: '4em',
-                      height: '100%',
-                      background: 'linear-gradient(to right, transparent, #fff 80%)',
-                      pointerEvents: 'none',
-                      display: 'none',
-                    }}
-                    className="fade-title"
-                  />
-                </span>
-              </h3>
-              {/* Dietary badges - only show if not hidden by category */}
-              <div className="flex gap-1 mt-1">
-                {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" showText={false} />}
-                {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" showText={false} />}
+              <div className="flex items-center justify-end">
+                <h3
+                  className={`text-base font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative flex-1`}
+                  title={item.name}
+                  style={{ textOverflow: 'clip' }}
+                >
+                  <span ref={titleSpanRef} className={!instantAvailable ? 'line-through' : ''} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                    {item.name}
+                    <span
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        width: '4em',
+                        height: '100%',
+                        background: 'linear-gradient(to right, transparent, #fff 80%)',
+                        pointerEvents: 'none',
+                        display: 'none',
+                      }}
+                      className="fade-title"
+                    />
+                  </span>
+                </h3>
+                {/* Dietary badges - only show if not hidden by category */}
+                <div className="flex gap-1 flex-shrink-0">
+                  {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" showText={false} />}
+                  {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" showText={false} />}
+                </div>
               </div>
             </div>
             {/* Only show drag handle in admin mode */}

@@ -61,7 +61,7 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
   return (
     <div className="w-full max-w-xs mx-auto">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="password"
@@ -111,6 +111,17 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
             ) : (
               'Se connecter'
             )}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full flex justify-center py-2 px-4"
+            disabled={loading}
+            onClick={() => {
+              window.location.href = `/e/${slug}`;
+            }}
+          >
+            Voir le menu public
           </Button>
         </form>
       </Form>

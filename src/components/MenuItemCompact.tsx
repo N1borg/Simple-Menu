@@ -94,59 +94,60 @@ export default function MenuItemCompact({
     >
       <div className="menu-item-card relative group">
         <div
-          className={`flex flex-col items-start gap-2 p-3 rounded-md shadow-md bg-white group-hover:ring-2 transition cursor-pointer h-full${!instantAvailable ? " line-through bg-gray-100 text-gray-400 border border-gray-200" : ""}`}
+          className={
+            `bg-white rounded-xl shadow-md p-3 flex flex-col gap-2 group-hover:ring-2 transition cursor-pointer h-full${!instantAvailable ? " bg-gray-100 text-gray-400 border border-gray-200" : ""}`
+          }
           style={{
-            boxShadow: "0 1px 4px 0 rgba(0,0,0,0.07)",
-            borderColor: "transparent",
-            outline: "none",
+            boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
+            borderColor: 'transparent',
+            outline: 'none',
             ...(editingItem === item.id ? { boxShadow: `0 0 0 2px ${ringColor}` } : {}),
           }}
           onClick={() => setEditingItem(item.id)}
           tabIndex={0}
           role="button"
           aria-label={isAdmin ? `Modifier l'élément ${item.name}` : `Voir l'élément ${item.name}`}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") setEditingItem(item.id);
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setEditingItem(item.id) }}
+          onMouseEnter={e => {
+            e.currentTarget.style.boxShadow = `0 0 0 2px ${ringColor}`
           }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = `0 0 0 2px ${ringColor}`;
-          }}
-          onMouseLeave={(e) => {
-            if (editingItem !== item.id)
-              e.currentTarget.style.boxShadow = "0 1px 4px 0 rgba(0,0,0,0.07)";
+          onMouseLeave={e => {
+            if (editingItem !== item.id) e.currentTarget.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)'
           }}
         >
-                    <div className="flex-1 min-w-0">
-            <span
-              ref={titleSpanRef}
-              className="text-base font-semibold max-w-full overflow-hidden whitespace-nowrap relative leading-tight"
-              title={item.name}
-              style={{
-                textOverflow: "clip",
-                display: "inline-block",
-                width: "100%",
-                position: "relative",
-              }}
-            >
-              {item.name}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
               <span
+                ref={titleSpanRef}
+                className="text-base font-semibold max-w-full overflow-hidden whitespace-nowrap relative leading-tight flex-1"
+                title={item.name}
                 style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 0,
-                  width: "2em",
-                  height: "100%",
-                  background: "linear-gradient(to right, transparent, #fff 80%)",
-                  pointerEvents: "none",
-                  display: "none",
+                  textOverflow: "clip",
+                  display: "inline-block",
+                  width: "100%",
+                  position: "relative",
                 }}
-                className="fade-title"
-              />
-            </span>
-            {/* Dietary badges - only show if not hidden by category */}
-            <div className="flex gap-1 mt-1">
-              {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" showText={false} />}
-              {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" showText={false} />}
+              >
+                {item.name}
+                <span
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: 0,
+                    width: "2em",
+                    height: "100%",
+                    background: "linear-gradient(to right, transparent, #fff 80%)",
+                    pointerEvents: "none",
+                    display: "none",
+                  }}
+                  className="fade-title"
+                />
+              </span>
+              {/* Dietary badges - only show if not hidden by category */}
+              <div className="flex gap-1 flex-shrink-0">
+                {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" showText={false} />}
+                {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" showText={false} />}
+              </div>
             </div>
           </div>
           <div className="w-full flex justify-between items-end mt-auto">

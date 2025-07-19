@@ -386,13 +386,29 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
               disabled={loggingOut}
               onClick={async () => {
                 setLoggingOut(true);
-                await fetch("/api/admin/logout", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ slug: establishment.slug })
-                });
-                document.cookie = "admin-session=; path=/; max-age=0;";
-                window.location.href = `/e/${establishment.slug}/admin`;
+                try {
+                  const response = await fetch("/api/admin/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ slug: establishment.slug })
+                  });
+                  
+                  if (!response.ok) {
+                    const errorData = await response.json();
+                    toast.error(errorData.error || 'Erreur lors de la déconnexion');
+                    setLoggingOut(false);
+                    return;
+                  }
+                  
+                  const data = await response.json();
+                  // Clear the client-side cookie as well
+                  document.cookie = "admin-session=; path=/; max-age=0;";
+                  // Redirect to the admin page
+                  window.location.href = data.redirectUrl || `/e/${establishment.slug}/admin`;
+                } catch (error) {
+                  toast.error('Erreur lors de la déconnexion');
+                  setLoggingOut(false);
+                }
               }}
             >
               {loggingOut ? (
@@ -410,6 +426,16 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
               )}
             </Button>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full flex items-center gap-2 cursor-pointer"
+            onClick={() => {
+              window.location.href = publicMenuUrl;
+            }}
+          >
+            Voir le menu public
+          </Button>
           <Button
             type="button"
             variant="outline"

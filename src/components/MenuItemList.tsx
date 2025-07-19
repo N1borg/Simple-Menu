@@ -114,8 +114,8 @@ export default function MenuItemList({
           }}
         >
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-semibold max-w-[100%] truncate" title={item.name}>{item.name}</span>
+            <div className="flex items-center">
+              <span className="text-base font-semibold max-w-[100%] truncate flex-1" title={item.name}>{item.name}</span>
             </div>
             {item.description && (
               <div className="text-sm text-gray-500 truncate mt-1 relative" title={item.description}>
@@ -134,14 +134,16 @@ export default function MenuItemList({
                 />
               </div>
             )}
-            {/* Dietary badges - only show if not hidden by category */}
-            <div className="flex gap-1 mt-1">
-              {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" showText={false} />}
-              {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" showText={false} />}
-            </div>
           </div>
           <div className="flex flex-col items-end min-w-[70px] gap-2">
-            <span className="font-bold">{item.price_one?.toFixed(2)}€</span>
+            <div className="flex items-center gap-2">
+              {/* Dietary badges - only show if not hidden by category */}
+              <div className="flex gap-1">
+                {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" showText={false} />}
+                {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" showText={false} />}
+              </div>
+              <span className="font-bold">{item.price_one?.toFixed(2)}€</span>
+            </div>
             {!isAdmin && basketEnabled && (
               <Checkbox
                 checked={isInCart?.(item.id) || false}
