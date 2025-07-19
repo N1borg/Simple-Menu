@@ -211,8 +211,8 @@ export default function MenuItemCard({
               </h3>
               {/* Dietary badges - only show if not hidden by category */}
               <div className="flex gap-1 mt-1">
-                {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" />}
-                {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" />}
+                {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" showText={false} />}
+                {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" showText={false} />}
               </div>
             </div>
             {/* Only show drag handle in admin mode */}

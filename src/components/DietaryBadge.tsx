@@ -4,10 +4,11 @@ interface DietaryBadgeProps {
   type: 'vegan' | 'alcohol-free'
   size?: 'sm' | 'md'
   variant?: 'active' | 'inactive'
+  showText?: boolean
   className?: string
 }
 
-export default function DietaryBadge({ type, size = 'md', variant = 'active', className = '' }: DietaryBadgeProps) {
+export default function DietaryBadge({ type, size = 'md', variant = 'active', showText = true, className = '' }: DietaryBadgeProps) {
   const isVegan = type === 'vegan'
   
   const baseClasses = 'inline-flex items-center gap-1.5 rounded-full px-2 py-1 font-medium text-xs'
@@ -28,7 +29,7 @@ export default function DietaryBadge({ type, size = 'md', variant = 'active', cl
       ) : (
         <WineOff className={iconClasses} />
       )}
-      {isVegan ? 'Vegan' : 'Sans alcool'}
+      {showText && (isVegan ? 'Vegan' : 'Sans alcool')}
     </span>
   )
 }

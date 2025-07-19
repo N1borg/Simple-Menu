@@ -377,12 +377,14 @@ export default function CategorySection({
             <DietaryBadge 
               type="vegan" 
               variant="active"
+              showText={false}
             />
           )}
           {categoryDietary.alcoholFree && (
             <DietaryBadge 
               type="alcohol-free" 
               variant="active"
+              showText={false}
             />
           )}
         </div>

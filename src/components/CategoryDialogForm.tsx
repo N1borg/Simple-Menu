@@ -92,6 +92,18 @@ export function CategoryDialogForm({
   return (
     <form onSubmit={handleFormSubmit} className="space-y-4">
       <div>
+        <Label className="flex items-center gap-2">
+          <Switch
+            checked={localAvailable}
+            onCheckedChange={setLocalAvailable}
+            disabled={isDemo}
+            className="cursor-pointer"
+          />
+          Disponible
+        </Label>
+      </div>
+
+      <div>
         <Label>Nom de la catégorie</Label>
         <Input
           value={localName}
@@ -122,18 +134,6 @@ export function CategoryDialogForm({
             </SelectGroup>
           </SelectContent>
         </Select>
-      </div>
-
-      <div>
-        <Label className="flex items-center gap-2">
-          <Switch
-            checked={localAvailable}
-            onCheckedChange={setLocalAvailable}
-            disabled={isDemo}
-            className="cursor-pointer"
-          />
-          Disponible
-        </Label>
       </div>
       
       <div>

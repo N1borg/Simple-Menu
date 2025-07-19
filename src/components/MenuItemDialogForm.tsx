@@ -88,6 +88,18 @@ export function MenuItemDialogForm({
   return (
     <form onSubmit={handleFormSubmit} className="space-y-3">
       <div>
+        <Label className="flex items-center gap-2">
+          <Switch
+            checked={localAvailable}
+            onCheckedChange={handleAvailableChange}
+            className="cursor-pointer"
+            disabled={isDemo}
+          />
+          Disponible
+        </Label>
+      </div>
+
+      <div>
         <Label>Nom</Label>
         <Input
           value={localName}
@@ -120,18 +132,6 @@ export function MenuItemDialogForm({
           disabled={isDemo}
         />
       </div>
-      <div>
-        <Label className="flex items-center gap-2">
-          <Switch
-            checked={localAvailable}
-            onCheckedChange={handleAvailableChange}
-            className="cursor-pointer"
-            disabled={isDemo}
-          />
-          Disponible
-        </Label>
-      </div>
-      
       <div>
         <Label>Badges alimentaires</Label>
         <div className="flex gap-2 mt-2">

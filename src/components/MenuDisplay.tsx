@@ -39,8 +39,8 @@ function renderCardStyle(category: Category, establishmentColor?: string, editin
         <h2 className="text-2xl font-bold">{category.name}</h2>
         {/* Category-level dietary badges */}
         <div className="flex gap-1">
-          {categoryDietary.vegan && <DietaryBadge type="vegan" />}
-          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" />}
+          {categoryDietary.vegan && <DietaryBadge type="vegan" showText={false} />}
+          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" showText={false} />}
         </div>
       </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -82,8 +82,8 @@ function renderListStyle(category: Category, establishmentColor?: string, editin
         <h2 className="text-xl font-bold">{category.name}</h2>
         {/* Category-level dietary badges */}
         <div className="flex gap-1">
-          {categoryDietary.vegan && <DietaryBadge type="vegan" />}
-          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" />}
+          {categoryDietary.vegan && <DietaryBadge type="vegan" showText={false} />}
+          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" showText={false} />}
         </div>
       </div>
       <ul className="space-y-1">
@@ -127,8 +127,8 @@ function renderCompactStyle(category: Category, establishmentColor?: string, edi
         <h2 className="text-lg font-semibold">{category.name}</h2>
         {/* Category-level dietary badges */}
         <div className="flex gap-1">
-          {categoryDietary.vegan && <DietaryBadge type="vegan" />}
-          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" />}
+          {categoryDietary.vegan && <DietaryBadge type="vegan" showText={false} />}
+          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" showText={false} />}
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full">
@@ -170,8 +170,8 @@ function renderTableStyle(category: Category, establishmentColor?: string, editi
         <h2 className="text-xl font-bold">{category.name}</h2>
         {/* Category-level dietary badges */}
         <div className="flex gap-1">
-          {categoryDietary.vegan && <DietaryBadge type="vegan" />}
-          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" />}
+          {categoryDietary.vegan && <DietaryBadge type="vegan" showText={false} />}
+          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" showText={false} />}
         </div>
       </div>
       <table className="w-full text-left border">

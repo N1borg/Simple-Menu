@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm";
 import { toast } from "sonner";
+import DietaryBadge from "@/components/DietaryBadge";
 
 interface MenuItemDialogProps {
   item: MenuItem;
@@ -92,7 +93,7 @@ export default function MenuItemDialog({
       <DialogHeader>
         <DialogTitle>{item.name}</DialogTitle>
         <DialogDescription>
-          {item.description || 'Aufzecune description.'}
+          {item.description || 'Aucune description.'}
         </DialogDescription>
       </DialogHeader>
       {item.image_url && (
@@ -106,22 +107,26 @@ export default function MenuItemDialog({
           />
         </div>
       )}
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
         <span className="font-bold text-lg">{item.price_one?.toFixed(2)}€</span>
-        {basketEnabled && (
-          <Checkbox
-            checked={isInCart?.(item.id) || false}
-            onCheckedChange={(checked: boolean) => {
-              if (checked && addToCart) {
-                addToCart(item);
-              } else if (!checked && removeFromCart) {
-                removeFromCart(item.id);
-              }
-            }}
-            accentColor={establishmentColor || '#3a4fff'}
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          {item.vegan && <DietaryBadge type="vegan" variant="active" />}
+          {item.alcohol_free && <DietaryBadge type="alcohol-free" variant="active" />}
+          {basketEnabled && (
+            <Checkbox
+              checked={isInCart?.(item.id) || false}
+              onCheckedChange={(checked: boolean) => {
+                if (checked && addToCart) {
+                  addToCart(item);
+                } else if (!checked && removeFromCart) {
+                  removeFromCart(item.id);
+                }
+              }}
+              accentColor={establishmentColor || '#3a4fff'}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            />
+          )}
+        </div>
       </div>
       <DialogClose asChild>
         <Button variant="outline" className="mt-4 w-full">Fermer</Button>
