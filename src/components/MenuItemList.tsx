@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
 import { useCart } from '@/components/hooks/useCart'
 import MenuItemDialog from '@/components/MenuItemDialog'
+import DietaryBadge from '@/components/DietaryBadge'
 
 interface MenuItemListProps {
   item: MenuItem
@@ -30,6 +31,7 @@ interface MenuItemListProps {
   isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
   basketEnabled?: boolean // New prop to control basket checkbox visibility
+  hideDietaryBadges?: { vegan?: boolean; alcoholFree?: boolean } // Hide badges if category has them
 }
 
 export default function MenuItemList({
@@ -44,7 +46,8 @@ export default function MenuItemList({
   establishmentColor,
   isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false,
-  basketEnabled = true // Default to enabled for backward compatibility
+  basketEnabled = true, // Default to enabled for backward compatibility
+  hideDietaryBadges = { vegan: false, alcoholFree: false }
 }: MenuItemListProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = establishmentColor || '#3a4fff'
@@ -58,7 +61,7 @@ export default function MenuItemList({
   // Local state for dialog editing
   const [localName, setLocalName] = useState(item.name)
   const [localDescription, setLocalDescription] = useState(item.description || '')
-  const [localPrice, setLocalPrice] = useState(item.price?.toFixed(2) ?? '')
+  const [localPrice, setLocalPrice] = useState(item.price_one?.toFixed(2) ?? '')
   const [localAvailable, setLocalAvailable] = useState(!!item.is_available)
   const [instantAvailable, setInstantAvailable] = useState(!!item.is_available)
 
@@ -66,7 +69,7 @@ export default function MenuItemList({
     if (editingItem === item.id) {
       setLocalName(item.name)
       setLocalDescription(item.description || '')
-      setLocalPrice(item.price?.toFixed(2) ?? '')
+      setLocalPrice(item.price_one?.toFixed(2) ?? '')
       setLocalAvailable(!!item.is_available)
       setInstantAvailable(!!item.is_available)
     }
@@ -131,9 +134,14 @@ export default function MenuItemList({
                 />
               </div>
             )}
+            {/* Dietary badges - only show if not hidden by category */}
+            <div className="flex gap-1 mt-1">
+              {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" />}
+              {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" />}
+            </div>
           </div>
           <div className="flex flex-col items-end min-w-[70px] gap-2">
-            <span className="font-bold">{item.price?.toFixed(2)}€</span>
+            <span className="font-bold">{item.price_one?.toFixed(2)}€</span>
             {!isAdmin && basketEnabled && (
               <Checkbox
                 checked={isInCart?.(item.id) || false}

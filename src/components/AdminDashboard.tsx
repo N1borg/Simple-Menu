@@ -19,7 +19,6 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSubscription } from '@/hooks/useSubscription'
 
-
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
 }
@@ -107,6 +106,8 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       is_available: true,
       menu_items: [],
       isLoading: true,
+      alcohol_free: null,
+      vegan: null,
     };
 
     setCategories(cats => {

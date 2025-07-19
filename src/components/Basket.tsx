@@ -27,12 +27,12 @@ export default function Basket({ establishmentColor, isAdminView = false, basket
   }, [totalItems])
 
   const totalPrice = cartItems.reduce((total, cartItem) => 
-    total + (cartItem.item.price || 0) * cartItem.quantity, 0
+            total + (cartItem.item.price_one || 0) * cartItem.quantity, 0
   )
 
   const handleCopyOrder = () => {
     const orderText = cartItems.map(cartItem => 
-      `${cartItem.quantity}x ${cartItem.item.name} - ${((cartItem.item.price || 0) * cartItem.quantity).toFixed(2)}€`
+              `${cartItem.quantity}x ${cartItem.item.name} - ${((cartItem.item.price_one || 0) * cartItem.quantity).toFixed(2)}€`
     ).join('\n')
     
     const fullOrder = `Commande:\n${orderText}\n\nTotal: ${totalPrice.toFixed(2)}€`
@@ -102,7 +102,7 @@ export default function Basket({ establishmentColor, isAdminView = false, basket
               <div key={cartItem.item.id} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
                 <div className="flex-1">
                   <h4 className="font-medium">{cartItem.item.name}</h4>
-                  <p className="text-sm text-gray-600">{cartItem.item.price?.toFixed(2)}€</p>
+                  <p className="text-sm text-gray-600">{cartItem.item.price_one?.toFixed(2)}€</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button

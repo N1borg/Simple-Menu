@@ -17,6 +17,7 @@ import { GripVertical } from "lucide-react"
 import { getEstablishmentColor } from '@/lib/utils'
 import { useCart } from '@/components/hooks/useCart'
 import MenuItemDialog from '@/components/MenuItemDialog'
+import DietaryBadge from '@/components/DietaryBadge'
 
 interface MenuItemCardProps {
   item: MenuItem
@@ -32,6 +33,7 @@ interface MenuItemCardProps {
   isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
   basketEnabled?: boolean // New prop to control basket checkbox visibility
+  hideDietaryBadges?: { vegan?: boolean; alcoholFree?: boolean } // Hide badges if category has them
 }
 
 export default function MenuItemCard({
@@ -46,7 +48,8 @@ export default function MenuItemCard({
   establishmentColor,
   isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false,
-  basketEnabled = true // Default to enabled for backward compatibility
+  basketEnabled = true, // Default to enabled for backward compatibility
+  hideDietaryBadges = { vegan: false, alcoholFree: false }
 }: MenuItemCardProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = getEstablishmentColor(establishmentColor)
@@ -60,7 +63,7 @@ export default function MenuItemCard({
   // Local state for dialog editing
   const [localName, setLocalName] = useState(item.name)
   const [localDescription, setLocalDescription] = useState(item.description || '')
-  const [localPrice, setLocalPrice] = useState(item.price?.toFixed(2) ?? '')
+  const [localPrice, setLocalPrice] = useState(item.price_one?.toFixed(2) ?? '')
   const [localAvailable, setLocalAvailable] = useState(!!item.is_available)
 
   // --- NEW: Track availability for instant UI update on card ---
@@ -72,7 +75,7 @@ export default function MenuItemCard({
     if (editingItem === item.id) {
       setLocalName(item.name)
       setLocalDescription(item.description || '')
-      setLocalPrice(item.price?.toFixed(2) ?? '')
+      setLocalPrice(item.price_one?.toFixed(2) ?? '')
       setLocalAvailable(!!item.is_available)
       setInstantAvailable(!!item.is_available)
     }
@@ -105,7 +108,7 @@ export default function MenuItemCard({
       ...item,
       name: localName,
       description: localDescription,
-      price: parsedPrice,
+      price_one: parsedPrice,
       is_available: localAvailable,
     }
     try {
@@ -183,28 +186,35 @@ export default function MenuItemCard({
           }}
         >
           <div className="flex justify-between items-start">
-            <h3
-              className={`text-base font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative`}
-              title={item.name}
-              style={{ textOverflow: 'clip' }}
-            >
-              <span ref={titleSpanRef} className={!instantAvailable ? 'line-through' : ''} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
-                {item.name}
-                <span
-                  style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '4em',
-                    height: '100%',
-                    background: 'linear-gradient(to right, transparent, #fff 80%)',
-                    pointerEvents: 'none',
-                    display: 'none',
-                  }}
-                  className="fade-title"
-                />
-              </span>
-            </h3>
+            <div className="flex-1 min-w-0">
+              <h3
+                className={`text-base font-semibold max-w-[100%] overflow-hidden whitespace-nowrap relative`}
+                title={item.name}
+                style={{ textOverflow: 'clip' }}
+              >
+                <span ref={titleSpanRef} className={!instantAvailable ? 'line-through' : ''} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                  {item.name}
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      width: '4em',
+                      height: '100%',
+                      background: 'linear-gradient(to right, transparent, #fff 80%)',
+                      pointerEvents: 'none',
+                      display: 'none',
+                    }}
+                    className="fade-title"
+                  />
+                </span>
+              </h3>
+              {/* Dietary badges - only show if not hidden by category */}
+              <div className="flex gap-1 mt-1">
+                {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" />}
+                {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" />}
+              </div>
+            </div>
             {/* Only show drag handle in admin mode */}
             {isAdmin && (
               <button
@@ -255,7 +265,7 @@ export default function MenuItemCard({
             </div>
             <div className={`flex items-center justify-between mt-2${!instantAvailable ? ' line-through' : ''}`}>
               <div className="text-right font-bold">
-                {item.price?.toFixed(2)}€
+                {item.price_one?.toFixed(2)}€
               </div>
               {!isAdmin && basketEnabled && (
                 <Checkbox

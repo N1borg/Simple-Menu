@@ -9,7 +9,11 @@ export async function POST(req: NextRequest) {
   try {
     // Vérifier l'authentification (optionnel)
     const authHeader = req.headers.get('Authorization')
-    const cronSecret = process.env.CRON_SECRET || 'SimpleMenu2025CronSecret'
+    const cronSecret = process.env.CRON_SECRET
+
+    if (!cronSecret) {
+      throw new Error('CRON_SECRET non défini dans les variables d\'environnement')
+    }
     
     if (authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json(

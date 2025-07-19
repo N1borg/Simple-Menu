@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       categories: {
         Row: {
+          alcohol_free: boolean | null
           created_at: string
           display_order: number | null
           display_style: string | null
@@ -23,8 +24,10 @@ export type Database = {
           id: string
           is_available: boolean | null
           name: string
+          vegan: boolean | null
         }
         Insert: {
+          alcohol_free?: boolean | null
           created_at?: string
           display_order?: number | null
           display_style?: string | null
@@ -32,8 +35,10 @@ export type Database = {
           id?: string
           is_available?: boolean | null
           name: string
+          vegan?: boolean | null
         }
         Update: {
+          alcohol_free?: boolean | null
           created_at?: string
           display_order?: number | null
           display_style?: string | null
@@ -41,6 +46,7 @@ export type Database = {
           id?: string
           is_available?: boolean | null
           name?: string
+          vegan?: boolean | null
         }
         Relationships: [
           {
@@ -138,6 +144,7 @@ export type Database = {
       }
       menu_items: {
         Row: {
+          alcohol_free: boolean | null
           category_id: string | null
           created_at: string | null
           description: string | null
@@ -147,9 +154,14 @@ export type Database = {
           image_url: string | null
           is_available: boolean | null
           name: string
-          price: number
+          price_one: number | null
+          price_reduction: string | null
+          price_three: number | null
+          price_two: number | null
+          vegan: boolean | null
         }
         Insert: {
+          alcohol_free?: boolean | null
           category_id?: string | null
           created_at?: string | null
           description?: string | null
@@ -159,9 +171,14 @@ export type Database = {
           image_url?: string | null
           is_available?: boolean | null
           name: string
-          price: number
+          price_one?: number | null
+          price_reduction?: string | null
+          price_three?: number | null
+          price_two?: number | null
+          vegan?: boolean | null
         }
         Update: {
+          alcohol_free?: boolean | null
           category_id?: string | null
           created_at?: string | null
           description?: string | null
@@ -171,7 +188,11 @@ export type Database = {
           image_url?: string | null
           is_available?: boolean | null
           name?: string
-          price?: number
+          price_one?: number | null
+          price_reduction?: string | null
+          price_three?: number | null
+          price_two?: number | null
+          vegan?: boolean | null
         }
         Relationships: [
           {

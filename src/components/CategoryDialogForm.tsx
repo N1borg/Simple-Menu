@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { toast } from "sonner"
 import type { Category } from '@/types/supabase_types'
 import { useState, useEffect } from 'react'
+import DietaryBadge from '@/components/DietaryBadge'
 import {
   Select,
   SelectContent,
@@ -48,12 +49,27 @@ export function CategoryDialogForm({
   const [localName, setLocalName] = useState(category.name)
   const [localDisplayStyle, setLocalDisplayStyle] = useState(category.display_style || 'card')
   const [localAvailable, setLocalAvailable] = useState(category.is_available ?? true)
+  const [localVegan, setLocalVegan] = useState(!!category.vegan)
+  const [localAlcoholFree, setLocalAlcoholFree] = useState(!!category.alcohol_free)
 
   useEffect(() => {
     setLocalName(category.name)
     setLocalDisplayStyle(category.display_style || 'card')
     setLocalAvailable(category.is_available ?? true)
+    setLocalVegan(!!category.vegan)
+    setLocalAlcoholFree(!!category.alcohol_free)
   }, [category])
+
+  // Check if any changes were made
+  const hasChanges = () => {
+    return (
+      localName !== category.name ||
+      localDisplayStyle !== (category.display_style || 'card') ||
+      localAvailable !== (category.is_available ?? true) ||
+      localVegan !== !!category.vegan ||
+      localAlcoholFree !== !!category.alcohol_free
+    )
+  }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,6 +83,8 @@ export function CategoryDialogForm({
       name: localName,
       display_style: localDisplayStyle,
       is_available: localAvailable,
+      vegan: localVegan,
+      alcohol_free: localAlcoholFree,
     }
     await onSubmit(updatedCategory)
   }
@@ -117,6 +135,37 @@ export function CategoryDialogForm({
           Disponible
         </Label>
       </div>
+      
+      <div>
+        <Label>Badges alimentaires</Label>
+        <div className="flex gap-2 mt-2">
+          <button
+            type="button"
+            onClick={() => setLocalVegan(!localVegan)}
+            disabled={isDemo}
+            className="cursor-pointer"
+          >
+            <DietaryBadge 
+              type="vegan" 
+              variant={localVegan ? "active" : "inactive"}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setLocalAlcoholFree(!localAlcoholFree)}
+            disabled={isDemo}
+            className="cursor-pointer"
+          >
+            <DietaryBadge 
+              type="alcohol-free" 
+              variant={localAlcoholFree ? "active" : "inactive"}
+            />
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          Cliquez sur les badges pour les activer/désactiver
+        </p>
+      </div>
 
       <DialogFooter>
         <div className="flex w-full justify-between gap-2">
@@ -150,7 +199,7 @@ export function CategoryDialogForm({
             </DialogClose>
             <Button
               type="submit"
-              disabled={savingCategoryId === category.id || loadingAction !== null || isDemo}
+              disabled={savingCategoryId === category.id || loadingAction !== null || isDemo || !hasChanges()}
               className="cursor-pointer"
             >
               {savingCategoryId === category.id ? (

@@ -16,6 +16,7 @@ import { MenuItemDialogForm } from "@/components/MenuItemDialogForm";
 import { getEstablishmentColor } from '@/lib/utils';
 import { useCart } from '@/components/hooks/useCart';
 import MenuItemDialog from '@/components/MenuItemDialog';
+import DietaryBadge from '@/components/DietaryBadge';
 
 interface MenuItemCompactProps {
   item: MenuItem;
@@ -30,6 +31,7 @@ interface MenuItemCompactProps {
   isAdmin?: boolean; // New prop to control admin features
   isDemo?: boolean;
   basketEnabled?: boolean; // New prop to control basket checkbox visibility
+  hideDietaryBadges?: { vegan?: boolean; alcoholFree?: boolean }; // Hide badges if category has them
 }
 
 export default function MenuItemCompact({
@@ -44,7 +46,8 @@ export default function MenuItemCompact({
   establishmentColor,
   isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false,
-  basketEnabled = true // Default to enabled for backward compatibility
+  basketEnabled = true, // Default to enabled for backward compatibility
+  hideDietaryBadges = { vegan: false, alcoholFree: false }
 }: MenuItemCompactProps) {
   const ringColor = getEstablishmentColor(establishmentColor);
   
@@ -113,34 +116,41 @@ export default function MenuItemCompact({
               e.currentTarget.style.boxShadow = "0 1px 4px 0 rgba(0,0,0,0.07)";
           }}
         >
-          <span
-            ref={titleSpanRef}
-            className="text-base font-semibold max-w-full overflow-hidden whitespace-nowrap relative self-start leading-tight"
-            title={item.name}
-            style={{
-              textOverflow: "clip",
-              display: "inline-block",
-              width: "100%",
-              position: "relative",
-            }}
-          >
-            {item.name}
+                    <div className="flex-1 min-w-0">
             <span
+              ref={titleSpanRef}
+              className="text-base font-semibold max-w-full overflow-hidden whitespace-nowrap relative leading-tight"
+              title={item.name}
               style={{
-                position: "absolute",
-                right: 0,
-                top: 0,
-                width: "2em",
-                height: "100%",
-                background: "linear-gradient(to right, transparent, #fff 80%)",
-                pointerEvents: "none",
-                display: "none",
+                textOverflow: "clip",
+                display: "inline-block",
+                width: "100%",
+                position: "relative",
               }}
-              className="fade-title"
-            />
-          </span>
+            >
+              {item.name}
+              <span
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: 0,
+                  width: "2em",
+                  height: "100%",
+                  background: "linear-gradient(to right, transparent, #fff 80%)",
+                  pointerEvents: "none",
+                  display: "none",
+                }}
+                className="fade-title"
+              />
+            </span>
+            {/* Dietary badges - only show if not hidden by category */}
+            <div className="flex gap-1 mt-1">
+              {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" />}
+              {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" />}
+            </div>
+          </div>
           <div className="w-full flex justify-between items-end mt-auto">
-            <span className="font-bold">{item.price?.toFixed(2)}€</span>
+            <span className="font-bold">{item.price_one?.toFixed(2)}€</span>
             {!isAdmin && basketEnabled && (
               <Checkbox
                 checked={isInCart?.(item.id) || false}

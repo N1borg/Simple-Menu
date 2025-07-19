@@ -107,7 +107,7 @@ export default function MenuItemDialog({
         </div>
       )}
       <div className="mt-4 flex items-center justify-between">
-        <span className="font-bold text-lg">{item.price?.toFixed(2)}€</span>
+        <span className="font-bold text-lg">{item.price_one?.toFixed(2)}€</span>
         {basketEnabled && (
           <Checkbox
             checked={isInCart?.(item.id) || false}

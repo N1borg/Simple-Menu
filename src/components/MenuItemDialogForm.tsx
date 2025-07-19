@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { toast } from "sonner"
 import type { MenuItem } from '@/types/supabase_types'
 import { useState, useEffect } from 'react'
+import DietaryBadge from '@/components/DietaryBadge'
 
 interface MenuItemDialogFormProps {
   item: MenuItem
@@ -31,15 +32,34 @@ export function MenuItemDialogForm({
 }: MenuItemDialogFormProps) {
   const [localName, setLocalName] = useState(item.name)
   const [localDescription, setLocalDescription] = useState(item.description || '')
-  const [localPrice, setLocalPrice] = useState(item.price?.toFixed(2) ?? '')
+  const [localPrice, setLocalPrice] = useState(item.price_one?.toFixed(2) ?? '')
   const [localAvailable, setLocalAvailable] = useState(!!item.is_available)
+  const [localVegan, setLocalVegan] = useState(!!item.vegan)
+  const [localAlcoholFree, setLocalAlcoholFree] = useState(!!item.alcohol_free)
 
   useEffect(() => {
     setLocalName(item.name)
     setLocalDescription(item.description || '')
-    setLocalPrice(item.price?.toFixed(2) ?? '')
+    setLocalPrice(item.price_one?.toFixed(2) ?? '')
     setLocalAvailable(!!item.is_available)
+    setLocalVegan(!!item.vegan)
+    setLocalAlcoholFree(!!item.alcohol_free)
   }, [item])
+
+  // Check if any changes were made
+  const hasChanges = () => {
+    const currentPrice = parseFloat(localPrice.replace(',', '.')) || 0
+    const originalPrice = item.price_one || 0
+
+    return (
+      localName !== item.name ||
+      localDescription !== (item.description || '') ||
+      Math.abs(currentPrice - originalPrice) > 0.01 || // Allow for floating point precision
+      localAvailable !== !!item.is_available ||
+      localVegan !== !!item.vegan ||
+      localAlcoholFree !== !!item.alcohol_free
+    )
+  }
 
   const handleAvailableChange = (val: boolean) => {
     setLocalAvailable(val)
@@ -57,8 +77,10 @@ export function MenuItemDialogForm({
       ...item,
       name: localName,
       description: localDescription,
-      price: parsedPrice,
+      price_one: parsedPrice,
       is_available: localAvailable,
+      vegan: localVegan,
+      alcohol_free: localAlcoholFree,
     }
     await onSubmit(updatedItem)
   }
@@ -109,6 +131,37 @@ export function MenuItemDialogForm({
           Disponible
         </Label>
       </div>
+      
+      <div>
+        <Label>Badges alimentaires</Label>
+        <div className="flex gap-2 mt-2">
+          <button
+            type="button"
+            onClick={() => setLocalVegan(!localVegan)}
+            disabled={isDemo}
+            className="cursor-pointer"
+          >
+            <DietaryBadge 
+              type="vegan" 
+              variant={localVegan ? "active" : "inactive"}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setLocalAlcoholFree(!localAlcoholFree)}
+            disabled={isDemo}
+            className="cursor-pointer"
+          >
+            <DietaryBadge 
+              type="alcohol-free" 
+              variant={localAlcoholFree ? "active" : "inactive"}
+            />
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          Cliquez sur les badges pour les activer/désactiver
+        </p>
+      </div>
       <DialogFooter>
         <div className="flex w-full justify-between gap-2">
           <div>
@@ -141,7 +194,7 @@ export function MenuItemDialogForm({
             </DialogClose>
             <Button
               type="submit"
-              disabled={savingItemId === item.id || loadingAction !== null || isDemo}
+              disabled={savingItemId === item.id || loadingAction !== null || isDemo || !hasChanges()}
               className="cursor-pointer"
             >
               {savingItemId === item.id ? (

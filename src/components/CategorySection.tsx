@@ -23,6 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { CategoryDialogForm } from "./CategoryDialogForm"
+import DietaryBadge from '@/components/DietaryBadge'
 
 interface CategorySectionProps {
   category: Category
@@ -65,6 +66,26 @@ export default function CategorySection({
   setIsAddingItemGlobally,
   basketEnabled = false,
 }: CategorySectionProps) {
+  // Helper function to check dietary attributes for a category
+  const getCategoryDietaryAttributes = (category: Category) => {
+    // First check if the category itself has dietary attributes
+    if (category.vegan || category.alcohol_free) {
+      return { 
+        vegan: !!category.vegan, 
+        alcoholFree: !!category.alcohol_free 
+      }
+    }
+    
+    // If category doesn't have attributes, check if all items have the same attributes
+    const availableItems = category.menu_items?.filter(item => item.is_available) || []
+    if (availableItems.length === 0) return { vegan: false, alcoholFree: false }
+    
+    const allVegan = availableItems.every(item => item.vegan)
+    const allAlcoholFree = availableItems.every(item => item.alcohol_free)
+    
+    return { vegan: allVegan, alcoholFree: allAlcoholFree }
+  }
+
   // Use useMenuItems hook for item actions
   const {
     saveItem,
@@ -120,7 +141,7 @@ export default function CategorySection({
                 is_available: null,
                 name: "",
                 order: null,
-                price: 0,
+                price_one: 0,
                 isLoading: true,
               },
             ],
@@ -217,12 +238,19 @@ export default function CategorySection({
   // Handle category dialog form submission
   const handleCategorySubmit = async (updatedCategory: Category) => {
     try {
+      // Ensure vegan and alcohol_free are properly included
+      const categoryToSave = {
+        ...updatedCategory,
+        vegan: typeof updatedCategory.vegan === 'boolean' ? updatedCategory.vegan : false,
+        alcohol_free: typeof updatedCategory.alcohol_free === 'boolean' ? updatedCategory.alcohol_free : false,
+      }
+      
       // Save to backend first
-      await saveCategory(updatedCategory)
+      await saveCategory(categoryToSave)
       
       // Only update local state after successful save
       const newCategories = categories.map((c) =>
-        c.id === category.id ? updatedCategory : c
+        c.id === category.id ? categoryToSave : c
       )
       setCategories(newCategories)
       setIsCategoryDialogOpen(false)
@@ -253,18 +281,21 @@ export default function CategorySection({
   // Simplified category header render function
   const renderCategoryHeader = () => {
     const categoryUnavailable = category.is_available === false
+    const categoryDietary = getCategoryDietaryAttributes(category)
     
     return (
       <>
-        <h2
-          className={`text-2xl font-bold mr-2 mb-2 sm:mb-0 overflow-hidden whitespace-nowrap ${
-            categoryUnavailable ? 'text-gray-400 line-through' : ''
-          }`}
-          style={{ textOverflow: "clip", maxWidth: "100%" }}
-          title={category.name}
-        >
-          {category.name}
-        </h2>
+        <div className="flex items-center gap-2 mr-2 mb-2 sm:mb-0">
+          <h2
+            className={`text-2xl font-bold overflow-hidden whitespace-nowrap ${
+              categoryUnavailable ? 'text-gray-400 line-through' : ''
+            }`}
+            style={{ textOverflow: "clip", maxWidth: "100%" }}
+            title={category.name}
+          >
+            {category.name}
+          </h2>
+        </div>
         <div className="tutorial-add-item">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -340,6 +371,21 @@ export default function CategorySection({
             <p>Supprimer la catégorie</p>
           </TooltipContent>
         </Tooltip>
+        {/* Category-level dietary badges - moved after buttons */}
+        <div className="flex gap-1">
+          {categoryDietary.vegan && (
+            <DietaryBadge 
+              type="vegan" 
+              variant="active"
+            />
+          )}
+          {categoryDietary.alcoholFree && (
+            <DietaryBadge 
+              type="alcohol-free" 
+              variant="active"
+            />
+          )}
+        </div>
       </>
     );
   }
@@ -378,6 +424,8 @@ export default function CategorySection({
           const item: MenuItem | undefined = category.menu_items.find((i: MenuItem) => i.id === activeId);
           if (!item) return null;
           
+          const categoryDietary = getCategoryDietaryAttributes(category)
+          
           switch (category.display_style) {
             case "list":
               return (
@@ -395,6 +443,10 @@ export default function CategorySection({
                   isDemo={isDemo}
                   isAdmin={isAdmin}
                   basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: categoryDietary.vegan,
+                    alcoholFree: categoryDietary.alcoholFree
+                  }}
                 />
               );
             case "compact":
@@ -412,6 +464,10 @@ export default function CategorySection({
                   isDemo={isDemo}
                   isAdmin={isAdmin}
                   basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: categoryDietary.vegan,
+                    alcoholFree: categoryDietary.alcoholFree
+                  }}
                 />
               );
             case "table":
@@ -434,6 +490,10 @@ export default function CategorySection({
                   isDemo={isDemo}
                   isAdmin={isAdmin}
                   basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: categoryDietary.vegan,
+                    alcoholFree: categoryDietary.alcoholFree
+                  }}
                 />
               );
           }
@@ -469,6 +529,10 @@ export default function CategorySection({
               isDemo={isDemo}
               isAdmin={isAdmin}
               basketEnabled={basketEnabled}
+              hideDietaryBadges={{
+                vegan: getCategoryDietaryAttributes(category).vegan,
+                alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+              }}
             />
           ) : category.display_style === "compact" ? (
             <MenuItemCompact
@@ -485,6 +549,10 @@ export default function CategorySection({
               isDemo={isDemo}
               isAdmin={isAdmin}
               basketEnabled={basketEnabled}
+              hideDietaryBadges={{
+                vegan: getCategoryDietaryAttributes(category).vegan,
+                alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+              }}
             />
           ) : (
             <MenuItemCard
@@ -501,6 +569,10 @@ export default function CategorySection({
               isDemo={isDemo}
               isAdmin={isAdmin}
               basketEnabled={basketEnabled}
+              hideDietaryBadges={{
+                vegan: getCategoryDietaryAttributes(category).vegan,
+                alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+              }}
             />
           )}
               </SortableItem>

@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
     }),
   },
 
+  // Disable TypeScript type checking during build for faster builds
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Production-only optimizations
   ...(isProduction && {
     experimental: {

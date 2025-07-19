@@ -27,14 +27,18 @@ export function useMenuItems(
                   id: `new-${Date.now()}`,
                   name: 'Nouvel élément',
                   description: '',
-                  price: 0,
+                  price_one: 0,
+                  price_two: null,
+                  price_three: null,
+                  price_reduction: null,
                   is_available: true,
                   display_order: cat.menu_items.length,
                   category_id: catId,
                   created_at: new Date().toISOString(),
                   display_style: null,
                   image_url: null,
-                  order: null,
+                  vegan: false,
+                  alcohol_free: false,
                 },
               ],
             }
@@ -50,7 +54,7 @@ export function useMenuItems(
       body: JSON.stringify({
         name: 'Nouvel élément',
         description: '',
-        price: 0,
+        price_one: 0,
         is_available: true,
         display_order: categories.find((cat: Category) => cat.id === catId)?.menu_items.length ?? 0,
         category_id: catId,
@@ -193,10 +197,12 @@ export function useMenuItems(
       originalItem &&
       item.name === originalItem.name &&
       item.description === originalItem.description &&
-      item.price === originalItem.price &&
+      item.price_one === originalItem.price_one &&
       item.display_style === originalItem.display_style &&
       item.display_order === originalItem.display_order &&
-      item.is_available === originalItem.is_available
+      item.is_available === originalItem.is_available &&
+      item.vegan === originalItem.vegan &&
+      item.alcohol_free === originalItem.alcohol_free
     ) {
       setEditingItem(null)
       setSavingItemId(null)

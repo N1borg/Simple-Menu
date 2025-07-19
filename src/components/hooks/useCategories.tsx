@@ -31,6 +31,8 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
         establishment_id: establishment.id,
         is_available: true,
         menu_items: [],
+        vegan: false,
+        alcohol_free: false,
       }
       setCategories([newCat, ...categories])
       toast.info("Modification désactivée (mode démo).")
@@ -50,6 +52,8 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
       is_available: true,
       menu_items: [],
       isLoading: true,
+      vegan: false,
+      alcohol_free: false,
     }
 
     setCategories([tempCat, ...categories])
@@ -148,6 +152,8 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
           display_style: cat.display_style,
           display_order: cat.display_order,
           is_available: cat.is_available,
+          vegan: cat.vegan,
+          alcohol_free: cat.alcohol_free,
         }),
       })
       

@@ -25,11 +25,13 @@ export async function POST(req: NextRequest) {
   // Input validation & sanitization
   const name = sanitizeString(item.name, 100)
   const description = sanitizeString(item.description, 500)
-  const price = sanitizeNumber(item.price, 0, 10000)
+  const price_one = sanitizeNumber(item.price_one, 0, 10000)
   const is_available = !!item.is_available
   const display_order = sanitizeNumber(item.display_order, 0, 1000)
   const category_id = item.category_id
   const display_style = sanitizeString(item.display_style, 20)
+  const vegan = !!item.vegan
+  const alcohol_free = !!item.alcohol_free
   
   if (!name || !category_id) {
     return NextResponse.json({ success: false, error: 'Nom et catégorie requis' }, { status: 400 })
@@ -64,11 +66,13 @@ export async function POST(req: NextRequest) {
     .insert({
       name,
       description,
-      price,
+      price_one,
       is_available,
       display_order,
       category_id,
       display_style,
+      vegan,
+      alcohol_free,
       created_at: new Date().toISOString(),
     })
     .select()

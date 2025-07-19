@@ -54,7 +54,7 @@ create table public.menu_items (
   category_id uuid null,
   name character varying(255) not null,
   description text null,
-  price numeric(10, 2) not null,
+  price_one numeric(10, 2) not null,
   image_url text null,
   is_available boolean null default true,
   display_order integer null default 0,

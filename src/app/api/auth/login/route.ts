@@ -3,6 +3,12 @@ import { getServerSupabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
+const JWT_SECRET = process.env.JWT_SECRET
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET non défini dans les variables d\'environnement')
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -54,7 +60,7 @@ export async function POST(req: NextRequest) {
         slug: establishment.slug,
         email: establishment.email
       },
-      process.env.JWT_SECRET || 'default-secret',
+      JWT_SECRET as string,
       { expiresIn: '7d' }
     )
 

@@ -8,63 +8,52 @@ import MenuItemList from '@/components/MenuItemList'
 import MenuItemCompact from '@/components/MenuItemCompact'
 import Basket from '@/components/Basket'
 import { CartProvider } from '@/components/hooks/useCart'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import DietaryBadge from '@/components/DietaryBadge'
 
-
-function renderCardStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
-  return (
-    <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
-      <h2 className="text-2xl font-bold mb-4">{category.name}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {category.menu_items
-          ?.filter((item: MenuItem) => item.is_available)
-          .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => (
-            <MenuItemCard
-              key={item.id}
-              item={item}
-              category={category}
-              editingItem={editingItem || null}
-              setEditingItem={setEditingItem || (() => {})}
-              saveItem={async () => {}} // No-op for public view
-              savingItemId={null}
-              loadingAction={null}
-              deleteMenuItem={async () => {}} // No-op for public view
-              establishmentColor={establishmentColor}
-              isAdmin={false} // Public view
-              isDemo={false}
-              basketEnabled={basketEnabled}
-            />
-          ))}
-      </div>
-    </section>
-  )
+// Helper function to check dietary attributes for a category
+function getCategoryDietaryAttributes(category: Category) {
+  // First check if the category itself has dietary attributes
+  if (category.vegan || category.alcohol_free) {
+    return { 
+      vegan: !!category.vegan, 
+      alcoholFree: !!category.alcohol_free 
+    }
+  }
+  
+  // If category doesn't have attributes, check if all items have the same attributes
+  const availableItems = category.menu_items?.filter(item => item.is_available) || []
+  if (availableItems.length === 0) return { vegan: false, alcoholFree: false }
+  
+  const allVegan = availableItems.every(item => item.vegan)
+  const allAlcoholFree = availableItems.every(item => item.alcohol_free)
+  
+  return { vegan: allVegan, alcoholFree: allAlcoholFree }
 }
 
-function renderListStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
+function renderCardStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
+  const categoryDietary = getCategoryDietaryAttributes(category)
+  
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
-      <h2 className="text-xl font-bold mb-2">{category.name}</h2>
-      <ul className="space-y-1">
-        {category.menu_items
-          ?.filter((item: MenuItem) => item.is_available)
-          .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => (
-            <li key={item.id} className="list-none">
-              <MenuItemList
+      <div className="flex items-center gap-2 mb-4">
+        <h2 className="text-2xl font-bold">{category.name}</h2>
+        {/* Category-level dietary badges */}
+        <div className="flex gap-1">
+          {categoryDietary.vegan && <DietaryBadge type="vegan" />}
+          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" />}
+        </div>
+      </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {category.menu_items
+            ?.filter((item: MenuItem) => item.is_available)
+            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+            .map(item => (
+              <MenuItemCard
+                key={item.id}
                 item={item}
                 category={category}
                 editingItem={editingItem || null}
                 setEditingItem={setEditingItem || (() => {})}
-                handleItemChange={() => {}} // No-op for public view
                 saveItem={async () => {}} // No-op for public view
                 savingItemId={null}
                 loadingAction={null}
@@ -73,48 +62,118 @@ function renderListStyle(category: Category, establishmentColor?: string, editin
                 isAdmin={false} // Public view
                 isDemo={false}
                 basketEnabled={basketEnabled}
+                hideDietaryBadges={{
+                  vegan: categoryDietary.vegan,
+                  alcoholFree: categoryDietary.alcoholFree
+                }}
               />
-            </li>
-          ))}
+            ))}
+        </div>
+    </section>
+  )
+}
+
+function renderListStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
+  const categoryDietary = getCategoryDietaryAttributes(category)
+  
+  return (
+    <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
+      <div className="flex items-center gap-2 mb-2">
+        <h2 className="text-xl font-bold">{category.name}</h2>
+        {/* Category-level dietary badges */}
+        <div className="flex gap-1">
+          {categoryDietary.vegan && <DietaryBadge type="vegan" />}
+          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" />}
+        </div>
+      </div>
+      <ul className="space-y-1">
+        {category.menu_items
+          ?.filter((item: MenuItem) => item.is_available)
+          .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+                      .map(item => (
+              <li key={item.id} className="list-none">
+                <MenuItemList
+                  item={item}
+                  category={category}
+                  editingItem={editingItem || null}
+                  setEditingItem={setEditingItem || (() => {})}
+                  handleItemChange={() => {}} // No-op for public view
+                  saveItem={async () => {}} // No-op for public view
+                  savingItemId={null}
+                  loadingAction={null}
+                  deleteMenuItem={async () => {}} // No-op for public view
+                  establishmentColor={establishmentColor}
+                  isAdmin={false} // Public view
+                  isDemo={false}
+                  basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: categoryDietary.vegan,
+                    alcoholFree: categoryDietary.alcoholFree
+                  }}
+                />
+              </li>
+            ))}
       </ul>
     </section>
   )
 }
 
 function renderCompactStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
+  const categoryDietary = getCategoryDietaryAttributes(category)
+  
   return (
     <section key={category.id} className="max-w-2xl mx-auto px-2 py-4">
-      <h2 className="text-lg font-semibold mb-4">{category.name}</h2>
+      <div className="flex items-center gap-2 mb-4">
+        <h2 className="text-lg font-semibold">{category.name}</h2>
+        {/* Category-level dietary badges */}
+        <div className="flex gap-1">
+          {categoryDietary.vegan && <DietaryBadge type="vegan" />}
+          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" />}
+        </div>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full">
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map(item => (
-            <MenuItemCompact
-              key={item.id}
-              item={item}
-              category={category}
-              editingItem={editingItem || null}
-              setEditingItem={setEditingItem || (() => {})}
-              saveItem={async () => {}} // No-op for public view
-              savingItemId={null}
-              loadingAction={null}
-              deleteMenuItem={async () => {}} // No-op for public view
-              establishmentColor={establishmentColor}
-              isAdmin={false} // Public view
-              isDemo={false}
-              basketEnabled={basketEnabled}
-            />
-          ))}
+                      .map(item => (
+              <MenuItemCompact
+                key={item.id}
+                item={item}
+                category={category}
+                editingItem={editingItem || null}
+                setEditingItem={setEditingItem || (() => {})}
+                saveItem={async () => {}} // No-op for public view
+                savingItemId={null}
+                loadingAction={null}
+                deleteMenuItem={async () => {}} // No-op for public view
+                establishmentColor={establishmentColor}
+                isAdmin={false} // Public view
+                isDemo={false}
+                basketEnabled={basketEnabled}
+                hideDietaryBadges={{
+                  vegan: categoryDietary.vegan,
+                  alcoholFree: categoryDietary.alcoholFree
+                }}
+              />
+            ))}
       </div>
     </section>
   )
 }
 
 function renderTableStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void) {
+  const categoryDietary = getCategoryDietaryAttributes(category)
+  
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
-      <h2 className="text-xl font-bold mb-2">{category.name}</h2>
+      <div className="flex items-center gap-2 mb-2">
+        <h2 className="text-xl font-bold">{category.name}</h2>
+        {/* Category-level dietary badges */}
+        <div className="flex gap-1">
+          {categoryDietary.vegan && <DietaryBadge type="vegan" />}
+          {categoryDietary.alcoholFree && <DietaryBadge type="alcohol-free" />}
+        </div>
+      </div>
       <table className="w-full text-left border">
         <thead>
           <tr>
@@ -138,7 +197,7 @@ function renderTableStyle(category: Category, establishmentColor?: string, editi
               >
                 <td className="border-b p-2 font-medium">{item.name}</td>
                 <td className="border-b p-2 text-sm text-gray-600">{item.description || '-'}</td>
-                <td className="border-b p-2 text-right font-bold">{item.price?.toFixed(2)}€</td>
+                <td className="border-b p-2 text-right font-bold">{item.price_one?.toFixed(2)}€</td>
               </tr>
             ))}
         </tbody>
