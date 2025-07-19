@@ -9,6 +9,7 @@ import MenuItemCompact from '@/components/MenuItemCompact'
 import Basket from '@/components/Basket'
 import { CartProvider } from '@/components/hooks/useCart'
 import DietaryBadge from '@/components/DietaryBadge'
+import BadgeLegend from '@/components/BadgeLegend'
 
 // Helper function to check dietary attributes for a category
 function getCategoryDietaryAttributes(category: Category) {
@@ -66,6 +67,7 @@ function renderCardStyle(category: Category, establishmentColor?: string, editin
                   vegan: categoryDietary.vegan,
                   alcoholFree: categoryDietary.alcoholFree
                 }}
+                categoryIsAvailable={category.is_available !== false}
               />
             ))}
         </div>
@@ -110,6 +112,7 @@ function renderListStyle(category: Category, establishmentColor?: string, editin
                     vegan: categoryDietary.vegan,
                     alcoholFree: categoryDietary.alcoholFree
                   }}
+                  categoryIsAvailable={category.is_available !== false}
                 />
               </li>
             ))}
@@ -154,6 +157,7 @@ function renderCompactStyle(category: Category, establishmentColor?: string, edi
                   vegan: categoryDietary.vegan,
                   alcoholFree: categoryDietary.alcoholFree
                 }}
+                categoryIsAvailable={category.is_available !== false}
               />
             ))}
       </div>
@@ -254,6 +258,12 @@ export default function MenuDisplay({ establishment, isAdminView = false, basket
               return renderCategoryByStyle(sortedCategory, establishmentColor, editingItem, setEditingItem, basketEnabled);
             })}
         </div>
+
+        {/* Badge Legend */}
+        <BadgeLegend 
+          categories={establishment.categories || []} 
+          className="mt-8" 
+        />
 
         {/* Shopping basket with style tester */}
         <Basket 

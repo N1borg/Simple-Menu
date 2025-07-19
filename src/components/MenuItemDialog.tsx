@@ -23,12 +23,13 @@ interface MenuItemDialogProps {
   saveItem: (item: MenuItem) => Promise<void>;
   deleteMenuItem: (catId: string, itemId: string) => Promise<void>;
   setEditingItem: (id: string | null) => void;
-  setInstantAvailable?: (val: boolean) => void;
+  setInstantAvailable: (available: boolean) => void;
   basketEnabled?: boolean;
-  isInCart?: (id: string) => boolean;
+  isInCart?: (itemId: string) => boolean;
   addToCart?: (item: MenuItem) => void;
-  removeFromCart?: (id: string) => void;
+  removeFromCart?: (itemId: string) => void;
   establishmentColor?: string;
+  categoryIsAvailable?: boolean;
 }
 
 export default function MenuItemDialog({
@@ -47,6 +48,7 @@ export default function MenuItemDialog({
   addToCart,
   removeFromCart,
   establishmentColor,
+  categoryIsAvailable,
 }: MenuItemDialogProps) {
   if (isAdmin) {
     return (
@@ -110,8 +112,22 @@ export default function MenuItemDialog({
       <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
         <span className="font-bold text-lg">{item.price_one?.toFixed(2)}€</span>
         <div className="flex items-center gap-2">
-          {item.vegan && <DietaryBadge type="vegan" variant="active" />}
-          {item.alcohol_free && <DietaryBadge type="alcohol-free" variant="active" />}
+          {item.vegan && (
+            (!item.is_available || !categoryIsAvailable) && !isAdmin ? null : (
+              <DietaryBadge 
+                type="vegan" 
+                variant={!item.is_available || !categoryIsAvailable ? "ghost" : "active"} 
+              />
+            )
+          )}
+          {item.alcohol_free && (
+            (!item.is_available || !categoryIsAvailable) && !isAdmin ? null : (
+              <DietaryBadge 
+                type="alcohol-free" 
+                variant={!item.is_available || !categoryIsAvailable ? "ghost" : "active"} 
+              />
+            )
+          )}
           {basketEnabled && (
             <Checkbox
               checked={isInCart?.(item.id) || false}

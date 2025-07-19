@@ -34,6 +34,7 @@ interface MenuItemCardProps {
   isDemo?: boolean
   basketEnabled?: boolean // New prop to control basket checkbox visibility
   hideDietaryBadges?: { vegan?: boolean; alcoholFree?: boolean } // Hide badges if category has them
+  categoryIsAvailable?: boolean // New prop to check if category is available
 }
 
 export default function MenuItemCard({
@@ -49,7 +50,8 @@ export default function MenuItemCard({
   isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false,
   basketEnabled = true, // Default to enabled for backward compatibility
-  hideDietaryBadges = { vegan: false, alcoholFree: false }
+  hideDietaryBadges = { vegan: false, alcoholFree: false },
+  categoryIsAvailable = true // Default to available for backward compatibility
 }: MenuItemCardProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = getEstablishmentColor(establishmentColor)
@@ -210,10 +212,28 @@ export default function MenuItemCard({
                     />
                   </span>
                 </h3>
-                {/* Dietary badges - only show if not hidden by category */}
+                {/* Dietary badges - always show, but in ghost mode under certain conditions */}
                 <div className="flex gap-1 flex-shrink-0">
-                  {item.vegan && !hideDietaryBadges.vegan && <DietaryBadge type="vegan" size="sm" showText={false} />}
-                  {item.alcohol_free && !hideDietaryBadges.alcoholFree && <DietaryBadge type="alcohol-free" size="sm" showText={false} />}
+                  {item.vegan && (
+                    (!instantAvailable || !categoryIsAvailable || hideDietaryBadges.vegan) && !isAdmin ? null : (
+                      <DietaryBadge 
+                        type="vegan" 
+                        size="sm" 
+                        showText={false} 
+                        variant={!instantAvailable || !categoryIsAvailable || hideDietaryBadges.vegan ? "ghost" : "active"}
+                      />
+                    )
+                  )}
+                  {item.alcohol_free && (
+                    (!instantAvailable || !categoryIsAvailable || hideDietaryBadges.alcoholFree) && !isAdmin ? null : (
+                      <DietaryBadge 
+                        type="alcohol-free" 
+                        size="sm" 
+                        showText={false} 
+                        variant={!instantAvailable || !categoryIsAvailable || hideDietaryBadges.alcoholFree ? "ghost" : "active"}
+                      />
+                    )
+                  )}
                 </div>
               </div>
             </div>
@@ -305,6 +325,7 @@ export default function MenuItemCard({
           addToCart={addToCart}
           removeFromCart={removeFromCart}
           establishmentColor={establishmentColor}
+          categoryIsAvailable={categoryIsAvailable}
         />
       </div>
     </Dialog>

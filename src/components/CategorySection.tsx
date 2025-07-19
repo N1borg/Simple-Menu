@@ -68,22 +68,20 @@ export default function CategorySection({
 }: CategorySectionProps) {
   // Helper function to check dietary attributes for a category
   const getCategoryDietaryAttributes = (category: Category) => {
-    // First check if the category itself has dietary attributes
-    if (category.vegan || category.alcohol_free) {
-      return { 
-        vegan: !!category.vegan, 
-        alcoholFree: !!category.alcohol_free 
-      }
-    }
+    // Check if attributes are explicitly set on the category
+    const categoryVegan = !!category.vegan
+    const categoryAlcoholFree = !!category.alcohol_free
     
-    // If category doesn't have attributes, check if all items have the same attributes
+    // Check if all available items have the same attributes (for automatic badges)
     const availableItems = category.menu_items?.filter(item => item.is_available) || []
-    if (availableItems.length === 0) return { vegan: false, alcoholFree: false }
+    const allVegan = availableItems.length > 0 && availableItems.every(item => item.vegan)
+    const allAlcoholFree = availableItems.length > 0 && availableItems.every(item => item.alcohol_free)
     
-    const allVegan = availableItems.every(item => item.vegan)
-    const allAlcoholFree = availableItems.every(item => item.alcohol_free)
-    
-    return { vegan: allVegan, alcoholFree: allAlcoholFree }
+    // Return true if explicitly set OR if all available items have it
+    return { 
+      vegan: categoryVegan || allVegan, 
+      alcoholFree: categoryAlcoholFree || allAlcoholFree 
+    }
   }
 
   // Use useMenuItems hook for item actions
@@ -449,6 +447,7 @@ export default function CategorySection({
                     vegan: categoryDietary.vegan,
                     alcoholFree: categoryDietary.alcoholFree
                   }}
+                  categoryIsAvailable={category.is_available !== false}
                 />
               );
             case "compact":
@@ -470,6 +469,7 @@ export default function CategorySection({
                     vegan: categoryDietary.vegan,
                     alcoholFree: categoryDietary.alcoholFree
                   }}
+                  categoryIsAvailable={category.is_available !== false}
                 />
               );
             case "table":
@@ -496,6 +496,7 @@ export default function CategorySection({
                     vegan: categoryDietary.vegan,
                     alcoholFree: categoryDietary.alcoholFree
                   }}
+                  categoryIsAvailable={category.is_available !== false}
                 />
               );
           }
@@ -535,6 +536,7 @@ export default function CategorySection({
                 vegan: getCategoryDietaryAttributes(category).vegan,
                 alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
               }}
+              categoryIsAvailable={category.is_available !== false}
             />
           ) : category.display_style === "compact" ? (
             <MenuItemCompact
@@ -542,7 +544,6 @@ export default function CategorySection({
               category={category}
               editingItem={editingItem}
               setEditingItem={setEditingItem}
-              // handleItemChange={handleItemChange}
               saveItem={handleSaveItem}
               savingItemId={savingItemId}
               loadingAction={loadingAction}
@@ -555,7 +556,10 @@ export default function CategorySection({
                 vegan: getCategoryDietaryAttributes(category).vegan,
                 alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
               }}
+              categoryIsAvailable={category.is_available !== false}
             />
+          ) : category.display_style === "table" ? (
+            <MenuItemSkeleton displayStyle="table" />
           ) : (
             <MenuItemCard
               item={item}
@@ -575,6 +579,7 @@ export default function CategorySection({
                 vegan: getCategoryDietaryAttributes(category).vegan,
                 alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
               }}
+              categoryIsAvailable={category.is_available !== false}
             />
           )}
               </SortableItem>

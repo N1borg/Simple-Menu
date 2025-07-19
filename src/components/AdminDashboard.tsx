@@ -18,6 +18,7 @@ import { Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSubscription } from '@/hooks/useSubscription'
+import BadgeLegend from '@/components/BadgeLegend'
 
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
@@ -292,6 +293,9 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         </div>
       </DndKitWrapper>
       
+      {/* Badge Legend */}
+      <BadgeLegend categories={categories} className="mt-8" />
+      
       {/* Show bottom button only when there are categories */}
       {categories.length > 0 && (
         <AddCategoryButton
@@ -330,6 +334,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           />
         )}
       </div>
+
     </div>
   )
 }
