@@ -124,6 +124,7 @@ export default function MenuItemDialog({
               }}
               accentColor={establishmentColor || '#3a4fff'}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="h-6 w-6"
             />
           )}
         </div>

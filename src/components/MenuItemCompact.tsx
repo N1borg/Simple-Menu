@@ -164,6 +164,7 @@ export default function MenuItemCompact({
                 }}
                 accentColor={establishmentColor}
                 onClick={(e) => e.stopPropagation()}
+                className="h-6 w-6"
               />
             )}
           </div>
