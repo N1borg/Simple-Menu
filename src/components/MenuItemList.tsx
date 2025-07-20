@@ -200,6 +200,10 @@ export default function MenuItemList({
           removeFromCart={removeFromCart}
           establishmentColor={establishmentColor}
           categoryIsAvailable={categoryIsAvailable}
+          categoryDietary={{
+            vegan: hideDietaryBadges.vegan || false,
+            alcoholFree: hideDietaryBadges.alcoholFree || false
+          }}
         />
       </div>
     </Dialog>

@@ -13,22 +13,14 @@ import BadgeLegend from '@/components/BadgeLegend'
 
 // Helper function to check dietary attributes for a category
 function getCategoryDietaryAttributes(category: Category) {
-  // First check if the category itself has dietary attributes
-  if (category.vegan || category.alcohol_free) {
-    return { 
-      vegan: !!category.vegan, 
-      alcoholFree: !!category.alcohol_free 
-    }
-  }
-  
-  // If category doesn't have attributes, check if all items have the same attributes
+  // Show badge if the category itself is marked OR all available items have the attribute
   const availableItems = category.menu_items?.filter(item => item.is_available) || []
-  if (availableItems.length === 0) return { vegan: false, alcoholFree: false }
-  
-  const allVegan = availableItems.every(item => item.vegan)
-  const allAlcoholFree = availableItems.every(item => item.alcohol_free)
-  
-  return { vegan: allVegan, alcoholFree: allAlcoholFree }
+  const allVegan = availableItems.length > 0 && availableItems.every(item => item.vegan)
+  const allAlcoholFree = availableItems.length > 0 && availableItems.every(item => item.alcohol_free)
+  return {
+    vegan: !!category.vegan || allVegan,
+    alcoholFree: !!category.alcohol_free || allAlcoholFree
+  }
 }
 
 function renderCardStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
@@ -210,7 +202,7 @@ function renderTableStyle(category: Category, establishmentColor?: string, editi
   )
 }
 
-function renderCategoryByStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
+function renderCategoryByStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean, categoryDietary?: { vegan: boolean; alcoholFree: boolean }) {
   switch (category.display_style) {
     case 'list':
       return renderListStyle(category, establishmentColor, editingItem, setEditingItem, basketEnabled)
@@ -255,15 +247,13 @@ export default function MenuDisplay({ establishment, isAdminView = false, basket
                 ...category,
                 menu_items: category.menu_items?.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) || []
               };
-              return renderCategoryByStyle(sortedCategory, establishmentColor, editingItem, setEditingItem, basketEnabled);
+              const categoryDietary = getCategoryDietaryAttributes(sortedCategory);
+              return renderCategoryByStyle(sortedCategory, establishmentColor, editingItem, setEditingItem, basketEnabled, categoryDietary);
             })}
         </div>
 
         {/* Badge Legend */}
-        <BadgeLegend 
-          categories={establishment.categories || []} 
-          className="mt-8" 
-        />
+        <BadgeLegend categories={establishment.categories || []} />
 
         {/* Shopping basket with style tester */}
         <Basket 

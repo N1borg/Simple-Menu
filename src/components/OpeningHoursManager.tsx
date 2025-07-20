@@ -22,12 +22,12 @@ interface OpeningHoursManagerProps {
   slug: string
   children?: React.ReactNode
   primaryColor?: string
+  isDemo?: boolean
 }
 
 const defaultHours = defaultWeekSchedule
 
-export function OpeningHoursManager({ establishmentId, slug, children, primaryColor }: OpeningHoursManagerProps) {
-  const isDemo = slug === 'demo'
+export function OpeningHoursManager({ establishmentId, slug, children, primaryColor, isDemo = false }: OpeningHoursManagerProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [openingHours, setOpeningHours] = useState<DaySchedule[]>(defaultHours)
@@ -38,25 +38,19 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
     return JSON.stringify(convertToLegacyHours(openingHours)) !== JSON.stringify(convertToLegacyHours(initialOpeningHours))
   }
 
-  // Load establishment data on mount for non-demo
+  // Load establishment data on mount for all modes
   useEffect(() => {
-    if (!isDemo) {
-      loadOpeningHours()
-    }
-  }, [isDemo])
+    loadOpeningHours()
+  }, [])
 
   const loadOpeningHours = async () => {
-    if (isDemo) {
-      return // Don't load data in demo mode
-    }
-    
+    // Always load data, even in demo mode
     setIsLoading(true)
     try {
       const response = await fetch(`/api/admin/establishment-info?slug=${slug}`)
       if (response.ok) {
         const data = await response.json()
         const loadedHours = data.opening_hours ? convertLegacyHours(data.opening_hours) : defaultHours
-        
         setOpeningHours(loadedHours)
         setInitialOpeningHours(loadedHours)
       } else {
@@ -145,21 +139,13 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
           <div className="flex items-center justify-center p-8">
             <Loader2 className="w-6 h-6 animate-spin" />
           </div>
-        ) : isDemo ? (
-          <div className="flex items-center justify-center p-8 text-center">
-            <div className="space-y-2">
-              <p className="text-lg font-medium text-gray-700">Mode Démo</p>
-              <p className="text-sm text-gray-500">
-                La modification des horaires est désactivée en mode démo.
-              </p>
-            </div>
-          </div>
         ) : (
           <div className="space-y-4">
             <OpeningHoursInput
               schedule={openingHours}
               onChange={handleHoursChange}
               primaryColor={primaryColor}
+              disabled={isDemo}
             />
           </div>
         )}

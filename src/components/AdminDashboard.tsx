@@ -293,48 +293,30 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         </div>
       </DndKitWrapper>
       
-      {/* Badge Legend */}
-      <BadgeLegend categories={categories} className="mt-8" />
-      
       {/* Show bottom button only when there are categories */}
       {categories.length > 0 && (
         <AddCategoryButton
-          onClick={() => addCategory('bottom')}
-          disabled={loadingAction !== null}
-          loading={loadingAction?.startsWith('adding-category')}
-          className="flex justify-center mt-8"
-          subscription={subscription}
-          isAddingItemGlobally={isAddingItemGlobally}
+        onClick={() => addCategory('bottom')}
+        disabled={loadingAction !== null}
+        loading={loadingAction?.startsWith('adding-category')}
+        className="flex justify-center mb-8"
+        subscription={subscription}
+        isAddingItemGlobally={isAddingItemGlobally}
         />
       )}
       
+      {/* Badge Legend */}
+      <BadgeLegend categories={categories} />
+      
       {/* Edit Contact Information Button - Always visible */}
-      <div className="flex justify-center mt-6 mb-6">
-        {isDemo ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2"
-                disabled={true}
-              >
-                <Settings className="w-4 h-4" />
-                Modifier les informations de contact
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Modification désactivée (mode démo)</p>
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <EstablishmentControls 
-            establishmentId={establishment.id}
-            slug={establishment.slug}
-            primaryColor={establishment.primary_color ?? undefined}
-          />
-        )}
+      <div className="flex justify-center mt-6">
+        <EstablishmentControls 
+          establishmentId={establishment.id}
+          slug={establishment.slug}
+          primaryColor={establishment.primary_color ?? undefined}
+          isDemo={isDemo}
+        />
       </div>
-
     </div>
   )
 }

@@ -23,12 +23,12 @@ interface EstablishmentInfoManagerProps {
   slug: string
   children?: React.ReactNode
   primaryColor?: string
+  isDemo?: boolean
 }
 
 const defaultHours = [] // No longer needed, kept for compatibility
 
-export function EstablishmentInfoManager({ establishmentId, slug, children, primaryColor }: EstablishmentInfoManagerProps) {
-  const isDemo = slug === 'demo'
+export function EstablishmentInfoManager({ establishmentId, slug, children, primaryColor, isDemo = false }: EstablishmentInfoManagerProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
@@ -197,7 +197,7 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
               className="w-4 h-4" 
               style={primaryColor ? { color: primaryColor } : {}}
             />
-            Contact & adresse
+            Contact et adresse
           </Button>
         )}
       </DialogTrigger>
@@ -218,15 +218,6 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
           <div className="flex items-center justify-center p-8">
             <Loader2 className="w-6 h-6 animate-spin" />
           </div>
-        ) : isDemo ? (
-          <div className="flex items-center justify-center p-8 text-center">
-            <div className="space-y-2">
-              <p className="text-lg font-medium text-gray-700">Mode Démo</p>
-              <p className="text-sm text-gray-500">
-                La modification des informations est désactivée en mode démo.
-              </p>
-            </div>
-          </div>
         ) : (
           <div className="space-y-6">
             <ContactInfoFields
@@ -234,6 +225,7 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
               onInputChange={handleInputChange}
               compact={true}
               primaryColor={primaryColor}
+              disabled={isDemo}
             />
           </div>
         )}

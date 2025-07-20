@@ -4,16 +4,24 @@ import { getServerSupabase } from '@/lib/supabase'
 
 export async function GET(req: NextRequest) {
   try {
-    const adminAuth = await requireSecureAdminAuth(req)
-    if ('status' in adminAuth) {
-      return adminAuth
-    }
+    const { searchParams } = new URL(req.url)
+    const querySlug = searchParams.get('slug')
 
-    const { slug } = adminAuth
+    let slug: string | null = null
 
-    // Block demo requests
-    if (slug === 'demo') {
-      return NextResponse.json({ error: 'Accès non autorisé en mode démo' }, { status: 403 })
+    if (querySlug) {
+      slug = querySlug
+    } else {
+      // fallback to admin auth
+      const adminAuth = await requireSecureAdminAuth(req)
+      if ('status' in adminAuth) {
+        return adminAuth
+      }
+      slug = adminAuth.slug
+      // Block demo requests for admin dashboard only
+      if (slug === 'demo') {
+        return NextResponse.json({ error: 'Accès non autorisé en mode démo' }, { status: 403 })
+      }
     }
 
     const supabase = await getServerSupabase()

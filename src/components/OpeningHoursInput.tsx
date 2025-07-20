@@ -20,6 +20,7 @@ interface OpeningHoursInputProps {
   onChange: (schedule: DaySchedule[]) => void
   className?: string
   primaryColor?: string
+  disabled?: boolean
 }
 
 const TimeSlotInput: React.FC<{
@@ -110,7 +111,8 @@ const DayScheduleInput: React.FC<{
   daySchedule: DaySchedule
   onChange: (daySchedule: DaySchedule) => void
   primaryColor?: string
-}> = ({ daySchedule, onChange, primaryColor }) => {
+  disabled?: boolean
+}> = ({ daySchedule, onChange, primaryColor, disabled = false }) => {
   const updateSchedule = (updates: Partial<DaySchedule>) => {
     onChange({ ...daySchedule, ...updates })
   }
@@ -140,6 +142,7 @@ const DayScheduleInput: React.FC<{
                 backgroundColor: primaryColor,
                 borderColor: primaryColor 
               } : {}}
+              disabled={disabled}
             />
             <span 
               className="text-xs"
@@ -163,6 +166,7 @@ const DayScheduleInput: React.FC<{
               borderColor: primaryColor, 
               color: primaryColor 
             } : {}}
+            disabled={disabled}
           >
             {daySchedule.hasSecondPeriod ? (
               <>
@@ -188,6 +192,7 @@ const DayScheduleInput: React.FC<{
             onChange={(firstPeriod) => updateSchedule({ firstPeriod })}
             label="1ère période"
             primaryColor={primaryColor}
+            disabled={disabled}
           />
           
           {daySchedule.hasSecondPeriod && (
@@ -196,6 +201,7 @@ const DayScheduleInput: React.FC<{
               onChange={(secondPeriod) => updateSchedule({ secondPeriod })}
               label="2ème période"
               primaryColor={primaryColor}
+              disabled={disabled}
             />
           )}
         </div>
@@ -208,7 +214,8 @@ export const OpeningHoursInput: React.FC<OpeningHoursInputProps> = ({
   schedule,
   onChange,
   className = "",
-  primaryColor
+  primaryColor,
+  disabled = false
 }) => {
   const updateDay = (index: number, daySchedule: DaySchedule) => {
     const newSchedule = [...schedule]
@@ -236,6 +243,7 @@ export const OpeningHoursInput: React.FC<OpeningHoursInputProps> = ({
             daySchedule={daySchedule}
             onChange={(newDaySchedule) => updateDay(index, newDaySchedule)}
             primaryColor={primaryColor}
+            disabled={disabled}
           />
         ))}
       </div>

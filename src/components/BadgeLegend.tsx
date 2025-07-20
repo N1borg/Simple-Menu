@@ -53,22 +53,19 @@ export default function BadgeLegend({ categories, className = '' }: BadgeLegendP
   }
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      <h3 className="text-sm font-medium text-gray-600 text-center">Légende</h3>
-      <div className="space-y-1">
-        {usedBadges.has('vegan') && (
-          <div className="flex items-center gap-2">
-            <DietaryBadge type="vegan" size="sm" showText={true} />
-            <span className="text-xs text-gray-500">Plat sans ingrédients d'origine animale</span>
-          </div>
-        )}
-        {usedBadges.has('alcohol-free') && (
-          <div className="flex items-center gap-2">
-            <DietaryBadge type="alcohol-free" size="sm" showText={true} />
-            <span className="text-xs text-gray-500">Boisson sans alcool</span>
-          </div>
-        )}
-      </div>
+    <div className={`space-y-1 ${className}`}>
+      {usedBadges.has('vegan') && (
+        <div className="flex items-center gap-2">
+          <DietaryBadge type="vegan" size="sm" showText={true} />
+          <span className="text-xs text-gray-500">Plat sans ingrédients d'origine animale</span>
+        </div>
+      )}
+      {usedBadges.has('alcohol-free') && (
+        <div className="flex items-center gap-2">
+          <DietaryBadge type="alcohol-free" size="sm" showText={true} />
+          <span className="text-xs text-gray-500">Boisson sans alcool</span>
+        </div>
+      )}
     </div>
   )
-} 
+}

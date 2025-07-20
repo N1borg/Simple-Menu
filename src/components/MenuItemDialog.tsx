@@ -30,6 +30,7 @@ interface MenuItemDialogProps {
   removeFromCart?: (itemId: string) => void;
   establishmentColor?: string;
   categoryIsAvailable?: boolean;
+  categoryDietary?: { vegan: boolean; alcoholFree: boolean }; // NEW
 }
 
 export default function MenuItemDialog({
@@ -49,6 +50,7 @@ export default function MenuItemDialog({
   removeFromCart,
   establishmentColor,
   categoryIsAvailable,
+  categoryDietary = { vegan: false, alcoholFree: false }, // NEW
 }: MenuItemDialogProps) {
   if (isAdmin) {
     return (
@@ -112,7 +114,15 @@ export default function MenuItemDialog({
       <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
         <span className="font-bold text-lg">{item.price_one?.toFixed(2)}€</span>
         <div className="flex items-center gap-2">
-          {item.vegan && (
+          {/* Show category-level badges (with text) if present */}
+          {categoryDietary.vegan && (
+            <DietaryBadge type="vegan" size="sm" showText={true} />
+          )}
+          {categoryDietary.alcoholFree && (
+            <DietaryBadge type="alcohol-free" size="sm" showText={true} />
+          )}
+          {/* Only show vegan badge if item is vegan and category is NOT all vegan */}
+          {item.vegan && !categoryDietary.vegan && (
             (!item.is_available || !categoryIsAvailable) && !isAdmin ? null : (
               <DietaryBadge 
                 type="vegan" 
@@ -120,7 +130,8 @@ export default function MenuItemDialog({
               />
             )
           )}
-          {item.alcohol_free && (
+          {/* Only show alcohol-free badge if item is alcohol-free and category is NOT all alcohol-free */}
+          {item.alcohol_free && !categoryDietary.alcoholFree && (
             (!item.is_available || !categoryIsAvailable) && !isAdmin ? null : (
               <DietaryBadge 
                 type="alcohol-free" 
