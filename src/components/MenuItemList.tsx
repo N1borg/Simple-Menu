@@ -96,7 +96,7 @@ export default function MenuItemList({
       <div className="menu-item-card relative group">
         {/* Menu Item Content - improved list style */}
         <div
-          className={`flex items-center gap-4 p-4 rounded-xl shadow-md border bg-white group-hover:ring-2 transition cursor-pointer min-h-[5.1em] mb-3 ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through border border-gray-200' : ''}`}
+          className={`flex items-center gap-4 p-4 rounded-xl shadow-md border bg-white group-hover:ring-2 transition cursor-pointer min-h-21 mb-3 ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through border border-gray-200' : ''}`}
           style={{
             boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
             borderColor: 'transparent',
@@ -115,6 +115,18 @@ export default function MenuItemList({
             if (editingItem !== item.id) e.currentTarget.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)'
           }}
         >
+          {/* Item image preview */}
+          {item.image_url && (
+            <div className="flex-shrink-0 w-12 h-12 mr-3 flex items-center justify-center">
+              <Image
+                src={item.image_url}
+                alt={item.name}
+                className="object-cover rounded-md border border-gray-200 w-12 h-12"
+                width={48}
+                height={48}
+              />
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center">
               <span className="text-base font-semibold max-w-[100%] truncate flex-1" title={item.name}>{item.name}</span>

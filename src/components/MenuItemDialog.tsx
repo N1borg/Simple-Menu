@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { MenuItemDialogForm } from "@/components/MenuItemDialogForm";
 import { toast } from "sonner";
 import DietaryBadge from "@/components/DietaryBadge";
+import ItemImageUpload from '@/components/ItemImageUpload';
 
 interface MenuItemDialogProps {
   item: MenuItem;
@@ -33,7 +34,7 @@ interface MenuItemDialogProps {
   categoryDietary?: { vegan: boolean; alcoholFree: boolean }; // NEW
 }
 
-export default function MenuItemDialog({
+export default function <MenuItemDialog>({
   item,
   category,
   isAdmin,
@@ -61,6 +62,16 @@ export default function MenuItemDialog({
             Modifiez les informations de l'élément puis cliquez sur enregistrer.
           </DialogDescription>
         </DialogHeader>
+        {/* Item image upload for admin */}
+        <ItemImageUpload
+          item={item}
+          isDemo={isDemo}
+          onImageUploaded={(url) => {
+            // Update the image_url in the form (simulate a change)
+            // This will require a refetch or state update in parent, but for now, just update the item prop if possible
+            item.image_url = url;
+          }}
+        />
         <MenuItemDialogForm
           item={item}
           isDemo={isDemo}
