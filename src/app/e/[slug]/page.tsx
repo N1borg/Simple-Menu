@@ -51,6 +51,8 @@ import AdminBanner from '@/components/AdminBanner'
 import MenuFooter from '@/components/MenuFooter'
 import { redirect } from 'next/navigation'
 import { EstablishmentThemeProvider } from '@/contexts/EstablishmentThemeContext'
+import Basket from '@/components/Basket'
+import { CartProvider } from '@/components/hooks/useCart'
 
 export const dynamic = 'force-dynamic'
 
@@ -113,13 +115,20 @@ export default async function MenuPage({ params }: PageProps) {
     <EstablishmentThemeProvider primaryColor={establishment.primary_color}>
       <div className="min-h-screen flex flex-col">
         {(isAuthenticated || slug === 'demo') && <AdminBanner slug={slug} color={establishment.primary_color ?? undefined} />}
-        <main className="flex-grow">
-          <MenuDisplay 
-            establishment={establishment} 
+        <CartProvider>
+          <Basket 
+            establishmentColor={establishment.primary_color ?? undefined}
             isAdminView={isAuthenticated || slug === 'demo'}
             basketEnabled={establishment.basket_enabled ?? true}
           />
-        </main>
+          <main className="flex-grow">
+            <MenuDisplay 
+              establishment={establishment} 
+              isAdminView={isAuthenticated || slug === 'demo'}
+              basketEnabled={establishment.basket_enabled ?? true}
+            />
+          </main>
+        </CartProvider>
         <MenuFooter 
           color={establishment.primary_color ?? undefined} 
           establishmentInfo={{
