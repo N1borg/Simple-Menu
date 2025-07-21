@@ -121,7 +121,7 @@ export default function MenuItemList({
               <Image
                 src={item.image_url}
                 alt={item.name}
-                className="object-cover rounded-md border border-gray-200 w-12 h-12"
+                className={`object-cover rounded-md border border-gray-200 w-12 h-12 transition duration-200 ${!instantAvailable ? 'grayscale opacity-60' : ''}`}
                 width={48}
                 height={48}
               />

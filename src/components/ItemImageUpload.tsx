@@ -165,77 +165,98 @@ export default function ItemImageUpload({
       {/* Banner/rectangle image or upload area */}
       {displayedImageUrl ? (
         <div className="relative w-full mb-4">
-          <Image
-            src={displayedImageUrl}
-            alt="Image de l'article"
-            width={600}
-            height={180}
-            className="w-full h-36 object-cover bg-white rounded-lg border border-gray-200"
-            priority
-            quality={90}
-            sizes="100vw"
-          />
-          <div className="absolute top-2 right-2 flex gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="opacity-70 hover:opacity-100 cursor-pointer"
-                  title="Modifier"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Modifier l'image</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <ConfirmDeleteDialog
-                    onConfirm={async () => {
-                      try {
+          <div className="relative">
+            <Image
+              src={displayedImageUrl}
+              alt="Image de l'article"
+              width={600}
+              height={180}
+              className={`w-full h-36 object-cover bg-white rounded-lg border border-gray-200 transition-opacity duration-200 ${isUploading ? 'opacity-50 grayscale pointer-events-none' : ''}`}
+              priority
+              quality={90}
+              sizes="100vw"
+            />
+            {/* Overlay loader when uploading */}
+            {isUploading && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <Loader2 className="h-10 w-10 animate-spin text-gray-400" />
+              </div>
+            )}
+            <div className="absolute top-2 right-2 flex gap-2 z-20">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="opacity-70 hover:opacity-100 cursor-pointer"
+                    title="Modifier"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                    ) : (
+                      <Pencil className="w-4 h-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Modifier l'image</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <ConfirmDeleteDialog
+                      onConfirm={async () => {
                         if (isDemo) {
                           toast.info('Modification désactivée (mode démo).');
                           return;
                         }
-                        const res = await fetch('/api/admin/menu-item/delete-image', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ item_id: item.id }),
-                        });
-                        const data = await res.json();
-                        if (res.ok && data.success) {
-                          // Also update the item's image_url in Supabase to null
-                          await fetch('/api/admin/menu-item/update-image', {
+                        const previousImageUrl = displayedImageUrl;
+                        setDisplayedImageUrl(undefined); // Immediately remove image from UI
+                        let apiSuccess = false;
+                        try {
+                          const res = await fetch('/api/admin/menu-item/delete-image', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: item.id, image_url: null }),
+                            body: JSON.stringify({ item_id: item.id }),
                           });
-                          setDisplayedImageUrl(undefined);
-                          onImageUploaded(null);
-                          toast.success("Image supprimée !");
-                        } else {
-                          setError({ message: data.error || "Erreur lors de la suppression de l'image", type: 'server' });
-                          toast.error(data.error || "Erreur lors de la suppression de l'image");
+                          const data = await res.json();
+                          if (res.ok && data.success) {
+                            // Also update the item's image_url in Supabase to null
+                            await fetch('/api/admin/menu-item/update-image', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ id: item.id, image_url: null }),
+                            });
+                            apiSuccess = true;
+                            onImageUploaded(null);
+                            toast.success("Image supprimée !");
+                          } else {
+                            setError({ message: data.error || "Erreur lors de la suppression de l'image", type: 'server' });
+                            toast.error(data.error || "Erreur lors de la suppression de l'image");
+                          }
+                        } catch (err) {
+                          setError({ message: "Erreur réseau lors de la suppression de l'image", type: 'network' });
+                          toast.error("Erreur réseau lors de la suppression de l'image");
                         }
-                      } catch (err) {
-                        setError({ message: "Erreur réseau lors de la suppression de l'image", type: 'network' });
-                        toast.error("Erreur réseau lors de la suppression de l'image");
-                      }
-                    }}
-                    title="Confirmer la suppression"
-                    description="Cette action supprimera l'image de l'article. Voulez-vous continuer ?"
-                  />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Supprimer l'image</p>
-              </TooltipContent>
-            </Tooltip>
+                        if (!apiSuccess) {
+                          setDisplayedImageUrl(previousImageUrl); // Restore image if API call failed
+                        }
+                      }}
+                      title="Confirmer la suppression"
+                      description="Cette action supprimera l'image de l'article. Voulez-vous continuer ?"
+                      disabled={isUploading}
+                      loading={isUploading}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Supprimer l'image</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
           <input
             ref={fileInputRef}
