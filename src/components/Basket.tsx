@@ -174,7 +174,8 @@ export default function Basket({ establishmentColor, isAdminView = false, basket
                 ))}
               </div>
             </div>
-            <div className="flex gap-3 mt-4 shrink-0 absolute left-0 right-0 bottom-0 px-4 pb-4 bg-white/90">
+            {/* Move the buttons here, outside the scrollable area */}
+            <div className="flex gap-3 mt-4 shrink-0 sticky bottom-0 left-0 right-0 px-4 pb-4 bg-white/90 z-10">
               <Button variant="outline" onClick={() => clearCart()} className="flex-1">
                 Vider le panier
               </Button>
