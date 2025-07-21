@@ -4,15 +4,16 @@ import { Upload, Pencil, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import type { MenuItem } from '@/types/supabase_types';
+import { getEstablishmentColor } from '@/lib/utils'
 
 interface ItemImageUploadProps {
   item: MenuItem;
   onImageUploaded: (url: string | null) => void;
   isDemo?: boolean;
   className?: string;
+  color?: string;
 }
 
 interface UploadError {
@@ -25,7 +26,9 @@ export default function ItemImageUpload({
   onImageUploaded,
   isDemo = false,
   className = '',
+  color,
 }: ItemImageUploadProps) {
+  const establishmentColor = getEstablishmentColor(color)
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<UploadError | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -177,7 +180,7 @@ export default function ItemImageUpload({
               <TooltipTrigger asChild>
                 <Button
                   size="icon"
-                  variant="ghost"
+                  variant="secondary"
                   className="opacity-70 hover:opacity-100 cursor-pointer"
                   title="Modifier"
                   onClick={() => fileInputRef.current?.click()}
@@ -244,30 +247,43 @@ export default function ItemImageUpload({
           />
         </div>
       ) : (
-        <div
-          className="relative w-full h-36 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg cursor-pointer mb-4"
-          style={{ backgroundColor: '#f9fafb', borderColor: '#d1d5db', color: '#374151', minHeight: '140px' }}
-          onClick={() => fileInputRef.current?.click()}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-            onChange={handleInputChange}
-            className="hidden"
-            disabled={isUploading}
-          />
-          <Upload className="h-7 w-7 mb-2" />
-          <span className="block">Ajouter une image</span>
-          {isUploading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 rounded-lg">
-              <Loader2 className="h-6 w-6 animate-spin mb-2" />
-              <span className="text-xs text-gray-500">Optimisation et upload...</span>
+        <div>
+          <div
+            className="relative w-full h-36 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg cursor-pointer mb-4 transition-colors"
+            style={{ backgroundColor: '#f9fafb', borderColor: '#d1d5db', color: '#374151', minHeight: '140px' }}
+            onClick={() => fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+              onChange={handleInputChange}
+              className="hidden"
+              disabled={isUploading}
+            />
+            <div className="flex flex-col items-center justify-center w-full px-2">
+              <Upload className="mx-auto h-10 w-10 mb-2" style={{ color: dragActive ? establishmentColor : '#9ca3af' }} />
+              {isUploading ? (
+                <div className="flex flex-col items-center space-y-1">
+                  <Loader2 className="h-6 w-6 animate-spin mb-1" style={{ color: establishmentColor }} />
+                  <p className="text-sm text-gray-600 text-center">Optimisation et upload...</p>
+                  <p className="text-xs text-gray-500 text-center">L'image est automatiquement optimisée</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center space-y-1">
+                  <p className="text-sm text-gray-600 text-center">
+                    <span className="font-medium hover:underline" style={{ color: establishmentColor }}>
+                      Cliquez pour sélectionner
+                    </span>
+                    <span> ou glissez-déposez votre image</span>
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

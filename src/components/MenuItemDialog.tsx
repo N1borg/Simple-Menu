@@ -66,6 +66,7 @@ export default function <MenuItemDialog>({
         <ItemImageUpload
           item={item}
           isDemo={isDemo}
+          color={establishmentColor}
           onImageUploaded={(url) => {
             // Update the image_url in the form (simulate a change)
             // This will require a refetch or state update in parent, but for now, just update the item prop if possible
