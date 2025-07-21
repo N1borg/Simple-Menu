@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext, ReactNode, useEffect } from 'react'
 import { getEstablishmentColor } from '@/lib/utils'
 
 interface EstablishmentThemeContextType {
@@ -16,7 +16,17 @@ interface EstablishmentThemeProviderProps {
 
 export function EstablishmentThemeProvider({ children, primaryColor }: EstablishmentThemeProviderProps) {
   const normalizedColor = getEstablishmentColor(primaryColor)
-  
+
+  // Set the CSS variable globally on the document body
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.body.style.setProperty('--establishment-color', normalizedColor)
+      document.body.style.setProperty('--establishment-color-20', normalizedColor + '20')
+      document.body.style.setProperty('--establishment-color-10', normalizedColor + '10')
+      document.body.style.setProperty('--establishment-color-90', normalizedColor + 'e6')
+    }
+  }, [normalizedColor])
+
   return (
     <EstablishmentThemeContext.Provider value={{ primaryColor: normalizedColor }}>
       <div
