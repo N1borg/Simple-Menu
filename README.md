@@ -19,7 +19,7 @@ Chaque établissement dispose :
 - 📦 Architecture multi-clients scalable (`/e/[slug]`)
 - 🧠 Rendu SSR avec cache intelligent (Next.js App Router)
 - 📱 Accès mobile-friendly (idéal pour les QR codes)
-- 💸 Stripe (à venir) pour la gestion des abonnements
+- 💸 Stripe pour la gestion des abonnements
 
 ---
 
@@ -31,7 +31,6 @@ Chaque établissement dispose :
 | **Supabase**   | BDD Postgres, Auth & API                         |
 | **TailwindCSS**| UI responsive et rapide                          |
 | **Cloudinary** | Hébergement d’images (logo, produits)            |
-| **JWT (JOSE)** | Auth admin avec cookie signé (secure sessions)  |
 | **Stripe**     | (à venir) pour la facturation                    |
 
 ---
@@ -54,30 +53,6 @@ src/
 ```
 
 ---
-
-## ⚙️ Variables d’environnement
-
-Exemple `.env` :
-
-```env
-NEXT_PUBLIC_SUPABASE_URL="https://xxxxx.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
-SUPABASE_SERVICE_ROLE_KEY="eyJ..."
-
-DATABASE_URL="postgresql://...@supabase.com:5432/postgres?pgbouncer=true"
-
-# Cloudinary
-CLOUDINARY_URL="cloudinary://API_KEY:API_SECRET@CLOUD_NAME"
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="..."
-CLOUDINARY_API_KEY="..."
-CLOUDINARY_API_SECRET="..."
-
-# JWT
-JWT_SECRET="votreclétrèssecrète"
-
-# App
-NEXT_PUBLIC_URL=http://localhost:3000
-```
 
 ## 🛠️ Installation & Lancement
 
@@ -105,5 +80,3 @@ npm run dev
 Page menu : http://localhost:3000/demo
 
 Admin : http://localhost:3000/demo/admin
-
-🔑 Mot de passe admin par défaut : `admin1234`

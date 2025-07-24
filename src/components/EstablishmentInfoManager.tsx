@@ -49,6 +49,8 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
     instagram_url: ''
   })
 
+  const [dialogOpen, setDialogOpen] = useState(false)
+
   // Check if there are any changes
   const hasChanges = () => {
     return Object.keys(formData).some(key => {
@@ -170,8 +172,9 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
       toast.success('Informations mises à jour avec succès!')
       // Update initial state to reflect saved changes
       setInitialFormData(formData)
-      // Close dialog by triggering a close - since we're using uncontrolled, we'll reload page
-      setTimeout(() => window.location.reload(), 500)
+      setDialogOpen(false) // Close dialog on success
+      // Optionally reload page or data here if needed
+      // setTimeout(() => window.location.reload(), 500)
     } catch (error) {
       console.error('Error saving establishment data:', error)
       // Keep the user's edits - don't revert form data on error
@@ -182,7 +185,10 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
   }
 
   return (
-    <Dialog>
+    <Dialog open={dialogOpen} onOpenChange={(open) => {
+      setDialogOpen(open)
+      if (!open) setFormData(initialFormData)
+    }}>
       <DialogTrigger asChild>
         {children || (
           <Button 
@@ -192,6 +198,7 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
               borderColor: primaryColor, 
               color: primaryColor 
             } : {}}
+            onClick={() => setDialogOpen(true)}
           >
             <MapPin 
               className="w-4 h-4" 

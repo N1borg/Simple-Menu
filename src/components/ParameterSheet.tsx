@@ -431,16 +431,6 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
             variant="outline"
             className="w-full flex items-center gap-2 cursor-pointer"
             onClick={() => {
-              window.location.href = publicMenuUrl;
-            }}
-          >
-            Voir le menu public
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full flex items-center gap-2 cursor-pointer"
-            onClick={() => {
               document.activeElement && (document.activeElement as HTMLElement).blur();
             }}
             asChild

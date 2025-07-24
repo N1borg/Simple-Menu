@@ -130,8 +130,12 @@ export function ContactInfoFields({
   const spacing = compact ? "space-y-4" : "space-y-6"
 
   const handleFieldChange = (field: keyof ContactFormData, value: string) => {
-    let processedValue = value.trim()
-    
+    let processedValue = value
+
+    if (field !== 'address') {
+      processedValue = value.trim()
+    }
+
     // Convert social media usernames to full URLs for storage
     if (field === 'facebook_url' && processedValue && !processedValue.startsWith('http')) {
       processedValue = `https://www.facebook.com/${processedValue}`

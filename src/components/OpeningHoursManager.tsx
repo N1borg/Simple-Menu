@@ -32,6 +32,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
   const [isSaving, setIsSaving] = useState(false)
   const [openingHours, setOpeningHours] = useState<DaySchedule[]>(defaultHours)
   const [initialOpeningHours, setInitialOpeningHours] = useState<DaySchedule[]>(defaultHours)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   // Check if there are any changes
   const hasChanges = () => {
@@ -91,8 +92,9 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
       toast.success('Horaires mis à jour avec succès!')
       // Update initial state to reflect saved changes
       setInitialOpeningHours(openingHours)
-      // Close dialog by triggering a close - since we're using uncontrolled, we'll reload page
-      setTimeout(() => window.location.reload(), 500)
+      setDialogOpen(false) // Close dialog on success
+      // Optionally reload page or data here if needed
+      // setTimeout(() => window.location.reload(), 500)
     } catch (error) {
       console.error('Error saving opening hours:', error)
       // Keep the user's edits - don't revert opening hours on error
@@ -103,7 +105,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
   }
 
   return (
-    <Dialog>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         {children || (
           <Button 
@@ -113,6 +115,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
               borderColor: getEstablishmentColor(primaryColor), 
               color: getEstablishmentColor(primaryColor) 
             }}
+            onClick={() => setDialogOpen(true)}
           >
             <Clock 
               className="w-4 h-4" 

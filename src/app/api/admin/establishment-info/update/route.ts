@@ -15,6 +15,14 @@ const EstablishmentInfoSchema = z.object({
   instagram_url: z.string().url().optional().or(z.literal(''))
 })
 
+function padTimeString(hoursString: string): string {
+  return hoursString.replace(/(\d{1,2}):(\d{1,2})/g, (_, h, m) => {
+    const hh = h.padStart(2, '0');
+    const mm = m.padStart(2, '0');
+    return `${hh}:${mm}`;
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const adminAuth = await requireSecureAdminAuth(req)
@@ -32,6 +40,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     
     const validatedData = EstablishmentInfoSchema.parse(body)
+    // Pad all hours in opening_hours
+    if (validatedData.opening_hours) {
+      validatedData.opening_hours = validatedData.opening_hours.map((entry) => ({
+        ...entry,
+        hours: padTimeString(entry.hours)
+      }))
+    }
     
     const supabase = await getServerSupabase()
     

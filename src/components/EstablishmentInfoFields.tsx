@@ -29,13 +29,14 @@ interface SocialMediaInputProps {
   placeholder: string
   value: string
   onChange: (value: string) => void
+  onBlur?: (value: string) => void
   maxLength?: number
   primaryColor?: string
   compact?: boolean
   className?: string
 }
 
-const SocialMediaInput = ({ id, domain, placeholder, value, onChange, maxLength = 50, primaryColor, compact = false, className = '' }: SocialMediaInputProps) => (
+const SocialMediaInput = ({ id, domain, placeholder, value, onChange, onBlur, maxLength = 50, primaryColor, compact = false, className = '' }: SocialMediaInputProps) => (
   <div className={`flex items-center border border-input rounded-md bg-background overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ${compact ? 'text-sm' : 'text-sm'} ${className}`}>
     {/* Static domain part */}
     <div className={`px-3 py-2 bg-muted/50 border-r border-border text-muted-foreground font-medium whitespace-nowrap ${compact ? 'text-xs px-2 py-1.5' : ''}`}>
@@ -48,6 +49,7 @@ const SocialMediaInput = ({ id, domain, placeholder, value, onChange, maxLength 
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      {...(onBlur ? { onBlur: (e) => onBlur(e.target.value) } : {})}
       maxLength={maxLength}
       className={`flex-1 bg-transparent outline-none placeholder:text-muted-foreground ${compact ? 'px-2 py-1.5' : 'px-3 py-2'}`}
       style={primaryColor && value ? { color: primaryColor } : {}}
@@ -132,7 +134,11 @@ export function EstablishmentInfoFields({
   const spacing = compact ? "space-y-4" : "space-y-6"
 
   const handleFieldChange = (field: keyof EstablishmentFormData, value: string) => {
-    let processedValue = value.trim()
+    let processedValue = value
+    
+    if (field !== 'address') {
+      processedValue = value.trim()
+    }
     
     // Convert social media usernames to full URLs for storage
     if (field === 'facebook_url' && processedValue && !processedValue.startsWith('http')) {
@@ -193,20 +199,20 @@ export function EstablishmentInfoFields({
         </div>
       )}
       {/* Address */}
-    <div>
-      <Label htmlFor="address" className={`flex items-center gap-2 mb-2 ${labelSize}`}>
-        <MapPin className="w-4 h-4" />
-        Adresse
-      </Label>
-      <Input
-        id="address"
-        placeholder="123 Rue de la Rouge Chèvre, 59800 Lille"
-        value={formData.address}
-        onChange={(e) => handleFieldChange('address', e.target.value)}
-        maxLength={200}
-        className={inputSize}
-      />
-    </div>
+      <div>
+        <Label htmlFor="address" className={`flex items-center gap-2 mb-2 ${labelSize}`}>
+          <MapPin className="w-4 h-4" />
+          Adresse
+        </Label>
+        <Input
+          id="address"
+          placeholder="123 Rue de la Rouge Chèvre, 59800 Lille"
+          value={formData.address}
+          onChange={e => handleFieldChange('address', e.target.value)}
+          maxLength={200}
+          className={inputSize}
+        />
+      </div>
 
       {/* Phone */}
       <div>
@@ -218,7 +224,7 @@ export function EstablishmentInfoFields({
           id="phone"
           placeholder="01 23 45 67 89"
           value={formData.phone}
-          onChange={(e) => handleFieldChange('phone', e.target.value)}
+          onChange={e => handleFieldChange('phone', e.target.value)}
           maxLength={20}
           className={`${inputSize} ${errors.phone ? 'border-red-500' : ''}`}
         />
@@ -238,7 +244,7 @@ export function EstablishmentInfoFields({
           type="email"
           placeholder="contact@exemple.fr"
           value={formData.email}
-          onChange={(e) => handleFieldChange('email', e.target.value)}
+          onChange={e => handleFieldChange('email', e.target.value)}
           maxLength={255}
           className={`${inputSize} ${errors.email ? 'border-red-500' : ''}`}
         />
@@ -261,7 +267,7 @@ export function EstablishmentInfoFields({
           domain="facebook.com/"
           placeholder="nomdelapage"
           value={formData.facebook_url?.replace(/^https?:\/\/(www\.)?facebook\.com\//, '') || ''}
-          onChange={(value) => handleFieldChange('facebook_url', value)}
+          onChange={value => handleFieldChange('facebook_url', value)}
           maxLength={50}
           primaryColor={primaryColor}
           compact={compact}
@@ -286,7 +292,7 @@ export function EstablishmentInfoFields({
           domain="instagram.com/"
           placeholder="nomdelapage"
           value={formData.instagram_url?.replace(/^https?:\/\/(www\.)?instagram\.com\//, '') || ''}
-          onChange={(value) => handleFieldChange('instagram_url', value)}
+          onChange={value => handleFieldChange('instagram_url', value)}
           maxLength={50}
           primaryColor={primaryColor}
           compact={compact}
