@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog"
 import { CategoryDialogForm } from "./CategoryDialogForm"
 import DietaryBadge from '@/components/DietaryBadge'
+import { SortableCategory } from './SortableCategory';
 
 interface CategorySectionProps {
   category: Category
@@ -400,21 +401,6 @@ export default function CategorySection({
 
   return (
     <section className="category-section max-w-4xl mx-auto px-4 py-6">
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        {/* Drag handle for category */}
-        <button
-          type="button"
-          className="dnd-handle-cat cursor-pointer p-0 flex items-center justify-center rounded hover:bg-gray-200 focus:outline-none w-9 h-9"
-          title="Déplacer la catégorie"
-          disabled={isDemo}
-        >
-          <GripVertical className="w-5 h-5 text-gray-400" />
-        </button>
-
-        {renderCategoryHeader()}
-      </div>
-
-      {/* Menu Items with Drag & Drop */}
       <DndKitWrapper
         id={`category-${category.id}`}
         items={category.menu_items}
@@ -502,6 +488,27 @@ export default function CategorySection({
           }
         }}
       >
+        <SortableCategory id={category.id}>
+          {(setActivatorNodeRef, listeners) => (
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div
+                ref={setActivatorNodeRef}
+                {...listeners}
+                className="cursor-pointer p-0 flex items-center justify-center rounded hover:bg-gray-200 focus:outline-none w-9 h-9"
+                title="Déplacer la catégorie"
+                tabIndex={0}
+                role="button"
+                aria-label="Déplacer la catégorie"
+                style={{ userSelect: 'none', touchAction: 'none', cursor: 'grab' }}
+              >
+                <GripVertical className="w-5 h-5 text-gray-400" />
+              </div>
+              {renderCategoryHeader()}
+            </div>
+          )}
+        </SortableCategory>
+
+        {/* Menu Items with Drag & Drop */}
         <div
           className={
             category.display_style === "card"

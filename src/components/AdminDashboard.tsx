@@ -14,7 +14,7 @@ import ParameterSheet from '@/components/ParameterSheet'
 import { AddCategoryButton } from '@/components/AddCategoryButton'
 import { useDashboardTutorial } from '@/hooks/useDashboardTutorial'
 import { EstablishmentControls } from '@/components/EstablishmentControls'
-import { Settings } from 'lucide-react'
+import { Settings, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSubscription } from '@/hooks/useSubscription'
@@ -268,26 +268,42 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
             .map(cat => (
               <SortableCategory key={cat.id} id={cat.id}>
-                <CategorySection
-                  category={cat}
-                  isDemo={isDemo}
-                  isAdmin={true}
-                  editingCategoryId={editingCategoryId}
-                  setEditingCategoryId={setEditingCategoryId}
-                  originalCategory={originalCategory}
-                  setOriginalCategory={setOriginalCategory}
-                  savingCategoryId={savingCategoryId}
-                  loadingAction={loadingAction}
-                  categories={categories}
-                  setCategories={setCategories}
-                  saveCategory={handleSaveCategory}
-                  establishmentColor={establishment.primary_color ?? undefined}
-                  deleteCategory={handleDeleteCategory}
-                  subscription={subscription}
-                  isAddingItemGlobally={isAddingItemGlobally}
-                  setIsAddingItemGlobally={setIsAddingItemGlobally}
-                  basketEnabled={establishment.basket_enabled ?? true}
-                />
+                {(setActivatorNodeRef, listeners) => (
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <div
+                      ref={setActivatorNodeRef}
+                      {...listeners}
+                      className="cursor-pointer p-0 flex items-center justify-center rounded hover:bg-gray-200 focus:outline-none w-9 h-9"
+                      title="Déplacer la catégorie"
+                      tabIndex={0}
+                      role="button"
+                      aria-label="Déplacer la catégorie"
+                      style={{ userSelect: 'none', touchAction: 'none', cursor: 'grab' }}
+                    >
+                      <GripVertical className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <CategorySection
+                      category={cat}
+                      isDemo={isDemo}
+                      isAdmin={true}
+                      editingCategoryId={editingCategoryId}
+                      setEditingCategoryId={setEditingCategoryId}
+                      originalCategory={originalCategory}
+                      setOriginalCategory={setOriginalCategory}
+                      savingCategoryId={savingCategoryId}
+                      loadingAction={loadingAction}
+                      categories={categories}
+                      setCategories={setCategories}
+                      saveCategory={handleSaveCategory}
+                      establishmentColor={establishment.primary_color ?? undefined}
+                      deleteCategory={handleDeleteCategory}
+                      subscription={subscription}
+                      isAddingItemGlobally={isAddingItemGlobally}
+                      setIsAddingItemGlobally={setIsAddingItemGlobally}
+                      basketEnabled={establishment.basket_enabled ?? true}
+                    />
+                  </div>
+                )}
               </SortableCategory>
             ))}
         </div>

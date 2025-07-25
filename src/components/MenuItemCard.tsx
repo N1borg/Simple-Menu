@@ -237,17 +237,6 @@ export default function MenuItemCard({
                 </div>
               </div>
             </div>
-            {/* Only show drag handle in admin mode */}
-            {isAdmin && (
-              <button
-                type="button"
-                className="dnd-handle-item cursor-pointer p-0 flex items-center justify-center rounded hover:bg-gray-200 focus:outline-none w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Déplacer l'élément"
-                disabled={isDemo}
-              >
-                <GripVertical className="w-4 h-4 text-gray-400" />
-              </button>
-            )}
           </div>
           {/* Content area with flex-1 to push price down */}
           <div className="flex-1 flex flex-col justify-between">
