@@ -113,13 +113,13 @@ export default function <MenuItemDialog>({
         </DialogDescription>
       </DialogHeader>
       {item.image_url && (
-        <div className="flex justify-center">
+        <div className="relative w-full h-48">
           <Image
             src={item.image_url}
             alt={item.name}
-            width={300}
-            height={200}
-            className="rounded-lg object-cover max-h-48"
+            fill
+            className="rounded-lg object-cover"
+            sizes="(max-width: 425px) 100vw, 300px"
           />
         </div>
       )}

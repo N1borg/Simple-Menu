@@ -79,6 +79,10 @@ export function SignupForm({ onClose, selectedPlan = 'pro' }: SignupFormProps) {
     resolver: zodResolver(SignupFormSchema),
     defaultValues: {
       plan: selectedPlan as 'essentiel' | 'pro' | 'premium',
+      establishmentSlug: "",
+      establishmentName: "",
+      email: "",
+      phone: "",
     },
   })
 
