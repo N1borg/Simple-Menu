@@ -489,17 +489,21 @@ export default function CategorySection({
         }}
       >
         <SortableCategory id={category.id}>
-          {(setActivatorNodeRef, listeners) => (
+          {(setActivatorNodeRef, listeners, isDragging) => ( // ADDED isDragging parameter
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <div
                 ref={setActivatorNodeRef}
                 {...listeners}
-                className="cursor-pointer p-0 flex items-center justify-center rounded hover:bg-gray-200 focus:outline-none w-9 h-9"
+                className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-200 rounded touch-manipulation focus:outline-none w-9 h-9 flex items-center justify-center"
                 title="Déplacer la catégorie"
                 tabIndex={0}
                 role="button"
                 aria-label="Déplacer la catégorie"
-                style={{ userSelect: 'none', touchAction: 'none', cursor: 'grab' }}
+                style={{ 
+                  userSelect: 'none', 
+                  touchAction: 'none',
+                  cursor: isDragging ? 'grabbing' : 'grab'
+                }}
               >
                 <GripVertical className="w-5 h-5 text-gray-400" />
               </div>

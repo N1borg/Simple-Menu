@@ -11,11 +11,18 @@ export function SortableItem({ id, children }: { id: string, children: React.Rea
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 100 : undefined,
-    touchAction: 'none',
-    cursor: 'grab',
+    touchAction: 'none', // IMPORTANT: Prevents scrolling during drag
+    cursor: isDragging ? 'grabbing' : 'grab', // UPDATED: Better cursor feedback
   };
+  
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes} 
+      {...listeners}
+      className="touch-manipulation" // ADDED: Better touch handling
+    >
       {children}
     </div>
   );
