@@ -120,6 +120,7 @@ export default async function MenuPage({ params }: PageProps) {
             establishmentColor={establishment.primary_color ?? undefined}
             isAdminView={isAuthenticated || slug === 'demo'}
             basketEnabled={establishment.basket_enabled ?? true}
+            adminBannerPresent={isAuthenticated || slug === 'demo'}
           />
           <main className="flex-grow">
             <MenuDisplay 
