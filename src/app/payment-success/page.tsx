@@ -155,22 +155,22 @@ function PaymentSuccessContent() {
               </div>
             </div>
           )}
-          
-          <div className="space-y-3">
-            <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
-              <Link href="/">
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Retour à l'accueil
-              </Link>
-            </Button>
             
             {slug && (
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
                 <Link href={`/e/${slug}/admin`}>
                   Accéder directement au tableau de bord
                 </Link>
               </Button>
             )}
+          
+          <div className="space-y-3">
+            <Button asChild variant={!slug ? "default" : "outline"} className={`w-full ${!slug && 'bg-blue-600 hover:bg-blue-700'}`}>
+              <Link href="/">
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Retour à l'accueil
+              </Link>
+            </Button>
           </div>
           
           <div className="text-xs text-gray-500 mt-6">

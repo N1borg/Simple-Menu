@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Mail, CircleCheck, X } from "lucide-react"
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import {
   Dialog,
   DialogContent,
@@ -23,14 +24,14 @@ export default function HomePage() {
     setShowSignupForm(true)
   }
 
+  // Only close the contact popup, don't touch selectedPlan
   const closePopup = () => {
     setShowContactPopup(false)
-    setSelectedPlan(null)
   }
 
+  // Only close the signup form, don't touch selectedPlan
   const closeSignupForm = () => {
     setShowSignupForm(false)
-    setSelectedPlan(null)
   }
 
   return (
@@ -53,8 +54,15 @@ export default function HomePage() {
         </p>
         <div className="flex flex-col md:flex-row gap-4 justify-center items-center mb-4">
           <Link
-            href="#contact"
+            href="#tarifs"
             className="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition"
+            onClick={e => {
+              e.preventDefault();
+              const section = document.getElementById('tarifs');
+              if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
           >
             🚀 Profiter de l'offre de lancement
           </Link>
@@ -92,7 +100,7 @@ export default function HomePage() {
       </section>
 
       {/* TARIFS */}
-      <section className="bg-[#e6eeff] py-20 px-6">
+      <section id="tarifs" className="bg-[#e6eeff] py-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6 text-blue-700">Choisissez votre formule</h2>
           <div
@@ -199,7 +207,7 @@ export default function HomePage() {
         </div>
 
         {/* Contact popup using shadcn/ui Dialog */}
-        <Dialog open={showContactPopup} onOpenChange={(open) => { if (!open) closePopup() }}>
+      <Dialog open={showContactPopup} onOpenChange={setShowContactPopup}>
           <DialogContent className="max-w-md w-full p-0">
             <DialogHeader>
               <DialogTitle className="flex flex-col items-center gap-2 pt-6">
@@ -282,6 +290,9 @@ export default function HomePage() {
       {/* Signup Form Modal */}
       <Dialog open={showSignupForm} onOpenChange={setShowSignupForm}>
         <DialogContent className="max-w-6xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+          {/* Visually hidden title for accessibility */}
+          <DialogTitle className="sr-only">Inscription</DialogTitle>
+          <DialogDescription className="sr-only">Formulaire d'inscription à Simple Menu</DialogDescription>
           <div className="flex-1 overflow-y-auto px-6 pb-6 -mx-6 -mb-6"
                style={{ 
                  scrollbarWidth: 'thin',
@@ -334,6 +345,7 @@ export default function HomePage() {
       </Dialog>
       
       <Analytics />
+      <SpeedInsights />
     </main>
   )
 }

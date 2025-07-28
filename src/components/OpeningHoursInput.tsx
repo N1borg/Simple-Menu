@@ -244,7 +244,6 @@ export const OpeningHoursInput: React.FC<OpeningHoursInputProps> = ({
     <div className={className}>
       <Label 
         className="flex items-center gap-2 mb-3"
-        style={primaryColor ? { color: primaryColor } : {}}
       >
         <Clock 
           className="w-4 h-4" 
