@@ -167,16 +167,27 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     }
     if (oldIndex === newIndex) return
 
-    const sorted = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-    const [moved] = sorted.splice(oldIndex, 1)
-    sorted.splice(newIndex, 0, moved)
-    sorted.forEach((cat, idx) => (cat.display_order = idx))
+    // Get properly sorted categories first
+    const sortedCategories = [...categories].sort((a, b) => {
+      const orderA = typeof a.display_order === 'number' ? a.display_order : 999999
+      const orderB = typeof b.display_order === 'number' ? b.display_order : 999999
+      return orderA - orderB
+    })
 
-    setCategories(sorted)
+    // Move the category
+    const [moved] = sortedCategories.splice(oldIndex, 1)
+    sortedCategories.splice(newIndex, 0, moved)
+    
+    // Reassign display_order to all categories sequentially
+    sortedCategories.forEach((cat, idx) => {
+      cat.display_order = idx
+    })
+
+    setCategories(sortedCategories)
 
     // Persist order to API
     if (!isDemo) {
-      sorted.forEach((cat, idx) => {
+      sortedCategories.forEach((cat, idx) => {
         fetch('/api/admin/menu-category/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -262,51 +273,66 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         items={categories}
         modifiers={[restrictToParentElement]}
         onDragEnd={handleCategoryDragEnd}
+        renderOverlay={(activeId) => {
+          const category = categories.find(cat => cat.id === activeId);
+          if (!category) return null;
+          
+          // Create a consistent drag overlay for categories
+          return (
+            <div 
+              className="bg-white rounded-lg shadow-lg border p-4"
+              style={{ 
+                width: "300px", 
+                opacity: 0.9,
+                transform: "rotate(5deg)",
+                zIndex: 1000
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold truncate">{category.name}</h2>
+                <div className="flex items-center gap-2">
+                  <GripVertical className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
+              <div className="mt-2 text-sm text-gray-500">
+                {category.menu_items?.length || 0} élément{(category.menu_items?.length || 0) !== 1 ? 's' : ''}
+              </div>
+            </div>
+          );
+        }}
       >
         <div className="space-y-8">
           {[...categories]
             .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
             .map(cat => (
               <SortableCategory key={cat.id} id={cat.id}>
-                {(setActivatorNodeRef, listeners) => (
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <div
-                      ref={setActivatorNodeRef}
-                      {...listeners}
-                      className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-200 rounded touch-manipulation focus:outline-none w-9 h-9 flex items-center justify-center"
-                      title="Déplacer la catégorie"
-                      tabIndex={0}
-                      role="button"
-                      aria-label="Déplacer la catégorie"
-                      style={{ 
-                        userSelect: 'none', 
-                        touchAction: 'none',
-                        cursor: 'grab'
-                      }}
-                    >
-                      <GripVertical className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <CategorySection
-                      category={cat}
-                      isDemo={isDemo}
-                      isAdmin={true}
-                      editingCategoryId={editingCategoryId}
-                      setEditingCategoryId={setEditingCategoryId}
-                      originalCategory={originalCategory}
-                      setOriginalCategory={setOriginalCategory}
-                      savingCategoryId={savingCategoryId}
-                      loadingAction={loadingAction}
-                      categories={categories}
-                      setCategories={setCategories}
-                      saveCategory={handleSaveCategory}
-                      establishmentColor={establishment.primary_color ?? undefined}
-                      deleteCategory={handleDeleteCategory}
-                      subscription={subscription}
-                      isAddingItemGlobally={isAddingItemGlobally}
-                      setIsAddingItemGlobally={setIsAddingItemGlobally}
-                      basketEnabled={establishment.basket_enabled ?? true}
-                    />
-                  </div>
+                {(setActivatorNodeRef, listeners, isDragging) => (
+                  <CategorySection
+                    category={cat}
+                    isDemo={isDemo}
+                    isAdmin={true}
+                    editingCategoryId={editingCategoryId}
+                    setEditingCategoryId={setEditingCategoryId}
+                    originalCategory={originalCategory}
+                    setOriginalCategory={setOriginalCategory}
+                    savingCategoryId={savingCategoryId}
+                    loadingAction={loadingAction}
+                    categories={categories}
+                    setCategories={setCategories}
+                    saveCategory={handleSaveCategory}
+                    establishmentColor={establishment.primary_color ?? undefined}
+                    deleteCategory={handleDeleteCategory}
+                    subscription={subscription}
+                    isAddingItemGlobally={isAddingItemGlobally}
+                    setIsAddingItemGlobally={setIsAddingItemGlobally}
+                    basketEnabled={establishment.basket_enabled ?? true}
+                    // Pass drag handle props to CategorySection
+                    dragHandleProps={{
+                      setActivatorNodeRef,
+                      listeners,
+                      isDragging
+                    }}
+                  />
                 )}
               </SortableCategory>
             ))}

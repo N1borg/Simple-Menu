@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dialog"
 import { CategoryDialogForm } from "./CategoryDialogForm"
 import DietaryBadge from '@/components/DietaryBadge'
-import { SortableCategory } from './SortableCategory';
 
 interface CategorySectionProps {
   category: Category
@@ -45,6 +44,12 @@ interface CategorySectionProps {
   isAddingItemGlobally?: boolean
   setIsAddingItemGlobally?: (adding: boolean) => void
   basketEnabled?: boolean
+  // NEW: Drag handle props
+  dragHandleProps?: {
+    setActivatorNodeRef: (el: HTMLElement | null) => void
+    listeners: any
+    isDragging: boolean
+  }
 }
 
 export default function CategorySection({
@@ -66,6 +71,7 @@ export default function CategorySection({
   isAddingItemGlobally = false,
   setIsAddingItemGlobally,
   basketEnabled = false,
+  dragHandleProps, // NEW
 }: CategorySectionProps) {
   // Helper function to check dietary attributes for a category
   const getCategoryDietaryAttributes = (category: Category) => {
@@ -212,19 +218,31 @@ export default function CategorySection({
     }
     if (oldIndex === newIndex) return
 
-    const sorted = [...category.menu_items].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-    const [moved] = sorted.splice(oldIndex, 1)
-    sorted.splice(newIndex, 0, moved)
-    sorted.forEach((item, idx) => (item.display_order = idx))
+    // Get properly sorted items first
+    const sortedItems = [...category.menu_items].sort((a, b) => {
+      const orderA = typeof a.display_order === 'number' ? a.display_order : 999999
+      const orderB = typeof b.display_order === 'number' ? b.display_order : 999999
+      return orderA - orderB
+    })
+
+    // Move the item
+    const [moved] = sortedItems.splice(oldIndex, 1)
+    sortedItems.splice(newIndex, 0, moved)
     
+    // Reassign display_order to all items sequentially
+    sortedItems.forEach((item, idx) => {
+      item.display_order = idx
+    })
+    
+    // Update categories state
     const newCategories = categories.map(c =>
-      c.id === category.id ? { ...c, menu_items: sorted } : c
+      c.id === category.id ? { ...c, menu_items: sortedItems } : c
     )
     setCategories(newCategories)
 
     // Persist order to API if not demo
     if (!isDemo) {
-      sorted.forEach((item, idx) => {
+      sortedItems.forEach((item, idx) => {
         fetch('/api/admin/menu-item/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -283,8 +301,8 @@ export default function CategorySection({
     const categoryDietary = getCategoryDietaryAttributes(category)
     
     return (
-      <>
-        <div className="flex items-center gap-2 mr-2 mb-2 sm:mb-0">
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
           <h2
             className={`text-2xl font-bold overflow-hidden whitespace-nowrap ${
               categoryUnavailable ? 'text-gray-400 line-through' : ''
@@ -294,100 +312,126 @@ export default function CategorySection({
           >
             {category.name}
           </h2>
+          
+          {/* Single drag handle next to category name */}
+          {dragHandleProps && (
+            <div
+              ref={dragHandleProps.setActivatorNodeRef}
+              {...dragHandleProps.listeners}
+              className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-200 rounded touch-manipulation focus:outline-none flex items-center justify-center"
+              title="Déplacer la catégorie"
+              tabIndex={0}
+              role="button"
+              aria-label="Déplacer la catégorie"
+              style={{ 
+                userSelect: 'none', 
+                touchAction: 'none',
+                cursor: dragHandleProps.isDragging ? 'grabbing' : 'grab'
+              }}
+            >
+              <GripVertical className="w-4 h-4 text-gray-400" />
+            </div>
+          )}
         </div>
-        <div className="tutorial-add-item">
+        
+        <div className="flex items-center gap-2">
+          <div className="tutorial-add-item">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => handleAddMenuItem(category.id)}
+                  variant="ghost"
+                  size="icon"
+                  title="Nouvel élément"
+                  className={`bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative ${
+                    subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
+                  }`}
+                  disabled={category.id.startsWith("temp-") || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
+                >
+                  <div className="w-5 h-5 flex items-center justify-center">
+                    {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : subscription && !subscription.canCreateMenuItem ? (
+                      <Crown className="w-5 h-5" />
+                    ) : (
+                      <Plus className="w-5 h-5" />
+                    )}
+                  </div>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
+                  <p>Ajout en cours...</p>
+                ) : subscription && !subscription.canCreateMenuItem ? (
+                  <div className="text-center">
+                    <p className="mb-1">Limite d'éléments atteinte</p>
+                    <p className="text-xs">({subscription.planConfig?.features.maxItems} max pour le plan {subscription.planConfig?.name})</p>
+                    <p className="text-xs text-blue-200 mt-1">Passez à un plan supérieur</p>
+                  </div>
+                ) : (
+                  <p>Ajouter un élément</p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={() => handleAddMenuItem(category.id)}
-                variant="ghost"
                 size="icon"
-                title="Nouvel élément"
-                className={`bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative ${
-                  subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
-                }`}
-                disabled={category.id.startsWith("temp-") || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
+                variant="ghost"
+                onClick={() => {
+                  setOriginalCategory({ ...category })
+                  setIsCategoryDialogOpen(true)
+                }}
+                title="Modifier la catégorie"
+                className="cursor-pointer"
               >
-                <div className="w-5 h-5 flex items-center justify-center">
-                  {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : subscription && !subscription.canCreateMenuItem ? (
-                    <Crown className="w-5 h-5" />
-                  ) : (
-                    <Plus className="w-5 h-5" />
-                  )}
-                </div>
+                <Pencil className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
-                <p>Ajout en cours...</p>
-              ) : subscription && !subscription.canCreateMenuItem ? (
-                <div className="text-center">
-                  <p className="mb-1">Limite d'éléments atteinte</p>
-                  <p className="text-xs">({subscription.planConfig?.features.maxItems} max pour le plan {subscription.planConfig?.name})</p>
-                  <p className="text-xs text-blue-200 mt-1">Passez à un plan supérieur</p>
-                </div>
-              ) : (
-                <p>Ajouter un élément</p>
-              )}
+              <p>Modifier la catégorie</p>
             </TooltipContent>
           </Tooltip>
-        </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => {
-                setOriginalCategory({ ...category })
-                setIsCategoryDialogOpen(true)
-              }}
-              title="Modifier la catégorie"
-              className="cursor-pointer"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Modifier la catégorie</p>
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <ConfirmDeleteDialog
-                onConfirm={async () => {
-                  await deleteCategory(category.id);
-                }}
-                title="Supprimer la catégorie ?"
-                description="Cette action supprimera la catégorie et tous ses éléments. Voulez-vous continuer ?"
-                triggerButtonClassName="size-icon variant-ghost"
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <ConfirmDeleteDialog
+                  onConfirm={async () => {
+                    await deleteCategory(category.id);
+                  }}
+                  title="Supprimer la catégorie ?"
+                  description="Cette action supprimera la catégorie et tous ses éléments. Voulez-vous continuer ?"
+                  triggerButtonClassName="size-icon variant-ghost"
+                />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Supprimer la catégorie</p>
+            </TooltipContent>
+          </Tooltip>
+          
+          {/* Category-level dietary badges - moved after buttons */}
+          <div className="flex gap-1">
+            {categoryDietary.vegan && (
+              <DietaryBadge 
+                type="vegan" 
+                variant="active"
+                showText={false}
               />
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Supprimer la catégorie</p>
-          </TooltipContent>
-        </Tooltip>
-        {/* Category-level dietary badges - moved after buttons */}
-        <div className="flex gap-1">
-          {categoryDietary.vegan && (
-            <DietaryBadge 
-              type="vegan" 
-              variant="active"
-              showText={false}
-            />
-          )}
-          {categoryDietary.alcoholFree && (
-            <DietaryBadge 
-              type="alcohol-free" 
-              variant="active"
-              showText={false}
-            />
-          )}
+            )}
+            {categoryDietary.alcoholFree && (
+              <DietaryBadge 
+                type="alcohol-free" 
+                variant="active"
+                showText={false}
+              />
+            )}
+          </div>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -401,6 +445,11 @@ export default function CategorySection({
 
   return (
     <section className="category-section max-w-4xl mx-auto px-4 py-6">
+      {/* Category Header */}
+      <div className="mb-4">
+        {renderCategoryHeader()}
+      </div>
+
       <DndKitWrapper
         id={`category-${category.id}`}
         items={category.menu_items}
@@ -412,106 +461,98 @@ export default function CategorySection({
           
           const categoryDietary = getCategoryDietaryAttributes(category)
           
+          // Create a properly sized drag overlay
+          const overlayStyle = {
+            width: category.display_style === "compact" ? "150px" : category.display_style === "list" ? "100%" : "200px",
+            opacity: 0.8,
+            transform: "rotate(5deg)",
+            zIndex: 1000
+          }
+          
           switch (category.display_style) {
             case "list":
               return (
-                <MenuItemList
-                  item={item}
-                  category={category}
-                  editingItem={editingItem}
-                  setEditingItem={setEditingItem}
-                  handleItemChange={handleItemChange}
-                  saveItem={handleSaveItem}
-                  savingItemId={savingItemId}
-                  loadingAction={loadingAction}
-                  deleteMenuItem={handleDeleteMenuItem}
-                  establishmentColor={establishmentColor}
-                  isDemo={isDemo}
-                  isAdmin={isAdmin}
-                  basketEnabled={basketEnabled}
-                  hideDietaryBadges={{
-                    vegan: categoryDietary.vegan,
-                    alcoholFree: categoryDietary.alcoholFree
-                  }}
-                  categoryIsAvailable={category.is_available !== false}
-                />
+                <div style={overlayStyle}>
+                  <MenuItemList
+                    item={item}
+                    category={category}
+                    editingItem={null} // Disable editing in overlay
+                    setEditingItem={() => {}}
+                    handleItemChange={handleItemChange}
+                    saveItem={handleSaveItem}
+                    savingItemId={savingItemId}
+                    loadingAction={loadingAction}
+                    deleteMenuItem={handleDeleteMenuItem}
+                    establishmentColor={establishmentColor}
+                    isDemo={isDemo}
+                    isAdmin={isAdmin}
+                    basketEnabled={basketEnabled}
+                    hideDietaryBadges={{
+                      vegan: categoryDietary.vegan,
+                      alcoholFree: categoryDietary.alcoholFree
+                    }}
+                    categoryIsAvailable={category.is_available !== false}
+                  />
+                </div>
               );
             case "compact":
               return (
-                <MenuItemCompact
-                  item={item}
-                  category={category}
-                  editingItem={editingItem}
-                  setEditingItem={setEditingItem}
-                  saveItem={handleSaveItem}
-                  savingItemId={savingItemId}
-                  loadingAction={loadingAction}
-                  deleteMenuItem={handleDeleteMenuItem}
-                  establishmentColor={establishmentColor}
-                  isDemo={isDemo}
-                  isAdmin={isAdmin}
-                  basketEnabled={basketEnabled}
-                  hideDietaryBadges={{
-                    vegan: categoryDietary.vegan,
-                    alcoholFree: categoryDietary.alcoholFree
-                  }}
-                  categoryIsAvailable={category.is_available !== false}
-                />
+                <div style={overlayStyle}>
+                  <MenuItemCompact
+                    item={item}
+                    category={category}
+                    editingItem={null} // Disable editing in overlay
+                    setEditingItem={() => {}}
+                    saveItem={handleSaveItem}
+                    savingItemId={savingItemId}
+                    loadingAction={loadingAction}
+                    deleteMenuItem={handleDeleteMenuItem}
+                    establishmentColor={establishmentColor}
+                    isDemo={isDemo}
+                    isAdmin={isAdmin}
+                    basketEnabled={basketEnabled}
+                    hideDietaryBadges={{
+                      vegan: categoryDietary.vegan,
+                      alcoholFree: categoryDietary.alcoholFree
+                    }}
+                    categoryIsAvailable={category.is_available !== false}
+                  />
+                </div>
               );
             case "table":
               return (
-                <MenuItemSkeleton displayStyle="table" />
+                <div style={overlayStyle}>
+                  <MenuItemSkeleton displayStyle="table" />
+                </div>
               );
             default:
               return (
-                <MenuItemCard
-                  item={item}
-                  category={category}
-                  editingItem={editingItem}
-                  setEditingItem={setEditingItem}
-                  handleItemChange={handleItemChange}
-                  saveItem={handleSaveItem}
-                  savingItemId={savingItemId}
-                  loadingAction={loadingAction}
-                  deleteMenuItem={handleDeleteMenuItem}
-                  establishmentColor={establishmentColor}
-                  isDemo={isDemo}
-                  isAdmin={isAdmin}
-                  basketEnabled={basketEnabled}
-                  hideDietaryBadges={{
-                    vegan: categoryDietary.vegan,
-                    alcoholFree: categoryDietary.alcoholFree
-                  }}
-                  categoryIsAvailable={category.is_available !== false}
-                />
+                <div style={overlayStyle}>
+                  <MenuItemCard
+                    item={item}
+                    category={category}
+                    editingItem={null} // Disable editing in overlay
+                    setEditingItem={() => {}}
+                    handleItemChange={handleItemChange}
+                    saveItem={handleSaveItem}
+                    savingItemId={savingItemId}
+                    loadingAction={loadingAction}
+                    deleteMenuItem={handleDeleteMenuItem}
+                    establishmentColor={establishmentColor}
+                    isDemo={isDemo}
+                    isAdmin={isAdmin}
+                    basketEnabled={basketEnabled}
+                    hideDietaryBadges={{
+                      vegan: categoryDietary.vegan,
+                      alcoholFree: categoryDietary.alcoholFree
+                    }}
+                    categoryIsAvailable={category.is_available !== false}
+                  />
+                </div>
               );
           }
         }}
       >
-        <SortableCategory id={category.id}>
-          {(setActivatorNodeRef, listeners, isDragging) => ( // ADDED isDragging parameter
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <div
-                ref={setActivatorNodeRef}
-                {...listeners}
-                className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-200 rounded touch-manipulation focus:outline-none w-9 h-9 flex items-center justify-center"
-                title="Déplacer la catégorie"
-                tabIndex={0}
-                role="button"
-                aria-label="Déplacer la catégorie"
-                style={{ 
-                  userSelect: 'none', 
-                  touchAction: 'none',
-                  cursor: isDragging ? 'grabbing' : 'grab'
-                }}
-              >
-                <GripVertical className="w-5 h-5 text-gray-400" />
-              </div>
-              {renderCategoryHeader()}
-            </div>
-          )}
-        </SortableCategory>
-
         {/* Menu Items with Drag & Drop */}
         <div
           className={
@@ -523,76 +564,86 @@ export default function CategorySection({
           }
         >
           {[...category.menu_items]
-            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+            .sort((a, b) => {
+              // Fix sorting logic - ensure display_order is properly handled
+              const orderA = typeof a.display_order === 'number' ? a.display_order : 999999
+              const orderB = typeof b.display_order === 'number' ? b.display_order : 999999
+              return orderA - orderB
+            })
             .map((item) => (
-              <SortableItem key={item.id} id={item.id}>
-          {item.isLoading ? (
-            <MenuItemSkeleton displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />
-          ) : category.display_style === "list" ? (
-            <MenuItemList
-              item={item}
-              category={category}
-              editingItem={editingItem}
-              setEditingItem={setEditingItem}
-              handleItemChange={handleItemChange}
-              saveItem={handleSaveItem}
-              savingItemId={savingItemId}
-              loadingAction={loadingAction}
-              deleteMenuItem={handleDeleteMenuItem}
-              establishmentColor={establishmentColor}
-              isDemo={isDemo}
-              isAdmin={isAdmin}
-              basketEnabled={basketEnabled}
-              hideDietaryBadges={{
-                vegan: getCategoryDietaryAttributes(category).vegan,
-                alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
-              }}
-              categoryIsAvailable={category.is_available !== false}
-            />
-          ) : category.display_style === "compact" ? (
-            <MenuItemCompact
-              item={item}
-              category={category}
-              editingItem={editingItem}
-              setEditingItem={setEditingItem}
-              saveItem={handleSaveItem}
-              savingItemId={savingItemId}
-              loadingAction={loadingAction}
-              deleteMenuItem={handleDeleteMenuItem}
-              establishmentColor={establishmentColor}
-              isDemo={isDemo}
-              isAdmin={isAdmin}
-              basketEnabled={basketEnabled}
-              hideDietaryBadges={{
-                vegan: getCategoryDietaryAttributes(category).vegan,
-                alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
-              }}
-              categoryIsAvailable={category.is_available !== false}
-            />
-          ) : category.display_style === "table" ? (
-            <MenuItemSkeleton displayStyle="table" />
-          ) : (
-            <MenuItemCard
-              item={item}
-              category={category}
-              editingItem={editingItem}
-              setEditingItem={setEditingItem}
-              handleItemChange={handleItemChange}
-              saveItem={handleSaveItem}
-              savingItemId={savingItemId}
-              loadingAction={loadingAction}
-              deleteMenuItem={handleDeleteMenuItem}
-              establishmentColor={establishmentColor}
-              isDemo={isDemo}
-              isAdmin={isAdmin}
-              basketEnabled={basketEnabled}
-              hideDietaryBadges={{
-                vegan: getCategoryDietaryAttributes(category).vegan,
-                alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
-              }}
-              categoryIsAvailable={category.is_available !== false}
-            />
-          )}
+              <SortableItem 
+                key={item.id} 
+                id={item.id}
+                // Disable dragging when item is being edited
+                disabled={editingItem === item.id || item.isLoading || isDemo}
+              >
+                {item.isLoading ? (
+                  <MenuItemSkeleton displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />
+                ) : category.display_style === "list" ? (
+                  <MenuItemList
+                    item={item}
+                    category={category}
+                    editingItem={editingItem}
+                    setEditingItem={setEditingItem}
+                    handleItemChange={handleItemChange}
+                    saveItem={handleSaveItem}
+                    savingItemId={savingItemId}
+                    loadingAction={loadingAction}
+                    deleteMenuItem={handleDeleteMenuItem}
+                    establishmentColor={establishmentColor}
+                    isDemo={isDemo}
+                    isAdmin={isAdmin}
+                    basketEnabled={basketEnabled}
+                    hideDietaryBadges={{
+                      vegan: getCategoryDietaryAttributes(category).vegan,
+                      alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+                    }}
+                    categoryIsAvailable={category.is_available !== false}
+                  />
+                ) : category.display_style === "compact" ? (
+                  <MenuItemCompact
+                    item={item}
+                    category={category}
+                    editingItem={editingItem}
+                    setEditingItem={setEditingItem}
+                    saveItem={handleSaveItem}
+                    savingItemId={savingItemId}
+                    loadingAction={loadingAction}
+                    deleteMenuItem={handleDeleteMenuItem}
+                    establishmentColor={establishmentColor}
+                    isDemo={isDemo}
+                    isAdmin={isAdmin}
+                    basketEnabled={basketEnabled}
+                    hideDietaryBadges={{
+                      vegan: getCategoryDietaryAttributes(category).vegan,
+                      alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+                    }}
+                    categoryIsAvailable={category.is_available !== false}
+                  />
+                ) : category.display_style === "table" ? (
+                  <MenuItemSkeleton displayStyle="table" />
+                ) : (
+                  <MenuItemCard
+                    item={item}
+                    category={category}
+                    editingItem={editingItem}
+                    setEditingItem={setEditingItem}
+                    handleItemChange={handleItemChange}
+                    saveItem={handleSaveItem}
+                    savingItemId={savingItemId}
+                    loadingAction={loadingAction}
+                    deleteMenuItem={handleDeleteMenuItem}
+                    establishmentColor={establishmentColor}
+                    isDemo={isDemo}
+                    isAdmin={isAdmin}
+                    basketEnabled={basketEnabled}
+                    hideDietaryBadges={{
+                      vegan: getCategoryDietaryAttributes(category).vegan,
+                      alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+                    }}
+                    categoryIsAvailable={category.is_available !== false}
+                  />
+                )}
               </SortableItem>
             ))}
         </div>
