@@ -7,6 +7,7 @@ import ImageUpload from "@/components/ImageUpload"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableCategory } from '@/components/SortableCategory'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
+import { verticalListSortingStrategy } from '@dnd-kit/sortable'
 import CategorySection from '@/components/CategorySection'
 import { useCategories } from '@/components/hooks/useCategories'
 import { useMenuItems } from '@/components/hooks/useMenuItems'
@@ -14,7 +15,7 @@ import ParameterSheet from '@/components/ParameterSheet'
 import { AddCategoryButton } from '@/components/AddCategoryButton'
 import { useDashboardTutorial } from '@/hooks/useDashboardTutorial'
 import { EstablishmentControls } from '@/components/EstablishmentControls'
-import { Settings, GripVertical } from 'lucide-react'
+import { Settings, GripVertical, Cat } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSubscription } from '@/hooks/useSubscription'
@@ -273,31 +274,44 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         items={categories}
         modifiers={[restrictToParentElement]}
         onDragEnd={handleCategoryDragEnd}
+        strategy={verticalListSortingStrategy}
         renderOverlay={(activeId) => {
           const category = categories.find(cat => cat.id === activeId);
           if (!category) return null;
-          
-          // Create a consistent drag overlay for categories
+
+          // Provide dummy drag handle props for overlay (since overlay is not interactive)
+          const setActivatorNodeRef = () => {};
+          const listeners = {};
+          const isDragging = true;
+
+          // Create a consistent drag overlay for categories with fixed size
           return (
-            <div 
-              className="bg-white rounded-lg shadow-lg border p-4"
-              style={{ 
-                width: "300px", 
-                opacity: 0.9,
-                transform: "rotate(5deg)",
-                zIndex: 1000
+            <CategorySection
+              category={category}
+              isDemo={isDemo}
+              isAdmin={true}
+              editingCategoryId={editingCategoryId}
+              setEditingCategoryId={setEditingCategoryId}
+              originalCategory={originalCategory}
+              setOriginalCategory={setOriginalCategory}
+              savingCategoryId={savingCategoryId}
+              loadingAction={loadingAction}
+              categories={categories}
+              setCategories={setCategories}
+              saveCategory={handleSaveCategory}
+              establishmentColor={establishment.primary_color ?? undefined}
+              deleteCategory={handleDeleteCategory}
+              subscription={subscription}
+              isAddingItemGlobally={isAddingItemGlobally}
+              setIsAddingItemGlobally={setIsAddingItemGlobally}
+              basketEnabled={establishment.basket_enabled ?? true}
+              // Pass drag handle props to CategorySection
+              dragHandleProps={{
+                setActivatorNodeRef,
+                listeners,
+                isDragging
               }}
-            >
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold truncate">{category.name}</h2>
-                <div className="flex items-center gap-2">
-                  <GripVertical className="w-4 h-4 text-gray-400" />
-                </div>
-              </div>
-              <div className="mt-2 text-sm text-gray-500">
-                {category.menu_items?.length || 0} élément{(category.menu_items?.length || 0) !== 1 ? 's' : ''}
-              </div>
-            </div>
+            />
           );
         }}
       >

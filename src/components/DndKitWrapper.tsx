@@ -7,7 +7,7 @@ import { ReactNode, useState } from 'react';
 interface DndKitWrapperProps<T = any> {
   items: T[];
   onDragEnd: (oldIndex: number, newIndex: number) => void;
-  onDragOver?: (activeId: string, overId: string) => void; // NEW: For cross-category movement
+  onDragOver?: (activeId: string, overId: string) => void;
   children: ReactNode;
   modifiers?: any[];
   renderOverlay?: (activeId: string | null) => ReactNode;
@@ -15,29 +15,25 @@ interface DndKitWrapperProps<T = any> {
   strategy?: any;
 }
 
-export function DndKitWrapper<T = any>({ 
-  items, 
-  onDragEnd, 
-  onDragOver, // NEW
-  children, 
-  modifiers, 
-  renderOverlay, 
-  id, 
-  strategy = rectSortingStrategy 
+export function DndKitWrapper<T = any>({
+  items,
+  onDragEnd,
+  onDragOver,
+  children,
+  modifiers,
+  renderOverlay,
+  id,
+  strategy = rectSortingStrategy
 }: DndKitWrapperProps<T>) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  
-  // UPDATED: Mobile-optimized sensors
+
+  // Updated sensors with longer delay for touch activation
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Increased from 5 to prevent accidental drags
-      },
-    }),
+    useSensor(PointerSensor, {}),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250, // Long press for mobile (was 300ms)
-        tolerance: 5, // Reduced from 10 for better responsiveness
+        delay: 250,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -51,7 +47,7 @@ export function DndKitWrapper<T = any>({
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={event => setActiveId(event.active.id as string)}
-      onDragOver={event => { // NEW: Handle cross-category movement
+      onDragOver={event => {
         if (onDragOver && event.over) {
           onDragOver(event.active.id as string, event.over.id as string);
         }
@@ -71,7 +67,7 @@ export function DndKitWrapper<T = any>({
       <SortableContext items={items.map((i: any) => i.id)} strategy={strategy}>
         {children}
       </SortableContext>
-      <DragOverlay dropAnimation={{ duration: 200, easing: 'ease' }}> {/* UPDATED: Better animation */}
+      <DragOverlay dropAnimation={{ duration: 200, easing: 'ease' }}>
         {activeId && renderOverlay ? renderOverlay(activeId) : null}
       </DragOverlay>
     </DndContext>

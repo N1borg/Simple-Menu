@@ -23,11 +23,15 @@ function getCategoryDietaryAttributes(category: Category) {
 
 function renderCardStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
   const categoryDietary = getCategoryDietaryAttributes(category)
-  
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <div className="flex items-center gap-2 mb-4">
-        <h2 className="text-2xl font-bold">{category.name}</h2>
+        <h2
+          className="text-2xl font-bold flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+          title={category.name}
+        >
+          {category.name}
+        </h2>
         {/* Category-level dietary badges */}
         <div className="flex gap-1">
           {categoryDietary.vegan && <DietaryBadge type="vegan" showText={false} />}
@@ -67,11 +71,15 @@ function renderCardStyle(category: Category, establishmentColor?: string, editin
 
 function renderListStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
   const categoryDietary = getCategoryDietaryAttributes(category)
-  
   return (
     <section key={category.id} className="max-w-4xl mx-auto px-4 py-6">
       <div className="flex items-center gap-2 mb-2">
-        <h2 className="text-xl font-bold">{category.name}</h2>
+        <h2
+          className="text-xl font-bold flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+          title={category.name}
+        >
+          {category.name}
+        </h2>
         {/* Category-level dietary badges */}
         <div className="flex gap-1">
           {categoryDietary.vegan && <DietaryBadge type="vegan" showText={false} />}
@@ -82,7 +90,7 @@ function renderListStyle(category: Category, establishmentColor?: string, editin
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-              .map(item => (
+          .map(item => (
             <li key={item.id} className="list-none">
               <MenuItemList
                 item={item}
@@ -113,11 +121,15 @@ function renderListStyle(category: Category, establishmentColor?: string, editin
 
 function renderCompactStyle(category: Category, establishmentColor?: string, editingItem?: string | null, setEditingItem?: (id: string | null) => void, basketEnabled?: boolean) {
   const categoryDietary = getCategoryDietaryAttributes(category)
-  
   return (
     <section key={category.id} className="max-w-2xl mx-auto px-2 py-4">
       <div className="flex items-center gap-2 mb-4">
-        <h2 className="text-lg font-semibold">{category.name}</h2>
+        <h2
+          className="text-lg font-semibold flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+          title={category.name}
+        >
+          {category.name}
+        </h2>
         {/* Category-level dietary badges */}
         <div className="flex gap-1">
           {categoryDietary.vegan && <DietaryBadge type="vegan" showText={false} />}
@@ -128,7 +140,7 @@ function renderCompactStyle(category: Category, establishmentColor?: string, edi
         {category.menu_items
           ?.filter((item: MenuItem) => item.is_available)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-              .map(item => (
+          .map(item => (
             <MenuItemCompact
               key={item.id}
               item={item}

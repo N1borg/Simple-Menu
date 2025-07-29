@@ -218,18 +218,20 @@ export default function CategorySection({
     }
     if (oldIndex === newIndex) return
 
-    // Get properly sorted items first
-    const sortedItems = [...category.menu_items].sort((a, b) => {
-      const orderA = typeof a.display_order === 'number' ? a.display_order : 999999
-      const orderB = typeof b.display_order === 'number' ? b.display_order : 999999
-      return orderA - orderB
-    })
+    // Create a working copy of menu items with proper display_order
+    const workingItems = category.menu_items.map((item, index) => ({
+      ...item,
+      display_order: typeof item.display_order === 'number' ? item.display_order : index
+    }))
 
-    // Move the item
+    // Sort by display_order to get current visual order
+    const sortedItems = workingItems.sort((a, b) => a.display_order - b.display_order)
+
+    // Perform the move
     const [moved] = sortedItems.splice(oldIndex, 1)
     sortedItems.splice(newIndex, 0, moved)
     
-    // Reassign display_order to all items sequentially
+    // Reassign display_order sequentially
     sortedItems.forEach((item, idx) => {
       item.display_order = idx
     })
@@ -297,44 +299,54 @@ export default function CategorySection({
 
   // Simplified category header render function
   const renderCategoryHeader = () => {
-    const categoryUnavailable = category.is_available === false
-    const categoryDietary = getCategoryDietaryAttributes(category)
-    
+    const categoryUnavailable = category.is_available === false;
+    const categoryDietary = getCategoryDietaryAttributes(category);
+
     return (
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-2">
-          <h2
-            className={`text-2xl font-bold overflow-hidden whitespace-nowrap ${
-              categoryUnavailable ? 'text-gray-400 line-through' : ''
-            }`}
-            style={{ textOverflow: "clip", maxWidth: "100%" }}
-            title={category.name}
-          >
-            {category.name}
-          </h2>
-          
-          {/* Single drag handle next to category name */}
+      <div
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2"
+      >
+        {/* Top row: drag handle, name, badges */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {/* Drag handle on the left with button size */}
           {dragHandleProps && (
             <div
               ref={dragHandleProps.setActivatorNodeRef}
               {...dragHandleProps.listeners}
-              className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-200 rounded touch-manipulation focus:outline-none flex items-center justify-center"
+              className="w-9 h-9 flex items-center justify-center hover:bg-gray-200 rounded touch-manipulation focus:outline-none"
               title="Déplacer la catégorie"
               tabIndex={0}
               role="button"
               aria-label="Déplacer la catégorie"
-              style={{ 
-                userSelect: 'none', 
+              style={{
+                userSelect: 'none',
                 touchAction: 'none',
-                cursor: dragHandleProps.isDragging ? 'grabbing' : 'grab'
+                cursor: 'grab',
               }}
             >
-              <GripVertical className="w-4 h-4 text-gray-400" />
+              <GripVertical className="w-5 h-5 text-gray-400" />
             </div>
           )}
+          <h2
+            className={`text-2xl font-bold flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${
+              categoryUnavailable ? 'text-gray-400 line-through' : ''
+            }`}
+            title={category.name}
+          >
+            {category.name}
+          </h2>
+          {/* Badges next to name, always inline */}
+          <div className="flex gap-1 ml-1">
+            {categoryDietary.vegan && (
+              <DietaryBadge type="vegan" variant="active" showText={false} />
+            )}
+            {categoryDietary.alcoholFree && (
+              <DietaryBadge type="alcohol-free" variant="active" showText={false} />
+            )}
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2">
+        {/* Action buttons: always in a row, but on small screens, below the name */}
+        <div className="flex items-center gap-2 sm:mt-0 mt-2">
           <div className="tutorial-add-item">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -346,7 +358,7 @@ export default function CategorySection({
                   className={`bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative ${
                     subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
                   }`}
-                  disabled={category.id.startsWith("temp-") || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
+                  disabled={category.id.startsWith('temp-') || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
                 >
                   <div className="w-5 h-5 flex items-center justify-center">
                     {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
@@ -374,15 +386,14 @@ export default function CategorySection({
               </TooltipContent>
             </Tooltip>
           </div>
-          
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={() => {
-                  setOriginalCategory({ ...category })
-                  setIsCategoryDialogOpen(true)
+                  setOriginalCategory({ ...category });
+                  setIsCategoryDialogOpen(true);
                 }}
                 title="Modifier la catégorie"
                 className="cursor-pointer"
@@ -394,7 +405,6 @@ export default function CategorySection({
               <p>Modifier la catégorie</p>
             </TooltipContent>
           </Tooltip>
-          
           <Tooltip>
             <TooltipTrigger asChild>
               <span>
@@ -412,28 +422,10 @@ export default function CategorySection({
               <p>Supprimer la catégorie</p>
             </TooltipContent>
           </Tooltip>
-          
-          {/* Category-level dietary badges - moved after buttons */}
-          <div className="flex gap-1">
-            {categoryDietary.vegan && (
-              <DietaryBadge 
-                type="vegan" 
-                variant="active"
-                showText={false}
-              />
-            )}
-            {categoryDietary.alcoholFree && (
-              <DietaryBadge 
-                type="alcohol-free" 
-                variant="active"
-                showText={false}
-              />
-            )}
-          </div>
         </div>
       </div>
     );
-  }
+  }  
 
   if (category.isLoading) {
     return (
@@ -461,94 +453,78 @@ export default function CategorySection({
           
           const categoryDietary = getCategoryDietaryAttributes(category)
           
-          // Create a properly sized drag overlay
-          const overlayStyle = {
-            width: category.display_style === "compact" ? "150px" : category.display_style === "list" ? "100%" : "200px",
-            opacity: 0.8,
-            transform: "rotate(5deg)",
-            zIndex: 1000
-          }
-          
           switch (category.display_style) {
             case "list":
               return (
-                <div style={overlayStyle}>
-                  <MenuItemList
-                    item={item}
-                    category={category}
-                    editingItem={null} // Disable editing in overlay
-                    setEditingItem={() => {}}
-                    handleItemChange={handleItemChange}
-                    saveItem={handleSaveItem}
-                    savingItemId={savingItemId}
-                    loadingAction={loadingAction}
-                    deleteMenuItem={handleDeleteMenuItem}
-                    establishmentColor={establishmentColor}
-                    isDemo={isDemo}
-                    isAdmin={isAdmin}
-                    basketEnabled={basketEnabled}
-                    hideDietaryBadges={{
-                      vegan: categoryDietary.vegan,
-                      alcoholFree: categoryDietary.alcoholFree
-                    }}
-                    categoryIsAvailable={category.is_available !== false}
-                  />
-                </div>
+                <MenuItemList
+                  item={item}
+                  category={category}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  handleItemChange={handleItemChange}
+                  saveItem={handleSaveItem}
+                  savingItemId={savingItemId}
+                  loadingAction={loadingAction}
+                  deleteMenuItem={handleDeleteMenuItem}
+                  establishmentColor={establishmentColor}
+                  isDemo={isDemo}
+                  isAdmin={isAdmin}
+                  basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: categoryDietary.vegan,
+                    alcoholFree: categoryDietary.alcoholFree
+                  }}
+                  categoryIsAvailable={category.is_available !== false}
+                />
               );
             case "compact":
               return (
-                <div style={overlayStyle}>
-                  <MenuItemCompact
-                    item={item}
-                    category={category}
-                    editingItem={null} // Disable editing in overlay
-                    setEditingItem={() => {}}
-                    saveItem={handleSaveItem}
-                    savingItemId={savingItemId}
-                    loadingAction={loadingAction}
-                    deleteMenuItem={handleDeleteMenuItem}
-                    establishmentColor={establishmentColor}
-                    isDemo={isDemo}
-                    isAdmin={isAdmin}
-                    basketEnabled={basketEnabled}
-                    hideDietaryBadges={{
-                      vegan: categoryDietary.vegan,
-                      alcoholFree: categoryDietary.alcoholFree
-                    }}
-                    categoryIsAvailable={category.is_available !== false}
-                  />
-                </div>
+                <MenuItemCompact
+                  item={item}
+                  category={category}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  saveItem={handleSaveItem}
+                  savingItemId={savingItemId}
+                  loadingAction={loadingAction}
+                  deleteMenuItem={handleDeleteMenuItem}
+                  establishmentColor={establishmentColor}
+                  isDemo={isDemo}
+                  isAdmin={isAdmin}
+                  basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: categoryDietary.vegan,
+                    alcoholFree: categoryDietary.alcoholFree
+                  }}
+                  categoryIsAvailable={category.is_available !== false}
+                />
               );
             case "table":
               return (
-                <div style={overlayStyle}>
-                  <MenuItemSkeleton displayStyle="table" />
-                </div>
+                <MenuItemSkeleton displayStyle="table" />
               );
             default:
               return (
-                <div style={overlayStyle}>
-                  <MenuItemCard
-                    item={item}
-                    category={category}
-                    editingItem={null} // Disable editing in overlay
-                    setEditingItem={() => {}}
-                    handleItemChange={handleItemChange}
-                    saveItem={handleSaveItem}
-                    savingItemId={savingItemId}
-                    loadingAction={loadingAction}
-                    deleteMenuItem={handleDeleteMenuItem}
-                    establishmentColor={establishmentColor}
-                    isDemo={isDemo}
-                    isAdmin={isAdmin}
-                    basketEnabled={basketEnabled}
-                    hideDietaryBadges={{
-                      vegan: categoryDietary.vegan,
-                      alcoholFree: categoryDietary.alcoholFree
-                    }}
-                    categoryIsAvailable={category.is_available !== false}
-                  />
-                </div>
+                <MenuItemCard
+                  item={item}
+                  category={category}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  handleItemChange={handleItemChange}
+                  saveItem={handleSaveItem}
+                  savingItemId={savingItemId}
+                  loadingAction={loadingAction}
+                  deleteMenuItem={handleDeleteMenuItem}
+                  establishmentColor={establishmentColor}
+                  isDemo={isDemo}
+                  isAdmin={isAdmin}
+                  basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: categoryDietary.vegan,
+                    alcoholFree: categoryDietary.alcoholFree
+                  }}
+                  categoryIsAvailable={category.is_available !== false}
+                />
               );
           }
         }}
@@ -563,16 +539,21 @@ export default function CategorySection({
               : "max-w-full"
           }
         >
-          {[...category.menu_items]
+          {/* Fix the weird initial sorting by ensuring items have proper display_order before rendering */}
+          {category.menu_items
+            .map((item, index) => ({
+              ...item,
+              // Ensure display_order is set if it's null/undefined
+              display_order: typeof item.display_order === 'number' ? item.display_order : index
+            }))
             .sort((a, b) => {
-              // Fix sorting logic - ensure display_order is properly handled
-              const orderA = typeof a.display_order === 'number' ? a.display_order : 999999
-              const orderB = typeof b.display_order === 'number' ? b.display_order : 999999
+              const orderA = a.display_order
+              const orderB = b.display_order
               return orderA - orderB
             })
             .map((item) => (
-              <SortableItem 
-                key={item.id} 
+              <SortableItem
+                key={item.id}
                 id={item.id}
                 // Disable dragging when item is being edited
                 disabled={editingItem === item.id || item.isLoading || isDemo}
