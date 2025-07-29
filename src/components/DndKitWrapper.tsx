@@ -29,10 +29,14 @@ export function DndKitWrapper<T = any>({
 
   // Updated sensors with longer delay for touch activation
   const sensors = useSensors(
-    useSensor(PointerSensor, {}),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // Require 5px movement before drag starts
+      },
+    }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250,
+        delay: 250,  // 250ms delay for touch
         tolerance: 5,
       },
     }),

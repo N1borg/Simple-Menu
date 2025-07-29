@@ -555,8 +555,7 @@ export default function CategorySection({
               <SortableItem
                 key={item.id}
                 id={item.id}
-                // Disable dragging when item is being edited
-                disabled={editingItem === item.id || item.isLoading || isDemo}
+                disabled={editingItem === item.id} // Disable when editing
               >
                 {item.isLoading ? (
                   <MenuItemSkeleton displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />

@@ -10,21 +10,21 @@ export function SortableItem({
   disabled = false 
 }: { 
   id: string, 
-  children: React.ReactElement<{ className?: string }> | React.ReactElement<{ className?: string }>[], 
+  children: React.ReactNode, 
   disabled?: boolean 
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
     id,
-    disabled // Pass disabled state to useSortable
+    disabled
   });
   
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 100 : undefined,
-    touchAction: disabled ? 'auto' : 'none', // Allow normal touch when disabled
-    cursor: disabled ? 'default' : (isDragging ? 'grabbing' : 'grab'),
+    // Disable pointer events when editing
+    pointerEvents: disabled ? 'none' : 'auto',
   };
   
   return (
@@ -32,8 +32,8 @@ export function SortableItem({
       ref={setNodeRef} 
       style={style} 
       {...attributes} 
-      {...(disabled ? {} : listeners)} // Don't attach listeners when disabled
-      className={`touch-manipulation ${disabled ? '' : 'cursor-grab'}`}
+      {...(disabled ? {} : listeners)} // Only attach listeners when not disabled
+      className={`${disabled ? 'pointer-events-none' : ''}`}
     >
       {children}
     </div>
