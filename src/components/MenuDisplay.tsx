@@ -26,7 +26,7 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
         )}
         <h1 className="text-3xl font-bold">{establishment.name}</h1>
       </div>
-      <div className="space-y-8">
+      <div className="space-y-8 mb-8">
         {establishment.categories
           ?.filter(category => category.is_available !== false)
           ?.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))

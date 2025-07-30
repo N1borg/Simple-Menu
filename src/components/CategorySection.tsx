@@ -8,7 +8,7 @@ import MenuItemList from '@/components/MenuItemList'
 import MenuItemCompact from '@/components/MenuItemCompact';
 import type { Category, MenuItem } from '@/types/supabase_types'
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { useRef, useEffect, useState } from 'react'
+import { useState } from 'react'
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
 import { useMenuItems } from '@/components/hooks/useMenuItems'
 import { toast } from "sonner"
@@ -44,7 +44,6 @@ interface CategorySectionProps {
   isAddingItemGlobally?: boolean
   setIsAddingItemGlobally?: (adding: boolean) => void
   basketEnabled?: boolean
-  // NEW: Drag handle props
   dragHandleProps?: {
     setActivatorNodeRef: (el: HTMLElement | null) => void
     listeners: any
@@ -309,7 +308,7 @@ export default function CategorySection({
         {/* Top row: drag handle, name, badges */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {/* Drag handle on the left with button size */}
-          {dragHandleProps && (
+          {isAdmin && dragHandleProps && (
             <div
               ref={dragHandleProps.setActivatorNodeRef}
               {...dragHandleProps.listeners}
@@ -328,7 +327,7 @@ export default function CategorySection({
             </div>
           )}
           <h2
-            className={`text-2xl font-bold flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${
+            className={`text-2xl font-bold ${isAdmin && 'flex-1'} min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${
               categoryUnavailable ? 'text-gray-400 line-through' : ''
             }`}
             title={category.name}
@@ -346,86 +345,88 @@ export default function CategorySection({
           </div>
         </div>
         {/* Action buttons: always in a row, but on small screens, below the name */}
-        <div className="flex items-center gap-2 sm:mt-0 mt-2">
-          <div className="tutorial-add-item">
+        { isAdmin && (
+          <div className="flex items-center gap-2 sm:mt-0 mt-2">
+            <div className="tutorial-add-item">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => handleAddMenuItem(category.id)}
+                    variant="ghost"
+                    size="icon"
+                    title="Nouvel élément"
+                    className={`bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative ${
+                      subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
+                    }`}
+                    disabled={category.id.startsWith('temp-') || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
+                  >
+                    <div className="w-5 h-5 flex items-center justify-center">
+                      {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : subscription && !subscription.canCreateMenuItem ? (
+                        <Crown className="w-5 h-5" />
+                      ) : (
+                        <Plus className="w-5 h-5" />
+                      )}
+                    </div>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
+                    <p>Ajout en cours...</p>
+                  ) : subscription && !subscription.canCreateMenuItem ? (
+                    <div className="text-center">
+                      <p className="mb-1">Limite d'éléments atteinte</p>
+                      <p className="text-xs">({subscription.planConfig?.features.maxItems} max pour le plan {subscription.planConfig?.name})</p>
+                      <p className="text-xs text-blue-200 mt-1">Passez à un plan supérieur</p>
+                    </div>
+                  ) : (
+                    <p>Ajouter un élément</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={() => handleAddMenuItem(category.id)}
-                  variant="ghost"
                   size="icon"
-                  title="Nouvel élément"
-                  className={`bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative ${
-                    subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
-                  }`}
-                  disabled={category.id.startsWith('temp-') || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
+                  variant="ghost"
+                  onClick={() => {
+                    setOriginalCategory({ ...category });
+                    setIsCategoryDialogOpen(true);
+                  }}
+                  title="Modifier la catégorie"
+                  className="cursor-pointer"
                 >
-                  <div className="w-5 h-5 flex items-center justify-center">
-                    {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : subscription && !subscription.canCreateMenuItem ? (
-                      <Crown className="w-5 h-5" />
-                    ) : (
-                      <Plus className="w-5 h-5" />
-                    )}
-                  </div>
+                  <Pencil className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
-                  <p>Ajout en cours...</p>
-                ) : subscription && !subscription.canCreateMenuItem ? (
-                  <div className="text-center">
-                    <p className="mb-1">Limite d'éléments atteinte</p>
-                    <p className="text-xs">({subscription.planConfig?.features.maxItems} max pour le plan {subscription.planConfig?.name})</p>
-                    <p className="text-xs text-blue-200 mt-1">Passez à un plan supérieur</p>
-                  </div>
-                ) : (
-                  <p>Ajouter un élément</p>
-                )}
+                <p>Modifier la catégorie</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <ConfirmDeleteDialog
+                    onConfirm={async () => {
+                      await deleteCategory(category.id);
+                    }}
+                    title="Supprimer la catégorie ?"
+                    description="Cette action supprimera la catégorie et tous ses éléments. Voulez-vous continuer ?"
+                    triggerButtonClassName="size-icon variant-ghost"
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Supprimer la catégorie</p>
               </TooltipContent>
             </Tooltip>
           </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => {
-                  setOriginalCategory({ ...category });
-                  setIsCategoryDialogOpen(true);
-                }}
-                title="Modifier la catégorie"
-                className="cursor-pointer"
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Modifier la catégorie</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <ConfirmDeleteDialog
-                  onConfirm={async () => {
-                    await deleteCategory(category.id);
-                  }}
-                  title="Supprimer la catégorie ?"
-                  description="Cette action supprimera la catégorie et tous ses éléments. Voulez-vous continuer ?"
-                  triggerButtonClassName="size-icon variant-ghost"
-                />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Supprimer la catégorie</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+        )}
       </div>
     );
-  }  
+  }
 
   if (category.isLoading) {
     return (
@@ -435,6 +436,116 @@ export default function CategorySection({
     )
   }
 
+  // Filter out unavailable items if not admin
+  const visibleMenuItems = isAdmin
+    ? category.menu_items
+    : category.menu_items.filter(item => item.is_available !== false);
+
+  // If not admin, disable sorting and drag-and-drop
+  if (!isAdmin) {
+    return (
+      <section className="category-section max-w-4xl mx-auto px-4 py-6">
+        {/* Category Header */}
+        <div className="mb-4">
+          {renderCategoryHeader()}
+        </div>
+        <div
+          className={
+            category.display_style === "card"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-full"
+              : category.display_style === "compact"
+              ? "grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full"
+              : "max-w-full"
+          }
+        >
+          {visibleMenuItems
+            .map((item, index) => ({
+              ...item,
+              display_order: typeof item.display_order === 'number' ? item.display_order : index
+            }))
+            .sort((a, b) => {
+              const orderA = a.display_order
+              const orderB = b.display_order
+              return orderA - orderB
+            })
+            .map((item) => (
+              item.isLoading ? (
+                <MenuItemSkeleton key={item.id} displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />
+              ) : category.display_style === "list" ? (
+                <MenuItemList
+                  key={item.id}
+                  item={item}
+                  category={category}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  handleItemChange={handleItemChange}
+                  saveItem={handleSaveItem}
+                  savingItemId={savingItemId}
+                  loadingAction={loadingAction}
+                  deleteMenuItem={handleDeleteMenuItem}
+                  establishmentColor={establishmentColor}
+                  isDemo={isDemo}
+                  isAdmin={isAdmin}
+                  basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: getCategoryDietaryAttributes(category).vegan,
+                    alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+                  }}
+                  categoryIsAvailable={category.is_available !== false}
+                />
+              ) : category.display_style === "compact" ? (
+                <MenuItemCompact
+                  key={item.id}
+                  item={item}
+                  category={category}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  saveItem={handleSaveItem}
+                  savingItemId={savingItemId}
+                  loadingAction={loadingAction}
+                  deleteMenuItem={handleDeleteMenuItem}
+                  establishmentColor={establishmentColor}
+                  isDemo={isDemo}
+                  isAdmin={isAdmin}
+                  basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: getCategoryDietaryAttributes(category).vegan,
+                    alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+                  }}
+                  categoryIsAvailable={category.is_available !== false}
+                />
+              ) : category.display_style === "table" ? (
+                <MenuItemSkeleton key={item.id} displayStyle="table" />
+              ) : (
+                <MenuItemCard
+                  key={item.id}
+                  item={item}
+                  category={category}
+                  editingItem={editingItem}
+                  setEditingItem={setEditingItem}
+                  handleItemChange={handleItemChange}
+                  saveItem={handleSaveItem}
+                  savingItemId={savingItemId}
+                  loadingAction={loadingAction}
+                  deleteMenuItem={handleDeleteMenuItem}
+                  establishmentColor={establishmentColor}
+                  isDemo={isDemo}
+                  isAdmin={isAdmin}
+                  basketEnabled={basketEnabled}
+                  hideDietaryBadges={{
+                    vegan: getCategoryDietaryAttributes(category).vegan,
+                    alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+                  }}
+                  categoryIsAvailable={category.is_available !== false}
+                />
+              )
+            ))}
+        </div>
+      </section>
+    );
+  }
+
+  // Default: admin mode (sorting enabled)
   return (
     <section className="category-section max-w-4xl mx-auto px-4 py-6">
       {/* Category Header */}
@@ -539,7 +650,6 @@ export default function CategorySection({
               : "max-w-full"
           }
         >
-          {/* Fix the weird initial sorting by ensuring items have proper display_order before rendering */}
           {category.menu_items
             .map((item, index) => ({
               ...item,
