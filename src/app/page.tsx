@@ -1,38 +1,23 @@
 'use client'
 
-import Link from 'next/link'
-import { useState } from 'react'
-import { Mail, CircleCheck, X } from "lucide-react"
-import { Analytics } from "@vercel/analytics/next"
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription
-} from '@/components/ui/dialog'
-import { SignupForm } from '@/components/SignupForm'
+import Link from 'next/link';
+import { useState } from 'react';
+import { Mail, CircleCheck } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { SignupForm } from '@/components/SignupForm';
 
 export default function HomePage() {
-  const [showContactPopup, setShowContactPopup] = useState(false)
-  const [showSignupForm, setShowSignupForm] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const [showSignupForm, setShowSignupForm] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   const handlePlanClick = (plan: string) => {
-    setSelectedPlan(plan)
-    setShowSignupForm(true)
-  }
+    setSelectedPlan(plan);
+    setShowSignupForm(true);
+  };
 
-  // Only close the contact popup, don't touch selectedPlan
-  const closePopup = () => {
-    setShowContactPopup(false)
-  }
-
-  // Only close the signup form, don't touch selectedPlan
-  const closeSignupForm = () => {
-    setShowSignupForm(false)
-  }
+  const closeSignupForm = () => setShowSignupForm(false);
 
   return (
     <main className="bg-gradient-to-br from-blue-50 via-white to-blue-100 min-h-screen text-[#1e293b]">
@@ -59,9 +44,7 @@ export default function HomePage() {
             onClick={e => {
               e.preventDefault();
               const section = document.getElementById('tarifs');
-              if (section) {
-                section.scrollIntoView({ behavior: 'smooth' });
-              }
+              if (section) section.scrollIntoView({ behavior: 'smooth' });
             }}
           >
             🚀 Profiter de l'offre de lancement
@@ -205,37 +188,6 @@ export default function HomePage() {
             <p className="text-xs text-gray-500 mt-2">Remise de 50% appliquée automatiquement sur les 3 premiers mois d'abonnement.</p>
           </div>
         </div>
-
-        {/* Contact popup using shadcn/ui Dialog */}
-      <Dialog open={showContactPopup} onOpenChange={setShowContactPopup}>
-          <DialogContent className="max-w-md w-full p-0">
-            <DialogHeader>
-              <DialogTitle className="flex flex-col items-center gap-2 pt-6">
-                <span className="text-4xl">🎉</span>
-                <span className="text-2xl font-bold text-blue-700">Profitez de l'offre de lancement !</span>
-              </DialogTitle>
-              <DialogDescription className="px-8">
-                <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 mt-4 text-center">
-                  <p className="font-semibold">Formule {selectedPlan}</p>
-                  <p className="text-sm">2 semaines gratuites + réduction de 50%</p>
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-            <div className="px-8 pb-8 text-center">
-              <p className="mb-6 text-gray-700">Nous vous accompagnons personnellement pour mettre en ligne votre menu en moins de 24h.</p>
-              <div className="space-y-3">
-                <a 
-                  className="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow hover:bg-blue-700 transition flex items-center justify-center gap-2" 
-                  href={`mailto:contact.simplemenu@gmail.com?subject=Simple%20Menu%20-%20Offre%20de%20lancement%20${selectedPlan}&body=Bonjour%20Robin,%20je%20veux%20profiter%20de%20l'offre%20de%20lancement%20Simple%20Menu%20(${selectedPlan})%20!`}
-                >
-                  <Mail className="text-xl" />
-                  contact.simplemenu@gmail.com
-                </a>
-              </div>
-              <p className="text-xs text-gray-500 mt-4">⚡ Offre limitée • Setup en 24h • Support français</p>
-            </div>
-          </DialogContent>
-        </Dialog>
       </section>
 
       {/* TESTIMONIALS SECTION */}
@@ -307,45 +259,9 @@ export default function HomePage() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Contact popup using shadcn/ui Dialog */}
-      <Dialog open={showContactPopup} onOpenChange={setShowContactPopup}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center text-2xl font-bold text-blue-700">
-              🎉 Excellent choix !
-            </DialogTitle>
-            <DialogDescription className="text-center">
-              Vous avez sélectionné le plan <strong>{selectedPlan}</strong>
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="text-center space-y-4">
-            <p className="text-gray-700">
-              Contactez-nous pour profiter de l'offre de lancement avec <strong>2 semaines gratuites + 50% de réduction</strong> !
-            </p>
-            
-            <a 
-              href={`mailto:contact.simplemenu@gmail.com?subject=Simple%20Menu%20-%20Plan%20${selectedPlan}&body=Bonjour%20Robin,%20je%20suis%20intéressé%20par%20le%20plan%20${selectedPlan}%20avec%20l'offre%20de%20lancement%20!`}
-              className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 transition"
-              onClick={closePopup}
-            >
-              <Mail className="w-5 h-5" />
-              Nous contacter
-            </a>
-            
-            <button
-              onClick={closePopup}
-              className="block w-full text-gray-500 hover:text-gray-700 transition mt-3"
-            >
-              Fermer
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
+      {/* Analytics and Speed Insights */}
       <Analytics />
       <SpeedInsights />
     </main>
-  )
+  );
 }
