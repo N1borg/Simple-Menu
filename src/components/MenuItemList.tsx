@@ -1,18 +1,8 @@
 import type { Category, MenuItem } from '@/types/supabase_types'
 import Image from 'next/image'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+import { Dialog } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useEffect, useState } from 'react'
-import { toast } from "sonner"
-import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
 import { useCart } from '@/components/hooks/useCart'
 import MenuItemDialog from '@/components/MenuItemDialog'
 import DietaryBadge from '@/components/DietaryBadge'
@@ -179,7 +169,7 @@ export default function MenuItemList({
             {!isAdmin && basketEnabled && (
               <Checkbox
                 checked={isInCart?.(item.id) || false}
-                onCheckedChange={(checked) => {
+                onCheckedChange={(checked: boolean) => {
                   if (checked && addToCart) {
                     addToCart(item)
                   } else if (!checked && removeFromCart) {
@@ -187,7 +177,7 @@ export default function MenuItemList({
                   }
                 }}
                 accentColor={establishmentColor}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => e.stopPropagation()}
                 className="h-6 w-6"
               />
             )}

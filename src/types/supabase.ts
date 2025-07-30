@@ -62,7 +62,7 @@ export type Database = {
         Row: {
           address: string | null
           admin_hash: string | null
-          basket_enabled: boolean | null
+          basket_enabled: boolean
           city: string | null
           created_at: string | null
           email: string | null
@@ -70,7 +70,7 @@ export type Database = {
           google_maps_url: string | null
           id: string
           instagram_url: string | null
-          is_active: boolean | null
+          is_active: boolean
           logo_url: string | null
           name: string
           opening_hours: Json | null
@@ -89,7 +89,7 @@ export type Database = {
         Insert: {
           address?: string | null
           admin_hash?: string | null
-          basket_enabled?: boolean | null
+          basket_enabled?: boolean
           city?: string | null
           created_at?: string | null
           email?: string | null
@@ -97,7 +97,7 @@ export type Database = {
           google_maps_url?: string | null
           id?: string
           instagram_url?: string | null
-          is_active?: boolean | null
+          is_active?: boolean
           logo_url?: string | null
           name: string
           opening_hours?: Json | null
@@ -116,7 +116,7 @@ export type Database = {
         Update: {
           address?: string | null
           admin_hash?: string | null
-          basket_enabled?: boolean | null
+          basket_enabled?: boolean
           city?: string | null
           created_at?: string | null
           email?: string | null
@@ -124,7 +124,7 @@ export type Database = {
           google_maps_url?: string | null
           id?: string
           instagram_url?: string | null
-          is_active?: boolean | null
+          is_active?: boolean
           logo_url?: string | null
           name?: string
           opening_hours?: Json | null

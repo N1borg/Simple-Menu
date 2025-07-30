@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import confetti from 'canvas-confetti'
 import { notFound, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -243,11 +243,26 @@ function PaymentSuccessContent() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 export default function PaymentSuccessPage() {
   return (
-    <PaymentSuccessContent />
-  )
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-6">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+            </div>
+            <CardTitle className="text-2xl text-gray-900">
+              Chargement...
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+    }>
+      <PaymentSuccessContent />
+    </Suspense>
+  );
 }
