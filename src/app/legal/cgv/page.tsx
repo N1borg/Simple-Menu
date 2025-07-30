@@ -4,23 +4,13 @@ export const metadata = {
 };
 
 import Link from "next/link";
+import LegalHeader from "@/components/LegalHeader";
+import LegalFooter from "@/components/LegalFooter";
 
 export default function TermsConditionsPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-blue-700 font-extrabold text-xl">
-            <img src="/simple-menu-logo-no-text.png" alt="Simple-Menu" className="h-8 w-8 rounded-full border-2 border-blue-200 shadow" />
-            Simple-Menu
-          </Link>
-          <nav className="flex gap-6">
-            <Link href="/" className="text-gray-700 hover:text-blue-700 font-medium">Accueil</Link>
-            <Link href="/contact" className="text-gray-700 hover:text-blue-700 font-medium">Contact</Link>
-          </nav>
-        </div>
-      </header>
+      <LegalHeader />
 
       {/* Main Content */}
       <main className="flex-1">
@@ -135,10 +125,7 @@ export default function TermsConditionsPage() {
         </div>
       </main>
 
-      {/* Footer - match home page style */}
-      <footer className="text-center text-sm text-gray-500 py-6 border-t bg-white mt-10">
-        © {new Date().getFullYear()} Simple-Menu — Conçu avec passion 🧑‍🍳
-      </footer>
+      <LegalFooter />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Mail, CircleCheck } from 'lucide-react';
+import LegalFooter from '@/components/LegalFooter';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -235,9 +236,7 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="text-center text-sm text-gray-500 py-6 border-t">
-        © {new Date().getFullYear()} Simple-Menu — Conçu avec passion 🧑‍🍳
-      </footer>
+      <LegalFooter transparentBg />
 
       {/* Signup Form Modal */}
       <Dialog open={showSignupForm} onOpenChange={setShowSignupForm}>
