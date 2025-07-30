@@ -124,9 +124,7 @@ export default async function MenuPage({ params }: PageProps) {
           />
           <main className="flex-grow">
             <MenuDisplay 
-              establishment={establishment} 
-              isAdminView={isAuthenticated || slug === 'demo'}
-              basketEnabled={establishment.basket_enabled ?? true}
+              establishment={establishment}
             />
           </main>
         </CartProvider>
