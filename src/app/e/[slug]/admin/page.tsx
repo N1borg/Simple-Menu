@@ -99,7 +99,7 @@ export default async function AdminPage({ params, searchParams }: PageProps) {
                 Connectez-vous pour gérer votre menu
               </p>
             </div>
-              <AdminLoginForm slug={slug} color={establishment.primary_color ?? undefined} />
+              <AdminLoginForm slug={slug} />
             </div>
         </div>
       </EstablishmentThemeProvider>
