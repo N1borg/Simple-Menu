@@ -1,5 +1,5 @@
 import React from "react"
-import EstablishmentFooter, { EstablishmentInfo } from "./EstablishmentFooter"
+import EstablishmentFooter, { EstablishmentInfo } from "@/components/EstablishmentFooter"
 
 interface MenuFooterProps {
   color?: string

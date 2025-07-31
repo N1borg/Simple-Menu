@@ -36,6 +36,7 @@ interface ParameterSheetProps {
     primary_color?: string;
     plan?: string;
     logo_url?: string;
+    basket_enabled?: boolean;
   };
   isDemo: boolean;
   subscription: any; // Add subscription prop
@@ -49,8 +50,10 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
   const [isSavingColor, setIsSavingColor] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPWAInstall, setShowPWAInstall] = useState(false);
-  const [basketEnabled, setBasketEnabled] = useState(true);
-  const [isLoadingBasket, setIsLoadingBasket] = useState(true);
+  const [basketEnabled, setBasketEnabled] = useState(
+    establishment.basket_enabled !== undefined ? establishment.basket_enabled : true
+  );
+  const [isLoadingBasket, setIsLoadingBasket] = useState(false);
   const [isSavingBasket, setIsSavingBasket] = useState(false);
 
   // Check if PWA is allowed for this establishment
@@ -117,37 +120,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
     }
   };
 
-  // Load basket setting on component mount
-  useEffect(() => {
-    const loadBasketSetting = async () => {
-      if (isDemo) {
-        setIsLoadingBasket(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/admin/basket-toggle`);
-        if (response.ok) {
-          const data = await response.json();
-          setBasketEnabled(data.basketEnabled);
-        } else if (response.status === 500) {
-          // Likely missing basket_enabled column, default to true
-          setBasketEnabled(true);
-          console.warn('Basket setting not available - database migration needed');
-        } else {
-          console.error('Failed to load basket setting');
-        }
-      } catch (error) {
-        console.error('Error loading basket setting:', error);
-        // Default to enabled if there's an error
-        setBasketEnabled(true);
-      } finally {
-        setIsLoadingBasket(false);
-      }
-    };
-
-    loadBasketSetting();
-  }, [isDemo]);
+  // No need to fetch basketEnabled on mount; it's included in establishment prop
 
   // Handle basket toggle
   const handleBasketToggle = async (enabled: boolean) => {
@@ -261,7 +234,6 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                 <ColorSelector
                   currentColor={currentColor}
                   onColorChange={setCurrentColor}
-                  establishmentId={establishment.id}
                   isDemo={isDemo}
                   showPreview={true}
                   showSaveButton={false}

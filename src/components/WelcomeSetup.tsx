@@ -410,7 +410,6 @@ export function WelcomeSetup({
       case 3: // Establishment info
         return (
           <EstablishmentInfoForm
-            establishmentId={establishmentId}
             onDataChange={setEstablishmentInfo}
             primaryColor={selectedColor}
           />

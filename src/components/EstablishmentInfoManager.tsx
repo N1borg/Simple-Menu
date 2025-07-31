@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl, convertToLegacyHours, getEstablishmentColor } from '@/lib/utils'
+import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl } from '@/lib/utils'
 import { Loader2, MapPin } from 'lucide-react'
 import {
   Dialog,
@@ -15,20 +15,16 @@ import {
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog"
-import EstablishmentFooter from '@/components/EstablishmentFooter'
 import ContactInfoFields, { ContactFormData } from '@/components/ContactInfoFields'
 
 interface EstablishmentInfoManagerProps {
-  establishmentId: string
   slug: string
   children?: React.ReactNode
   primaryColor?: string
   isDemo?: boolean
 }
 
-const defaultHours = [] // No longer needed, kept for compatibility
-
-export function EstablishmentInfoManager({ establishmentId, slug, children, primaryColor, isDemo = false }: EstablishmentInfoManagerProps) {
+export function EstablishmentInfoManager({ slug, children, primaryColor, isDemo = false }: EstablishmentInfoManagerProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   

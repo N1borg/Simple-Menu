@@ -34,7 +34,7 @@ const TimeSlotInput: React.FC<{
 }> = ({ timeSlot, onChange, label, disabled = false, primaryColor }) => {
   const updateField = (field: keyof TimeSlot, value: string) => {
     let sanitized = sanitizeTimeInput(value)
-    
+
     // Validate based on field type
     if ((field === 'startHour' || field === 'endHour') && sanitized && !validateHour(sanitized)) {
       return

@@ -33,7 +33,6 @@ export default function ItemImageUpload({
   const [error, setError] = useState<UploadError | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [displayedImageUrl, setDisplayedImageUrl] = useState<string | undefined>(item.image_url || undefined);
 

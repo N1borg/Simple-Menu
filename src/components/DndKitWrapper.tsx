@@ -1,6 +1,6 @@
 // DndKitWrapper.tsx - Updated version
 import { DndContext, closestCenter, DragOverlay, PointerSensor, TouchSensor, useSensor, useSensors, KeyboardSensor } from '@dnd-kit/core';
-import { arrayMove, SortableContext, verticalListSortingStrategy, rectSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { SortableContext, rectSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { ReactNode, useState } from 'react';
 

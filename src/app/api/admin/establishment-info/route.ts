@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     // Get establishment basic info
     const { data: establishment, error } = await supabase
       .from('establishments')
-      .select('id, name, primary_color, logo_url, address, phone, email, facebook_url, instagram_url, google_maps_url, opening_hours')
+      .select('id, name, primary_color, secondary_color, logo_url, address, phone, email, facebook_url, instagram_url, google_maps_url, opening_hours, basket_enabled')
       .eq('slug', slug)
       .single()
 
@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       id: establishment.id,
       name: establishment.name,
+      secondary_color: establishment.secondary_color,
       primary_color: establishment.primary_color,
       logo_url: establishment.logo_url,
       address: establishment.address,
@@ -48,7 +49,8 @@ export async function GET(req: NextRequest) {
       facebook_url: establishment.facebook_url,
       instagram_url: establishment.instagram_url,
       google_maps_url: establishment.google_maps_url,
-      opening_hours: establishment.opening_hours
+      opening_hours: establishment.opening_hours,
+      basket_enabled: establishment.basket_enabled
     })
 
   } catch (error) {

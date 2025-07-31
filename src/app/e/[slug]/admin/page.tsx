@@ -127,7 +127,6 @@ export default async function AdminPage({ params, searchParams }: PageProps) {
                 <PaymentStatusBanner 
                   paymentStatus={paymentStatus}
                   sessionId={sessionId}
-                  establishmentSlug={slug}
                 />
               </div>
             )}

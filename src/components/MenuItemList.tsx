@@ -73,11 +73,6 @@ export default function MenuItemList({
     }
   }, [editingItem, item.is_available, item.id])
 
-  const handleAvailableChange = (val: boolean) => {
-    setLocalAvailable(val)
-    setInstantAvailable(val)
-  }
-
   return (
     <Dialog open={editingItem === item.id} onOpenChange={open => {
       if (!open && editingItem === item.id) setEditingItem(null)

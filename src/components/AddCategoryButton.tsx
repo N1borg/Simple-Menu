@@ -21,7 +21,6 @@ export function AddCategoryButton({
   isAddingItemGlobally = false
 }: AddCategoryButtonProps) {
   const isSubscriptionDisabled = subscription && !subscription.canCreateCategory
-  const isDisabled = disabled || loading || isSubscriptionDisabled || isAddingItemGlobally
 
   const getTooltipContent = () => {
     if (loading || isAddingItemGlobally) return "Création en cours..."

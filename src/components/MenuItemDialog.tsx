@@ -31,10 +31,10 @@ interface MenuItemDialogProps {
   removeFromCart?: (itemId: string) => void;
   establishmentColor?: string;
   categoryIsAvailable?: boolean;
-  categoryDietary?: { vegan: boolean; alcoholFree: boolean }; // NEW
+  categoryDietary?: { vegan: boolean; alcoholFree: boolean };
 }
 
-export default function <MenuItemDialog>({
+export default function MenuItemDialog({
   item,
   category,
   isAdmin,
@@ -51,7 +51,7 @@ export default function <MenuItemDialog>({
   removeFromCart,
   establishmentColor,
   categoryIsAvailable,
-  categoryDietary = { vegan: false, alcoholFree: false }, // NEW
+  categoryDietary = { vegan: false, alcoholFree: false },
 }: MenuItemDialogProps) {
   if (isAdmin) {
     return (

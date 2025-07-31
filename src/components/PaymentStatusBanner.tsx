@@ -9,10 +9,9 @@ import { toast } from 'sonner'
 interface PaymentStatusBannerProps {
   paymentStatus: string
   sessionId?: string
-  establishmentSlug: string
 }
 
-export function PaymentStatusBanner({ paymentStatus, sessionId, establishmentSlug }: PaymentStatusBannerProps) {
+export function PaymentStatusBanner({ paymentStatus, sessionId }: PaymentStatusBannerProps) {
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationResult, setVerificationResult] = useState<any>(null)
 

@@ -18,20 +18,21 @@ import {
 } from "@/components/ui/dialog"
 
 interface OpeningHoursManagerProps {
-  establishmentId: string
   slug: string
   children?: React.ReactNode
   primaryColor?: string
   isDemo?: boolean
+  openingHoursData?: any // Accept opening_hours directly
 }
 
 const defaultHours = defaultWeekSchedule
 
-export function OpeningHoursManager({ establishmentId, slug, children, primaryColor, isDemo = false }: OpeningHoursManagerProps) {
+export function OpeningHoursManager({ slug, children, primaryColor, isDemo = false, openingHoursData }: OpeningHoursManagerProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [openingHours, setOpeningHours] = useState<DaySchedule[]>(defaultHours)
-  const [initialOpeningHours, setInitialOpeningHours] = useState<DaySchedule[]>(defaultHours)
+  const initialHours = openingHoursData ? convertLegacyHours(openingHoursData) : defaultHours
+  const [openingHours, setOpeningHours] = useState<DaySchedule[]>(initialHours)
+  const [initialOpeningHours, setInitialOpeningHours] = useState<DaySchedule[]>(initialHours)
   const [dialogOpen, setDialogOpen] = useState(false)
 
   // Check if there are any changes
@@ -39,31 +40,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
     return JSON.stringify(convertToLegacyHours(openingHours)) !== JSON.stringify(convertToLegacyHours(initialOpeningHours))
   }
 
-  // Load establishment data on mount for all modes
-  useEffect(() => {
-    loadOpeningHours()
-  }, [])
-
-  const loadOpeningHours = async () => {
-    // Always load data, even in demo mode
-    setIsLoading(true)
-    try {
-      const response = await fetch(`/api/admin/establishment-info?slug=${slug}`)
-      if (response.ok) {
-        const data = await response.json()
-        const loadedHours = data.opening_hours ? convertLegacyHours(data.opening_hours) : defaultHours
-        setOpeningHours(loadedHours)
-        setInitialOpeningHours(loadedHours)
-      } else {
-        toast.error('Erreur lors du chargement des horaires')
-      }
-    } catch (error) {
-      console.error('Error loading opening hours:', error)
-      toast.error('Erreur lors du chargement des horaires')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // No API call for loading opening hours; use prop
 
   const handleHoursChange = (newSchedule: DaySchedule[]) => {
     setOpeningHours(newSchedule)
@@ -92,9 +69,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
       toast.success('Horaires mis à jour avec succès!')
       // Update initial state to reflect saved changes
       setInitialOpeningHours(openingHours)
-      setDialogOpen(false) // Close dialog on success
-      // Optionally reload page or data here if needed
-      // setTimeout(() => window.location.reload(), 500)
+      setDialogOpen(false)
     } catch (error) {
       console.error('Error saving opening hours:', error)
       // Keep the user's edits - don't revert opening hours on error

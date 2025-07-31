@@ -7,7 +7,6 @@ import ContactInfoFields, { ContactFormData } from '@/components/ContactInfoFiel
 import OpeningHoursInput from '@/components/OpeningHoursInput'
 
 interface EstablishmentInfoFormProps {
-  establishmentId: string
   onDataChange: (data: {
     address: string
     phone: string
@@ -29,8 +28,7 @@ interface EstablishmentInfoFormProps {
 
 const defaultHours = defaultWeekSchedule
 
-export function EstablishmentInfoForm({ 
-  establishmentId, 
+export function EstablishmentInfoForm({
   onDataChange,
   primaryColor,
   initialData 
@@ -46,29 +44,21 @@ export function EstablishmentInfoForm({
     initialData?.opening_hours ? convertLegacyHours(initialData.opening_hours) : defaultHours
   )
 
-  // Update parent whenever data changes
-  const updateParent = () => {
-    onDataChange({
-      ...formData,
-      opening_hours: convertToLegacyHours(openingHours)
-    })
-  }
-
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
     let processedValue = value.trim()
-    
+
     // Convert social media usernames to full URLs, but only if there's actually a value
     if (field === 'facebook_url' && processedValue && !processedValue.startsWith('http')) {
       processedValue = `https://www.facebook.com/${processedValue}`
     } else if (field === 'instagram_url' && processedValue && !processedValue.startsWith('http')) {
       processedValue = `https://www.instagram.com/${processedValue}`
     }
-    
+
     // If the field was cleared, make sure it's empty
     if (!value.trim()) {
       processedValue = ''
     }
-    
+
     const newData = { ...formData, [field]: processedValue }
     setFormData(newData)
     onDataChange({

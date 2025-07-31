@@ -2,7 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import React, { ReactNode } from 'react';
+import React from 'react';
 
 export function SortableItem({ 
   id, 

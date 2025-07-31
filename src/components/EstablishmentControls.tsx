@@ -1,29 +1,28 @@
 'use client'
 
-import { EstablishmentInfoManager } from './EstablishmentInfoManager'
-import { OpeningHoursManager } from './OpeningHoursManager'
+import { EstablishmentInfoManager } from '@/components/EstablishmentInfoManager'
+import { OpeningHoursManager } from '@/components/OpeningHoursManager'
 
 interface EstablishmentControlsProps {
-  establishmentId: string
   slug: string
   primaryColor?: string
   isDemo?: boolean
+  openingHoursData: any // Accept opening_hours directly
 }
 
-export function EstablishmentControls({ establishmentId, slug, primaryColor, isDemo = false }: EstablishmentControlsProps) {
+export function EstablishmentControls({ slug, primaryColor, isDemo = false, openingHoursData }: EstablishmentControlsProps) {
   return (
     <div className="space-y-2">
-      <EstablishmentInfoManager 
-        establishmentId={establishmentId} 
+      <EstablishmentInfoManager
         slug={slug}
         primaryColor={primaryColor}
         isDemo={isDemo}
       />
-      <OpeningHoursManager 
-        establishmentId={establishmentId} 
+      <OpeningHoursManager
         slug={slug}
         primaryColor={primaryColor}
         isDemo={isDemo}
+        openingHoursData={openingHoursData}
       />
     </div>
   )

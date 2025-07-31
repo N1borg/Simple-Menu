@@ -11,7 +11,6 @@ interface ColorSelectorProps {
   currentColor?: string
   onColorChange?: (color: string) => void
   onColorSave?: (color: string) => Promise<void>
-  establishmentId?: string
   isDemo?: boolean
   showPreview?: boolean
   showSaveButton?: boolean
@@ -24,7 +23,6 @@ export function ColorSelector({
   currentColor = '#3b82f6',
   onColorChange,
   onColorSave,
-  establishmentId,
   isDemo = false,
   showPreview = true,
   showSaveButton = true,

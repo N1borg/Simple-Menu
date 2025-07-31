@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useCart } from '@/components/hooks/useCart'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ChefHat, Plus, Minus, Trash2, Copy, X } from 'lucide-react'
+import { ChefHat, Plus, Minus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
@@ -15,8 +15,7 @@ interface BasketProps {
   adminBannerPresent?: boolean
 }
 
-export default function Basket({ establishmentColor, isAdminView = false, basketEnabled = true, adminBannerPresent = false }: BasketProps) {
-  // Don't render basket if it's disabled
+export default function Basket({ establishmentColor, basketEnabled = true, adminBannerPresent = false }: BasketProps) {
   if (!basketEnabled) {
     return null
   }

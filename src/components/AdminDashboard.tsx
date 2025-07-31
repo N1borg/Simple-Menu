@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { EstablishmentWithCategories } from '@/types/supabase_types'
 import { toast } from "sonner"
 import ImageUpload from "@/components/ImageUpload"
@@ -10,14 +10,10 @@ import { restrictToParentElement } from '@dnd-kit/modifiers'
 import { verticalListSortingStrategy } from '@dnd-kit/sortable'
 import CategorySection from '@/components/CategorySection'
 import { useCategories } from '@/components/hooks/useCategories'
-import { useMenuItems } from '@/components/hooks/useMenuItems'
 import ParameterSheet from '@/components/ParameterSheet'
 import { AddCategoryButton } from '@/components/AddCategoryButton'
 import { useDashboardTutorial } from '@/hooks/useDashboardTutorial'
 import { EstablishmentControls } from '@/components/EstablishmentControls'
-import { Settings, GripVertical, Cat } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSubscription } from '@/hooks/useSubscription'
 import BadgeLegend from '@/components/BadgeLegend'
 
@@ -27,16 +23,11 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const isDemo = establishment.slug === 'demo'
-  
   const [demoLogoUrl, setDemoLogoUrl] = useState<string | undefined>(
     isDemo ? (establishment.logo_url ?? undefined) : undefined
   )
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [loggingOut, setLoggingOut] = useState(false)
   const [isAddingItemGlobally, setIsAddingItemGlobally] = useState(false)
-
   const { startTutorial, tutorialCompleted } = useDashboardTutorial()
-
   const {
     categories,
     setCategories,
@@ -53,12 +44,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   
   // Initialize subscription hook with current categories for real-time count updates
   const subscription = useSubscription(establishment, categories)
-
-  const {
-    savingItemId,
-    editingItem,
-    setEditingItem
-  } = useMenuItems(categories, setCategories, isDemo)
 
   const handleLogoUpload = async (url: string) => {
     if (isDemo) {
@@ -370,11 +355,11 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       
       {/* Edit Contact Information Button - Always visible */}
       <div className="flex justify-center mt-6">
-        <EstablishmentControls 
-          establishmentId={establishment.id}
+        <EstablishmentControls
           slug={establishment.slug}
           primaryColor={establishment.primary_color ?? undefined}
           isDemo={isDemo}
+          openingHoursData={establishment.opening_hours}
         />
       </div>
     </div>
