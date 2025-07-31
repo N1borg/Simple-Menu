@@ -11,6 +11,7 @@ import DietaryBadge from '@/components/DietaryBadge'
 interface MenuItemCardProps {
   item: MenuItem
   category: Category
+  plan: string
   editingItem: string | null
   setEditingItem: (id: string | null) => void
   handleItemChange?: (catId: string, itemId: string, field: string, value: any) => void
@@ -29,6 +30,7 @@ interface MenuItemCardProps {
 export default function MenuItemCard({
   item,
   category,
+  plan = 'essentiel',
   editingItem,
   setEditingItem,
   saveItem,
@@ -292,6 +294,7 @@ export default function MenuItemCard({
           category={category}
           isAdmin={isAdmin}
           isDemo={isDemo}
+          plan={plan}
           savingItemId={savingItemId}
           loadingAction={loadingAction}
           saveItem={saveItem}

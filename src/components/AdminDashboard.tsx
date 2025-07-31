@@ -275,6 +275,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
               category={category}
               isDemo={isDemo}
               isAdmin={true}
+              plan={establishment.plan || 'essentiel'}
               editingCategoryId={editingCategoryId}
               setEditingCategoryId={setEditingCategoryId}
               originalCategory={originalCategory}
@@ -284,7 +285,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
               categories={categories}
               setCategories={setCategories}
               saveCategory={handleSaveCategory}
-              establishmentColor={establishment.primary_color ?? undefined}
+              establishmentColor={establishment.primary_color ?? '#3b82f6'}
               deleteCategory={handleDeleteCategory}
               subscription={subscription}
               isAddingItemGlobally={isAddingItemGlobally}
@@ -310,6 +311,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                     category={cat}
                     isDemo={isDemo}
                     isAdmin={true}
+                    plan={establishment.plan || 'essentiel'}
                     editingCategoryId={editingCategoryId}
                     setEditingCategoryId={setEditingCategoryId}
                     originalCategory={originalCategory}

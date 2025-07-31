@@ -187,7 +187,7 @@ export function SignupForm({ onClose, selectedPlan = 'pro' }: SignupFormProps) {
                   </div>
                 </div>
               </div>
-                  
+
               <FormField
                 control={form.control}
                 name="plan"

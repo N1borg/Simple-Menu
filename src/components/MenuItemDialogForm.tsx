@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import ProCrown from "@/components/ui/ProCrown"
 import { DialogClose, DialogFooter } from "@/components/ui/dialog"
 import { Loader2 } from "lucide-react"
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
@@ -12,13 +13,14 @@ import { useState, useEffect } from 'react'
 import DietaryBadge from '@/components/DietaryBadge'
 
 interface MenuItemDialogFormProps {
-  item: MenuItem
-  isDemo: boolean
-  savingItemId: string | null
-  loadingAction: string | null
-  onSubmit: (updatedItem: MenuItem) => Promise<void>
-  onDelete: () => Promise<void>
-  onCancel: () => void
+  item: MenuItem;
+  isDemo: boolean;
+  savingItemId: string | null;
+  loadingAction: string | null;
+  onSubmit: (updatedItem: MenuItem) => Promise<void>;
+  onDelete: () => Promise<void>;
+  onCancel: () => void;
+  plan: string
 }
 
 export function MenuItemDialogForm({
@@ -29,11 +31,15 @@ export function MenuItemDialogForm({
   onSubmit,
   onDelete,
   onCancel,
+  plan = 'essentiel',
 }: MenuItemDialogFormProps) {
   const [localName, setLocalName] = useState(item.name)
   const [localDescription, setLocalDescription] = useState(item.description || '')
   const [localPrice, setLocalPrice] = useState(item.price_one?.toFixed(2) ?? '')
-  const [localAvailable, setLocalAvailable] = useState(!!item.is_available)
+  // Block is-available for non-pro/premium
+  const isProOrPremium = plan === 'pro' || plan === 'premium';
+  // Always show as available for non-pro/premium
+  const [localAvailable, setLocalAvailable] = useState(isProOrPremium ? !!item.is_available : true)
   const [localVegan, setLocalVegan] = useState(!!item.vegan)
   const [localAlcoholFree, setLocalAlcoholFree] = useState(!!item.alcohol_free)
 
@@ -62,7 +68,7 @@ export function MenuItemDialogForm({
   }
 
   const handleAvailableChange = (val: boolean) => {
-    setLocalAvailable(val)
+    if (isProOrPremium) setLocalAvailable(val)
   }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -89,13 +95,25 @@ export function MenuItemDialogForm({
     <form onSubmit={handleFormSubmit} className="space-y-3">
       <div>
         <Label className="flex items-center gap-2">
-          <Switch
-            checked={localAvailable}
-            onCheckedChange={handleAvailableChange}
-            className="cursor-pointer"
-            disabled={isDemo}
-          />
-          Disponible
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex items-center">
+                <Switch
+                  checked={isProOrPremium ? localAvailable : true}
+                  onCheckedChange={handleAvailableChange}
+                  className={isProOrPremium ? "cursor-pointer" : "cursor-not-allowed"}
+                  disabled={!isProOrPremium || isDemo}
+                />
+                {!isProOrPremium && <ProCrown title="Pro/Premium" />}
+              </span>
+            </TooltipTrigger>
+            {!isProOrPremium && (
+              <TooltipContent>
+                <span>Fonctionnalité disponible uniquement avec le plan Pro ou Premium</span>
+              </TooltipContent>
+            )}
+          </Tooltip>
+          <span className={isProOrPremium ? undefined : "text-gray-400"}>Disponible</span>
         </Label>
       </div>
 

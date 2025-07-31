@@ -36,6 +36,7 @@ export default function MenuDisplay({ establishment }: MenuDisplayProps) {
               category={category}
               isDemo={false}
               isAdmin={false}
+              plan={establishment.plan || 'essentiel'}
               editingCategoryId={null}
               setEditingCategoryId={() => {}}
               originalCategory={null}

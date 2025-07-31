@@ -10,6 +10,7 @@ import DietaryBadge from '@/components/DietaryBadge';
 interface MenuItemCompactProps {
   item: MenuItem;
   category: Category;
+  plan: string;
   editingItem: string | null;
   setEditingItem: (id: string | null) => void;
   saveItem: (item: MenuItem) => Promise<void>;
@@ -27,6 +28,7 @@ interface MenuItemCompactProps {
 export default function MenuItemCompact({
   item,
   category,
+  plan = 'essentiel',
   editingItem,
   setEditingItem,
   saveItem,
@@ -185,6 +187,7 @@ export default function MenuItemCompact({
           category={category}
           isAdmin={isAdmin}
           isDemo={isDemo}
+          plan={plan}
           savingItemId={savingItemId}
           loadingAction={loadingAction}
           saveItem={saveItem}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
@@ -34,12 +34,12 @@ interface ParameterSheetProps {
     id: string;
     slug: string;
     primary_color?: string;
-    plan?: string;
+    plan: string;
     logo_url?: string;
     basket_enabled?: boolean;
   };
   isDemo: boolean;
-  subscription: any; // Add subscription prop
+  subscription: any;
   onTutorialStart?: () => void;
 }
 

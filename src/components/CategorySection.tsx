@@ -33,6 +33,7 @@ interface CategorySectionProps {
   setEditingCategoryId: (id: string | null) => void
   originalCategory: Category | null
   setOriginalCategory: (cat: Category | null) => void
+  plan: string
   savingCategoryId: string | null
   loadingAction: string | null
   categories: any[]
@@ -55,6 +56,7 @@ export default function CategorySection({
   category,
   isDemo,
   isAdmin = true,
+  plan = 'essentiel',
   editingCategoryId,
   setEditingCategoryId,
   originalCategory,
@@ -86,7 +88,7 @@ export default function CategorySection({
     // Return true if explicitly set OR if all available items have it
     return { 
       vegan: categoryVegan || allVegan, 
-      alcoholFree: categoryAlcoholFree || allAlcoholFree 
+      alcoholFree: categoryAlcoholFree || allAlcoholFree
     }
   }
 
@@ -475,6 +477,7 @@ export default function CategorySection({
                 <MenuItemList
                   key={item.id}
                   item={item}
+                  plan={plan}
                   category={category}
                   editingItem={editingItem}
                   setEditingItem={setEditingItem}
@@ -497,6 +500,7 @@ export default function CategorySection({
                 <MenuItemCompact
                   key={item.id}
                   item={item}
+                  plan={plan}
                   category={category}
                   editingItem={editingItem}
                   setEditingItem={setEditingItem}
@@ -520,6 +524,7 @@ export default function CategorySection({
                 <MenuItemCard
                   key={item.id}
                   item={item}
+                  plan={plan}
                   category={category}
                   editingItem={editingItem}
                   setEditingItem={setEditingItem}
@@ -570,6 +575,7 @@ export default function CategorySection({
                 <MenuItemList
                   item={item}
                   category={category}
+                  plan={plan}
                   editingItem={editingItem}
                   setEditingItem={setEditingItem}
                   handleItemChange={handleItemChange}
@@ -593,6 +599,7 @@ export default function CategorySection({
                 <MenuItemCompact
                   item={item}
                   category={category}
+                  plan={plan}
                   editingItem={editingItem}
                   setEditingItem={setEditingItem}
                   saveItem={handleSaveItem}
@@ -619,6 +626,7 @@ export default function CategorySection({
                 <MenuItemCard
                   item={item}
                   category={category}
+                  plan={plan}
                   editingItem={editingItem}
                   setEditingItem={setEditingItem}
                   handleItemChange={handleItemChange}
@@ -673,6 +681,7 @@ export default function CategorySection({
                   <MenuItemList
                     item={item}
                     category={category}
+                    plan={plan}
                     editingItem={editingItem}
                     setEditingItem={setEditingItem}
                     handleItemChange={handleItemChange}
@@ -694,6 +703,7 @@ export default function CategorySection({
                   <MenuItemCompact
                     item={item}
                     category={category}
+                    plan={plan}
                     editingItem={editingItem}
                     setEditingItem={setEditingItem}
                     saveItem={handleSaveItem}
@@ -716,6 +726,7 @@ export default function CategorySection({
                   <MenuItemCard
                     item={item}
                     category={category}
+                    plan={plan}
                     editingItem={editingItem}
                     setEditingItem={setEditingItem}
                     handleItemChange={handleItemChange}

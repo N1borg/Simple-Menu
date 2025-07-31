@@ -19,6 +19,7 @@ interface MenuItemDialogProps {
   category: Category;
   isAdmin: boolean;
   isDemo?: boolean;
+  plan: string;
   savingItemId: string | null;
   loadingAction: string | null;
   saveItem: (item: MenuItem) => Promise<void>;
@@ -39,6 +40,7 @@ export default function MenuItemDialog({
   category,
   isAdmin,
   isDemo = false,
+  plan = 'essentiel',
   savingItemId,
   loadingAction,
   saveItem,
@@ -78,6 +80,7 @@ export default function MenuItemDialog({
           isDemo={isDemo}
           savingItemId={savingItemId}
           loadingAction={loadingAction}
+          plan={plan || 'essentiel'}
           onSubmit={async (updatedItem) => {
             try {
               await saveItem(updatedItem);
