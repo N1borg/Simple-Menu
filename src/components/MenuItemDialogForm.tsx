@@ -15,23 +15,23 @@ import DietaryBadge from '@/components/DietaryBadge'
 interface MenuItemDialogFormProps {
   item: MenuItem;
   isDemo: boolean;
+  plan: string
   savingItemId: string | null;
   loadingAction: string | null;
   onSubmit: (updatedItem: MenuItem) => Promise<void>;
   onDelete: () => Promise<void>;
   onCancel: () => void;
-  plan: string
 }
 
 export function MenuItemDialogForm({
   item,
   isDemo,
+  plan = 'essentiel',
   savingItemId,
   loadingAction,
   onSubmit,
   onDelete,
   onCancel,
-  plan = 'essentiel',
 }: MenuItemDialogFormProps) {
   const [localName, setLocalName] = useState(item.name)
   const [localDescription, setLocalDescription] = useState(item.description || '')

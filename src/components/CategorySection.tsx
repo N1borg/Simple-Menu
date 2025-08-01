@@ -762,6 +762,7 @@ export default function CategorySection({
           <CategoryDialogForm
             category={category}
             isDemo={isDemo}
+            plan={plan}
             savingCategoryId={savingCategoryId}
             loadingAction={loadingAction}
             onSubmit={handleCategorySubmit}

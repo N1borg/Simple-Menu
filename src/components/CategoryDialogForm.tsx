@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import ProCrown from "@/components/ui/ProCrown"
 import { DialogClose, DialogFooter } from "@/components/ui/dialog"
 import { Loader2 } from "lucide-react"
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog'
@@ -30,6 +31,7 @@ const DISPLAY_STYLES = [
 interface CategoryDialogFormProps {
   category: Category
   isDemo: boolean
+  plan: string
   savingCategoryId: string | null
   loadingAction: string | null
   onSubmit: (updatedCategory: Category) => Promise<void>
@@ -40,6 +42,7 @@ interface CategoryDialogFormProps {
 export function CategoryDialogForm({
   category,
   isDemo,
+  plan = 'essentiel',
   savingCategoryId,
   loadingAction,
   onSubmit,
@@ -48,7 +51,13 @@ export function CategoryDialogForm({
 }: CategoryDialogFormProps) {
   const [localName, setLocalName] = useState(category.name)
   const [localDisplayStyle, setLocalDisplayStyle] = useState(category.display_style || 'card')
+  const isProOrPremium = plan === 'pro' || plan === 'premium';
   const [localAvailable, setLocalAvailable] = useState(category.is_available ?? true)
+
+  // Only allow changing available for pro/premium
+  const handleAvailableChange = (val: boolean) => {
+    if (isProOrPremium) setLocalAvailable(val)
+  }
   const [localVegan, setLocalVegan] = useState(!!category.vegan)
   const [localAlcoholFree, setLocalAlcoholFree] = useState(!!category.alcohol_free)
 
@@ -93,13 +102,25 @@ export function CategoryDialogForm({
     <form onSubmit={handleFormSubmit} className="space-y-4">
       <div>
         <Label className="flex items-center gap-2">
-          <Switch
-            checked={localAvailable}
-            onCheckedChange={setLocalAvailable}
-            disabled={isDemo}
-            className="cursor-pointer"
-          />
-          Disponible
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex items-center">
+                <Switch
+                  checked={isProOrPremium ? localAvailable : true}
+                  onCheckedChange={handleAvailableChange}
+                  className={isProOrPremium ? "cursor-pointer" : "cursor-not-allowed"}
+                  disabled={!isProOrPremium || isDemo}
+                />
+                {!isProOrPremium && <ProCrown title="Pro/Premium" />}
+              </span>
+            </TooltipTrigger>
+            {!isProOrPremium && (
+              <TooltipContent>
+                <span>Fonctionnalité disponible uniquement avec le plan Pro ou Premium</span>
+              </TooltipContent>
+            )}
+          </Tooltip>
+          <span className={isProOrPremium ? undefined : "text-gray-400"}>Disponible</span>
         </Label>
       </div>
 
