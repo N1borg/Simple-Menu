@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const newDisplayOrder = typeof display_order === 'number' ? display_order : (category.display_order ?? 0) + 1;
   const newCategory = {
     ...categoryData,
-    name: `Category ${newDisplayOrder}`, // category.name
+    name: category.name,
     display_order: newDisplayOrder,
   };
 
@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Duplicate menu items
+  let duplicatedItems: any[] = [];
   if (category.menu_items && category.menu_items.length > 0) {
     const itemsToInsert = category.menu_items.map((item: any) => {
       const { id, created_at, ...itemData } = item;
@@ -71,9 +72,10 @@ export async function POST(req: NextRequest) {
       };
     });
     if (itemsToInsert.length > 0) {
-      await supabase.from('menu_items').insert(itemsToInsert);
+      const { data: insertedItems } = await supabase.from('menu_items').insert(itemsToInsert).select();
+      duplicatedItems = insertedItems || [];
     }
   }
 
-  return NextResponse.json({ success: true, category: insertedCat });
+  return NextResponse.json({ success: true, category: insertedCat, menu_items: duplicatedItems });
 }

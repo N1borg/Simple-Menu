@@ -343,7 +343,6 @@ export default function CategorySection({
 
     try {
       const payload = { categoryId: catId, display_order: newDisplayOrder };
-      console.log('[DUPLICATE CATEGORY] Sending to API:', payload);
       const res = await fetch('/api/admin/menu-category/duplicate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -351,13 +350,14 @@ export default function CategorySection({
       });
       const data = await res.json();
       if (res.ok && data.category) {
-        // Set the correct display_order for the new category
+        // If the API returns duplicated items, use them; otherwise, fallback to empty array
+        const duplicatedItems = data.menu_items || [];
         setCategories((cats) => {
           // Remove tempCat
           const filtered = cats.filter((c) => c.id !== tempCatId);
           // Insert the new category at the right position
           const insertIdx = filtered.findIndex((c, idx) => idx > originalIdx && (typeof c.display_order === 'number' ? c.display_order : idx) > newDisplayOrder - 1);
-          const newCat = { ...data.category, menu_items: [] };
+          const newCat = { ...data.category, menu_items: duplicatedItems };
           if (insertIdx === -1) {
             // Insert at end
             return [...filtered.slice(0, originalIdx + 1), newCat, ...filtered.slice(originalIdx + 1)];
@@ -487,40 +487,6 @@ export default function CategorySection({
                 <p>Modifier la catégorie</p>
               </TooltipContent>
             </Tooltip>
-            {/* <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={async () => {
-                    try {
-                      const res = await fetch('/api/admin/menu-category/duplicate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ categoryId: category.id })
-                      });
-                      const data = await res.json();
-                      if (res.ok && data.category) {
-                        // Optionally, you could fetch categories again, or just add the new one to state
-                        // For now, reload the page to reflect changes
-                        window.location.reload();
-                      } else {
-                        toast.error(data.error || 'Erreur lors de la duplication');
-                      }
-                    } catch (e) {
-                      toast.error('Erreur lors de la duplication');
-                    }
-                  }}
-                  title="Dupliquer la catégorie"
-                  className="cursor-pointer"
-                >
-                  <CopyPlus className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Dupliquer la catégorie</p>
-              </TooltipContent>
-            </Tooltip> */}
 
             <div className="tutorial-dup-category">
               <Tooltip>
