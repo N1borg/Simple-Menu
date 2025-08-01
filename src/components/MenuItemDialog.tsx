@@ -68,6 +68,7 @@ export default function MenuItemDialog({
         <ItemImageUpload
           item={item}
           isDemo={isDemo}
+          plan={plan}
           color={establishmentColor}
           onImageUploaded={(url) => {
             // Update the image_url in the form (simulate a change)
@@ -80,7 +81,7 @@ export default function MenuItemDialog({
           isDemo={isDemo}
           savingItemId={savingItemId}
           loadingAction={loadingAction}
-          plan={plan || 'essentiel'}
+          plan={plan}
           onSubmit={async (updatedItem) => {
             try {
               await saveItem(updatedItem);

@@ -7,9 +7,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import type { MenuItem } from '@/types/supabase_types';
 import { getEstablishmentColor } from '@/lib/utils'
+import ProCrown from '@/components/ui/ProCrown';
 
 interface ItemImageUploadProps {
   item: MenuItem;
+  plan: string;
   onImageUploaded: (url: string | null) => void;
   isDemo?: boolean;
   className?: string;
@@ -23,11 +25,13 @@ interface UploadError {
 
 export default function ItemImageUpload({
   item,
+  plan = 'essentiel',
   onImageUploaded,
   isDemo = false,
   className = '',
   color,
 }: ItemImageUploadProps) {
+  const isProOrPremium = plan === 'pro' || plan === 'premium';
   const establishmentColor = getEstablishmentColor(color)
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<UploadError | null>(null);
@@ -196,17 +200,28 @@ export default function ItemImageUpload({
                     className="opacity-70 hover:opacity-100 cursor-pointer"
                     title="Modifier"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading || isDemo}
+                    disabled={isUploading || isDemo || !isProOrPremium}
                   >
                     {isUploading ? (
                       <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                     ) : (
-                      <Pencil className="w-4 h-4" />
+                      !isProOrPremium ? (
+                        <ProCrown className="w-5 h-5 text-yellow-400" title="Fonctionnalité Pro/Premium" />
+                      ) : (
+                        <Pencil className="w-4 h-4" />
+                      )
                     )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Modifier l'image</p>
+                  {!isProOrPremium ? (
+                    <span>
+                      <span className="text-yellow-500 font-semibold">Fonctionnalité Pro</span><br/>
+                      Ajoutez une image à vos articles en passant au plan <span className="font-semibold">Pro</span> ou <span className="font-semibold">Premium</span>.
+                    </span>
+                  ) : (
+                    <p>Modifier l'image</p>
+                  )}
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -214,8 +229,8 @@ export default function ItemImageUpload({
                   <span>
                     <ConfirmDeleteDialog
                       onConfirm={async () => {
-                        if (isDemo) {
-                          toast.info('Modification désactivée (mode démo).');
+                        if (isDemo || !isProOrPremium) {
+                          toast.info(!isProOrPremium ? 'Fonctionnalité réservée aux plans Pro/Premium.' : 'Modification désactivée (mode démo).');
                           return;
                         }
                         const previousImageUrl = displayedImageUrl;
@@ -251,14 +266,21 @@ export default function ItemImageUpload({
                         }
                       }}
                       title="Confirmer la suppression"
-                      description="Cette action supprimera l'image de l'article. Voulez-vous continuer ?"
-                      disabled={isUploading || isDemo}
+                      description={!isProOrPremium ? 'Fonctionnalité réservée aux plans Pro/Premium.' : "Cette action supprimera l'image de l'article. Voulez-vous continuer ?"}
+                      disabled={isUploading || isDemo || !isProOrPremium}
                       loading={isUploading}
                     />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Supprimer l'image</p>
+                  {!isProOrPremium ? (
+                    <span>
+                      <span className="text-yellow-500 font-semibold">Fonctionnalité Pro</span><br/>
+                      Ajoutez une image à vos articles en passant au plan <span className="font-semibold">Pro</span> ou <span className="font-semibold">Premium</span>.
+                    </span>
+                  ) : (
+                    <p>Supprimer l'image</p>
+                  )}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -269,18 +291,24 @@ export default function ItemImageUpload({
             accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
             onChange={handleInputChange}
             className="hidden"
-            disabled={isUploading || isDemo}
+            disabled={isUploading || isDemo || !isProOrPremium}
           />
         </div>
       ) : (
         <div>
           <div
             className="relative w-full h-36 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg cursor-pointer mb-4 transition-colors"
-            style={{ backgroundColor: '#f9fafb', borderColor: '#d1d5db', color: '#374151', minHeight: '140px' }}
-            onClick={() => !isDemo && fileInputRef.current?.click()}
-            onDrop={isDemo ? undefined : handleDrop}
-            onDragOver={isDemo ? undefined : handleDragOver}
-            onDragLeave={isDemo ? undefined : handleDragLeave}
+            onClick={() => !isDemo && isProOrPremium && fileInputRef.current?.click()}
+            onDrop={isDemo || !isProOrPremium ? undefined : handleDrop}
+            onDragOver={isDemo || !isProOrPremium ? undefined : handleDragOver}
+            onDragLeave={isDemo || !isProOrPremium ? undefined : handleDragLeave}
+            style={{
+              backgroundColor: '#f9fafb',
+              borderColor: '#d1d5db',
+              color: '#374151',
+              minHeight: '140px',
+              ...( !isProOrPremium ? { opacity: 0.7, pointerEvents: 'none' } : {} )
+            }}
           >
             <input
               ref={fileInputRef}
@@ -288,11 +316,21 @@ export default function ItemImageUpload({
               accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
               onChange={handleInputChange}
               className="hidden"
-              disabled={isUploading || isDemo}
+              disabled={isUploading || isDemo || !isProOrPremium}
             />
             <div className="flex flex-col items-center justify-center w-full px-2">
-              <Upload className="mx-auto h-10 w-10 mb-2" style={{ color: dragActive ? establishmentColor : '#9ca3af' }} />
-              {isUploading ? (
+              {/* Crown icon for non-pro/premium, upload for pro/premium */}
+              {!isProOrPremium ? (
+                <ProCrown className="w-10 h-10 mb-2 text-yellow-400" title="Fonctionnalité Pro/Premium" />
+              ) : (
+                <Upload className="mx-auto h-10 w-10 mb-2" style={{ color: dragActive ? establishmentColor : '#9ca3af' }} />
+              )}
+              {!isProOrPremium ? (
+                <div className="flex flex-col items-center space-y-1">
+                  <span className="text-yellow-500 font-semibold">Fonctionnalité Pro</span>
+                  <span className="text-xs text-gray-700 text-center">Ajoutez une image à vos articles en passant au plan <span className="font-semibold">Pro</span> ou <span className="font-semibold">Premium</span>.</span>
+                </div>
+              ) : isUploading ? (
                 <div className="flex flex-col items-center space-y-1">
                   <Loader2 className="h-6 w-6 animate-spin mb-1" style={{ color: establishmentColor }} />
                   <p className="text-sm text-gray-600 text-center">Optimisation et upload...</p>
