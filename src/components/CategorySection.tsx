@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { GripVertical, Plus, Pencil, Loader2, Crown } from "lucide-react"
+import { GripVertical, Plus, Pencil, Loader2, Crown, CopyPlus } from "lucide-react"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableItem } from '@/components/SortableItem'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
@@ -72,7 +72,7 @@ export default function CategorySection({
   isAddingItemGlobally = false,
   setIsAddingItemGlobally,
   basketEnabled = false,
-  dragHandleProps, // NEW
+  dragHandleProps,
 }: CategorySectionProps) {
   // Helper function to check dietary attributes for a category
   const getCategoryDietaryAttributes = (category: Category) => {
@@ -298,6 +298,86 @@ export default function CategorySection({
     }
   }
 
+  // Duplicate category handler
+  const handleDuplicateCategory = async (catId: string) => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return;
+    }
+    setIsAddingItemGlobally?.(true);
+    // Find the index and display_order of the category to duplicate
+    const cats = [...categories];
+    const originalIdx = cats.findIndex(c => c.id === catId);
+    if (originalIdx === -1) {
+      setIsAddingItemGlobally?.(false);
+      return;
+    }
+    const originalCat = cats[originalIdx];
+    const newDisplayOrder = (typeof originalCat.display_order === 'number' ? originalCat.display_order : originalIdx) + 1;
+
+    // Add a temporary skeleton category to UI at the right position
+    const tempCatId = `temp-dup-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+    const tempCat = {
+      ...category,
+      id: tempCatId,
+      name: category.name + ' (copie)',
+      isLoading: true,
+      display_order: newDisplayOrder,
+      menu_items: (category.menu_items || []).map((item, idx) => ({
+        ...item,
+        id: `temp-dup-item-${Date.now()}-${idx}`,
+        isLoading: true
+      }))
+    };
+
+    // Increment display_order of all categories after the original
+    const updatedCats = cats.map((c, idx) => {
+      if (idx > originalIdx) {
+        return { ...c, display_order: (typeof c.display_order === 'number' ? c.display_order : idx) + 1 };
+      }
+      return c;
+    });
+    // Insert tempCat after the original
+    updatedCats.splice(originalIdx + 1, 0, tempCat);
+    setCategories(updatedCats);
+
+    try {
+      const payload = { categoryId: catId, display_order: newDisplayOrder };
+      console.log('[DUPLICATE CATEGORY] Sending to API:', payload);
+      const res = await fetch('/api/admin/menu-category/duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.category) {
+        // Set the correct display_order for the new category
+        setCategories((cats) => {
+          // Remove tempCat
+          const filtered = cats.filter((c) => c.id !== tempCatId);
+          // Insert the new category at the right position
+          const insertIdx = filtered.findIndex((c, idx) => idx > originalIdx && (typeof c.display_order === 'number' ? c.display_order : idx) > newDisplayOrder - 1);
+          const newCat = { ...data.category, menu_items: [] };
+          if (insertIdx === -1) {
+            // Insert at end
+            return [...filtered.slice(0, originalIdx + 1), newCat, ...filtered.slice(originalIdx + 1)];
+          } else {
+            return [...filtered.slice(0, insertIdx), newCat, ...filtered.slice(insertIdx)];
+          }
+        });
+        toast.success('Catégorie dupliquée');
+      } else {
+        setCategories((cats) => cats.filter((c) => c.id !== tempCatId));
+        toast.error(data.error || 'Erreur lors de la duplication');
+      }
+    } catch (e) {
+      setCategories((cats) => cats.filter((c) => c.id !== tempCatId));
+      toast.error('Erreur lors de la duplication');
+    } finally {
+      setIsAddingItemGlobally?.(false);
+    }
+  }
+
   // Simplified category header render function
   const renderCategoryHeader = () => {
     const categoryUnavailable = category.is_available === false;
@@ -407,6 +487,80 @@ export default function CategorySection({
                 <p>Modifier la catégorie</p>
               </TooltipContent>
             </Tooltip>
+            {/* <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/admin/menu-category/duplicate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ categoryId: category.id })
+                      });
+                      const data = await res.json();
+                      if (res.ok && data.category) {
+                        // Optionally, you could fetch categories again, or just add the new one to state
+                        // For now, reload the page to reflect changes
+                        window.location.reload();
+                      } else {
+                        toast.error(data.error || 'Erreur lors de la duplication');
+                      }
+                    } catch (e) {
+                      toast.error('Erreur lors de la duplication');
+                    }
+                  }}
+                  title="Dupliquer la catégorie"
+                  className="cursor-pointer"
+                >
+                  <CopyPlus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Dupliquer la catégorie</p>
+              </TooltipContent>
+            </Tooltip> */}
+
+            <div className="tutorial-dup-category">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => handleDuplicateCategory(category.id)}
+                    variant="ghost"
+                    size="icon"
+                    title="Dupliquer la catégorie"
+                    className={`cursor-pointer relative ${
+                      subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
+                    }`}
+                    disabled={category.id.startsWith('temp-') || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
+                  >
+                    <div className="w-5 h-5 flex items-center justify-center">
+                      {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : subscription && !subscription.canCreateMenuItem ? (
+                        <Crown className="w-5 h-5" />
+                      ) : (
+                        <CopyPlus className="w-5 h-5" />
+                      )}
+                    </div>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
+                    <p>Ajout en cours...</p>
+                  ) : subscription && !subscription.canCreateMenuItem ? (
+                    <div className="text-center">
+                      <p className="mb-1">Limite d'éléments atteinte</p>
+                      <p className="text-xs">({subscription.planConfig?.features.maxItems} max pour le plan {subscription.planConfig?.name})</p>
+                      <p className="text-xs text-blue-200 mt-1">Passez à un plan supérieur</p>
+                    </div>
+                  ) : (
+                    <p>Dupliquer la catégorie</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
@@ -432,9 +586,20 @@ export default function CategorySection({
 
   if (category.isLoading) {
     return (
-    <section className="max-w-4xl mx-auto px-4 py-6">
-      <CategorySkeleton />
-    </section>
+      <section className="max-w-4xl mx-auto px-4 py-6">
+        <CategorySkeleton />
+        <div className={
+          category.display_style === "card"
+            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-full mt-4"
+            : category.display_style === "compact"
+            ? "grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full mt-4"
+            : "max-w-full mt-4"
+        }>
+          {(category.menu_items || []).map((item, idx) =>
+            <MenuItemSkeleton key={item.id || idx} displayStyle={category.display_style as "card" | "list" | "compact" | "table"} />
+          )}
+        </div>
+      </section>
     )
   }
 
