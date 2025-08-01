@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
-  const { categoryId } = await req.json();
+  const { categoryId, display_order } = await req.json();
   if (!categoryId) {
     return NextResponse.json({ error: 'Missing categoryId' }, { status: 400 });
   }
@@ -20,12 +20,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Category not found' }, { status: 404 });
   }
 
-  // Remove id and timestamps, set new name
-  const { id, created_at, ...categoryData } = category;
+  // Remove id, timestamps, and menu_items, set new name and display_order
+  const { id, created_at, menu_items, ...categoryData } = category;
+  const newDisplayOrder = typeof display_order === 'number' ? display_order : (category.display_order ?? 0) + 1;
   const newCategory = {
     ...categoryData,
-    name: category.name + ' (copie)',
-    // display_order: category.display_order + 1, // Optionally increment order
+    name: `Category ${newDisplayOrder}`, // category.name
+    display_order: newDisplayOrder,
   };
 
   // Insert new category
@@ -37,6 +38,27 @@ export async function POST(req: NextRequest) {
 
   if (insertCatError || !insertedCat) {
     return NextResponse.json({ error: 'Failed to duplicate category' }, { status: 500 });
+  }
+
+  // Increment display_order of all categories with display_order >= newDisplayOrder, except the new one
+  // (This assumes display_order is unique and used for ordering)
+  // Increment display_order for all categories (except the new one) with display_order >= newDisplayOrder
+  // Increment display_order for all categories (except the new one) with display_order >= newDisplayOrder
+  const { data: catsToUpdate } = await supabase
+    .from('categories')
+    .select('id, display_order')
+    .neq('id', insertedCat.id)
+    .eq('establishment_id', insertedCat.establishment_id as string)
+    .gte('display_order', newDisplayOrder);
+
+  if (catsToUpdate && catsToUpdate.length > 0) {
+    for (const cat of catsToUpdate) {
+      await supabase
+        .from('categories')
+        .update({ display_order: (cat.display_order ?? 0) + 1 })
+        .eq('id', cat.id)
+        .eq('establishment_id', insertedCat.establishment_id as string);
+    }
   }
 
   // Duplicate menu items
