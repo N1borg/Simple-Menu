@@ -13,11 +13,11 @@ export async function POST(req: NextRequest) {
   }
 
   const { slug } = authResult
-  
+
   try {
     const body = await req.json()
     const { basketEnabled } = body
-    
+
     // Input validation
     if (typeof basketEnabled !== 'boolean') {
       await auditLog({

@@ -1,10 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/supabase';
+import { requireSecureAdminAuth } from '@/lib/auth';
+import { SubscriptionServerService } from '@/lib/subscription-server';
+import { SUBSCRIPTION_PLANS } from '@/lib/subscription';
+import { isDemoSlug } from '@/lib/validate';
 
 export async function POST(req: NextRequest) {
+  const auth = await requireSecureAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
+
   const { categoryId, display_order } = await req.json();
   if (!categoryId) {
     return NextResponse.json({ error: 'Missing categoryId' }, { status: 400 });
+  }
+
+  // Blocage des modifications en mode démo
+  if (isDemoSlug(slug)) {
+    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
+  }
+
+  // Check subscription limits and plan features
+  const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
+  if (!subscription) {
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Établissement non trouvé' 
+    }, { status: 404 })
+  }
+
+  // Check if plan allows duplication (Pro/Premium only)
+  const planConfig = SUBSCRIPTION_PLANS[subscription.plan]
+  if (!planConfig) {
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Plan non reconnu' 
+    }, { status: 400 })
+  }
+
+  if (subscription.plan === 'essentiel') {
+    return NextResponse.json({ 
+      success: false, 
+      error: 'La duplication de catégories est une fonctionnalité Pro et Premium. Passez à un plan supérieur pour utiliser cette option.',
+      code: 'FEATURE_RESTRICTED',
+      requiredPlan: 'pro'
+    }, { status: 403 })
+  }
+
+  // Check if can create new category (duplication creates a new category)
+  if (!subscription.canCreateCategory) {
+    const maxCategories = planConfig?.features.maxCategories || 0
+    return NextResponse.json({ 
+      success: false, 
+      error: `Limite de catégories atteinte (${maxCategories} max pour le plan ${planConfig?.name || subscription.plan}). Passez à un plan supérieur pour ajouter plus de catégories.`,
+      code: 'SUBSCRIPTION_LIMIT_REACHED',
+      currentUsage: subscription.usage.categoriesUsed,
+      maxAllowed: maxCategories
+    }, { status: 403 })
   }
 
   const supabase = await getServerSupabase();
@@ -18,6 +70,25 @@ export async function POST(req: NextRequest) {
 
   if (catError || !category) {
     return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+  }
+
+  // Check if duplicating items would exceed limits
+  const itemsToCreate = category.menu_items?.length || 0;
+  if (itemsToCreate > 0) {
+    const maxItems = planConfig.features.maxItems;
+    const currentItems = subscription.usage.menuItemsUsed;
+    const wouldExceedLimit = maxItems !== -1 && (currentItems + itemsToCreate) > maxItems;
+    
+    if (wouldExceedLimit) {
+      return NextResponse.json({ 
+        success: false, 
+        error: `La duplication de cette catégorie créerait ${itemsToCreate} articles supplémentaires, ce qui dépasserait votre limite de ${maxItems} articles (actuellement ${currentItems}). Passez à un plan supérieur ou supprimez des articles existants.`,
+        code: 'SUBSCRIPTION_LIMIT_REACHED',
+        currentUsage: currentItems,
+        maxAllowed: maxItems,
+        wouldCreate: itemsToCreate
+      }, { status: 403 })
+    }
   }
 
   // Remove id, timestamps, and menu_items, set new name and display_order

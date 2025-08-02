@@ -7,13 +7,15 @@ export function useAddCategoryAtPosition({
   establishment,
   categories,
   setCategories,
-  setLoadingAction
+  setLoadingAction,
+  onUpgradeNeeded
 }: {
   isDemo: boolean,
   establishment: EstablishmentWithCategories,
   categories: any[],
   setCategories: (cats: any[]) => void,
-  setLoadingAction: (action: string | null) => void
+  setLoadingAction: (action: string | null) => void,
+  onUpgradeNeeded?: (feature: string) => void
 }) {
   // Helper to add category with a specific display_order
   const addCategoryWithOrder = useCallback(async (display_order: number) => {
@@ -70,12 +72,7 @@ export function useAddCategoryAtPosition({
         if (data?.code === 'SUBSCRIPTION_LIMIT_REACHED') {
           toast.error(data.error || "Limite d'abonnement atteinte")
           // Open upgrade dialog
-          setTimeout(() => {
-            window.open(
-              'mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur%20pour%20ajouter%20plus%20de%20catégories.',
-              '_blank'
-            )
-          }, 1000)
+          onUpgradeNeeded?.('Ajouter plus de catégories')
         } else {
           throw new Error('Failed to create category')
         }

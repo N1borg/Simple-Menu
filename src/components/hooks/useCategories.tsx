@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { toast } from "sonner"
 import type { EstablishmentWithCategories } from '@/types/supabase_types'
 
-export function useCategories(establishment: EstablishmentWithCategories, isDemo: boolean) {
+export function useCategories(establishment: EstablishmentWithCategories, isDemo: boolean, onUpgradeNeeded?: (feature: string) => void) {
   const [categories, setCategories] = useState(
     establishment.categories.map(cat => ({
       ...cat,
@@ -82,12 +82,7 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
         if (data?.code === 'SUBSCRIPTION_LIMIT_REACHED') {
           toast.error(data.error || "Limite d'abonnement atteinte")
           // Open upgrade dialog
-          setTimeout(() => {
-            window.open(
-              'mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur%20pour%20ajouter%20plus%20de%20catégories.',
-              '_blank'
-            )
-          }, 1000)
+          onUpgradeNeeded?.('Ajouter plus de catégories')
         } else {
           toast.error(data?.error || "Erreur lors de la création de la catégorie")
         }

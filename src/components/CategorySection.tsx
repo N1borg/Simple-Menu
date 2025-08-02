@@ -104,7 +104,10 @@ export default function CategorySection({
     handleItemChange,
     savingItemId,
     addMenuItem
-  } = useMenuItems(categories, setCategories, isDemo)
+  } = useMenuItems(categories, setCategories, isDemo, (feature: string) => {
+    setUpgradeFeature(feature)
+    setUpgradeDialogOpen(true)
+  })
 
   // Local state for editing item
   const [editingItem, setEditingItem] = useState<string | null>(null)

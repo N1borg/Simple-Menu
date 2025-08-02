@@ -16,6 +16,7 @@ import { useDashboardTutorial } from '@/hooks/useDashboardTutorial'
 import { EstablishmentControls } from '@/components/EstablishmentControls'
 import { useSubscription } from '@/hooks/useSubscription'
 import BadgeLegend from '@/components/BadgeLegend'
+import UpgradeDialog from '@/components/ui/UpgradeDialog'
 
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
@@ -27,7 +28,15 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     isDemo ? (establishment.logo_url ?? undefined) : undefined
   )
   const [isAddingItemGlobally, setIsAddingItemGlobally] = useState(false)
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false)
+  const [upgradeFeature, setUpgradeFeature] = useState('')
   const { startTutorial, tutorialCompleted } = useDashboardTutorial()
+  
+  const handleUpgradeNeeded = (feature: string) => {
+    setUpgradeFeature(feature)
+    setUpgradeDialogOpen(true)
+  }
+  
   const {
     categories,
     setCategories,
@@ -40,7 +49,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     originalCategory,
     setOriginalCategory,
     setLoadingAction
-  } = useCategories(establishment, isDemo)
+  } = useCategories(establishment, isDemo, handleUpgradeNeeded)
   
   // Initialize subscription hook with current categories for real-time count updates
   const subscription = useSubscription(establishment, categories)
@@ -126,12 +135,8 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         if (data?.code === 'SUBSCRIPTION_LIMIT_REACHED') {
           toast.error(data.error || "Limite d'abonnement atteinte")
           // Open upgrade dialog
-          setTimeout(() => {
-            window.open(
-              'mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur%20pour%20ajouter%20plus%20de%20catégories.',
-              '_blank'
-            )
-          }, 1000)
+          setUpgradeFeature('Ajouter plus de catégories')
+          setUpgradeDialogOpen(true)
         } else {
           toast.error(data?.error || "Erreur lors de la création de la catégorie")
         }
@@ -364,6 +369,12 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           openingHoursData={establishment.opening_hours}
         />
       </div>
+
+      <UpgradeDialog
+        open={upgradeDialogOpen}
+        onOpenChange={setUpgradeDialogOpen}
+        feature={upgradeFeature}
+      />
     </div>
   )
 }
