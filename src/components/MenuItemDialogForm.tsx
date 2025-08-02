@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import type { MenuItem } from '@/types/supabase_types'
 import { useState, useEffect } from 'react'
 import DietaryBadge from '@/components/DietaryBadge'
+import UpgradeDialog from '@/components/ui/UpgradeDialog'
 
 interface MenuItemDialogFormProps {
   item: MenuItem;
@@ -43,6 +44,9 @@ export function MenuItemDialogForm({
   const [localVegan, setLocalVegan] = useState(!!item.vegan)
   const [localAlcoholFree, setLocalAlcoholFree] = useState(!!item.alcohol_free)
 
+  // State for upgrade dialog
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false)
+
   useEffect(() => {
     setLocalName(item.name)
     setLocalDescription(item.description || '')
@@ -68,7 +72,11 @@ export function MenuItemDialogForm({
   }
 
   const handleAvailableChange = (val: boolean) => {
-    if (isProOrPremium) setLocalAvailable(val)
+    if (isProOrPremium) {
+      setLocalAvailable(val)
+    } else {
+      setUpgradeDialogOpen(true)
+    }
   }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -93,93 +101,83 @@ export function MenuItemDialogForm({
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-3">
-      <div>
-        <Label className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="flex items-center">
-                <Switch
-                  checked={isProOrPremium ? localAvailable : true}
-                  onCheckedChange={handleAvailableChange}
-                  className={isProOrPremium ? "cursor-pointer" : "cursor-not-allowed"}
-                  disabled={!isProOrPremium || isDemo}
-                />
-                {!isProOrPremium && <ProCrown title="Pro/Premium" />}
-              </span>
-            </TooltipTrigger>
-            {!isProOrPremium && (
-              <TooltipContent>
-                <span>Fonctionnalité disponible uniquement avec le plan Pro ou Premium</span>
-              </TooltipContent>
-            )}
-          </Tooltip>
-          <span className={isProOrPremium ? undefined : "text-gray-400"}>Disponible</span>
-        </Label>
-      </div>
+      <Label className="flex items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="flex items-center">
+              <Switch
+                checked={isProOrPremium ? localAvailable : true}
+                onCheckedChange={handleAvailableChange}
+                className={isProOrPremium ? "cursor-pointer" : "cursor-pointer"}
+                disabled={!isProOrPremium || isDemo}
+              />
+              {!isProOrPremium && <ProCrown className="w-4 h-4 text-yellow-500 ml-1" title="Pro/Premium" />}
+            </span>
+          </TooltipTrigger>
+          {!isProOrPremium && (
+            <TooltipContent>
+              <span>Cliquer pour découvrir les plans Pro et Premium</span>
+            </TooltipContent>
+          )}
+        </Tooltip>
+        <span className={isProOrPremium ? undefined : "text-gray-400"}>Disponible</span>
+      </Label>
 
-      <div>
-        <Label>Nom</Label>
-        <Input
-          value={localName}
-          onChange={e => setLocalName(e.target.value)}
-          placeholder="Nom de l'article"
+      <Label>Nom</Label>
+      <Input
+        value={localName}
+        onChange={e => setLocalName(e.target.value)}
+        placeholder="Nom de l'article"
+        disabled={isDemo}
+      />
+      <Label>Description</Label>
+      <Input
+        value={localDescription}
+        onChange={e => setLocalDescription(e.target.value)}
+        placeholder="Description détaillée de l'article"
+        disabled={isDemo}
+      />
+      <Label>Prix</Label>
+      <Input
+        type="text"
+        inputMode="decimal"
+        pattern="[0-9]*[.,]?[0-9]*"
+        value={localPrice}
+        placeholder="0.00"
+        onChange={e => {
+          const val = e.target.value.replace(/[^0-9.,]/g, '')
+          setLocalPrice(val)
+        }}
+        disabled={isDemo}
+      />
+      <Label>Badges alimentaires</Label>
+      <div className="flex gap-2 mt-2">
+        <button
+          type="button"
+          onClick={() => setLocalVegan(!localVegan)}
           disabled={isDemo}
-        />
-      </div>
-      <div>
-        <Label>Description</Label>
-        <Input
-          value={localDescription}
-          onChange={e => setLocalDescription(e.target.value)}
-          placeholder="Description détaillée de l'article"
+          className="cursor-pointer"
+        >
+          <DietaryBadge 
+            type="vegan" 
+            variant={localVegan ? "active" : "inactive"}
+          />
+        </button>
+        <button
+          type="button"
+          onClick={() => setLocalAlcoholFree(!localAlcoholFree)}
           disabled={isDemo}
-        />
+          className="cursor-pointer"
+        >
+          <DietaryBadge 
+            type="alcohol-free" 
+            variant={localAlcoholFree ? "active" : "inactive"}
+          />
+        </button>
       </div>
-      <div>
-        <Label>Prix</Label>
-        <Input
-          type="text"
-          inputMode="decimal"
-          pattern="[0-9]*[.,]?[0-9]*"
-          value={localPrice}
-          placeholder="0.00"
-          onChange={e => {
-            const val = e.target.value.replace(/[^0-9.,]/g, '')
-            setLocalPrice(val)
-          }}
-          disabled={isDemo}
-        />
-      </div>
-      <div>
-        <Label>Badges alimentaires</Label>
-        <div className="flex gap-2 mt-2">
-          <button
-            type="button"
-            onClick={() => setLocalVegan(!localVegan)}
-            disabled={isDemo}
-            className="cursor-pointer"
-          >
-            <DietaryBadge 
-              type="vegan" 
-              variant={localVegan ? "active" : "inactive"}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => setLocalAlcoholFree(!localAlcoholFree)}
-            disabled={isDemo}
-            className="cursor-pointer"
-          >
-            <DietaryBadge 
-              type="alcohol-free" 
-              variant={localAlcoholFree ? "active" : "inactive"}
-            />
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-1">
-          Cliquez sur les badges pour les activer/désactiver
-        </p>
-      </div>
+      <p className="text-xs text-gray-500 mt-1">
+        Cliquez sur les badges pour les activer/désactiver
+      </p>
       <DialogFooter>
         <div className="flex w-full justify-between gap-2">
           <div>
@@ -229,6 +227,14 @@ export function MenuItemDialogForm({
           </div>
         </div>
       </DialogFooter>
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog
+        open={upgradeDialogOpen}
+        onOpenChange={setUpgradeDialogOpen}
+        feature="Gestion de la disponibilité"
+        description="La gestion de la disponibilité des articles vous permet de masquer temporairement des articles en rupture de stock ou saisonniers sans les supprimer de votre menu."
+      />
     </form>
   )
 }

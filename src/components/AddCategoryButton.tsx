@@ -1,3 +1,5 @@
+import { useState } from "react"
+import UpgradeDialog from "@/components/ui/UpgradeDialog"
 import { Plus, Loader2, Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -20,6 +22,7 @@ export function AddCategoryButton({
   subscription,
   isAddingItemGlobally = false
 }: AddCategoryButtonProps) {
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false)
   const isSubscriptionDisabled = subscription && !subscription.canCreateCategory
 
   const getTooltipContent = () => {
@@ -39,11 +42,7 @@ export function AddCategoryButton({
 
   const handleClick = () => {
     if (isSubscriptionDisabled && subscription) {
-      // Open upgrade dialog or mailto
-      window.open(
-        'mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur%20pour%20ajouter%20plus%20de%20catégories.',
-        '_blank'
-      )
+      setUpgradeDialogOpen(true)
       return
     }
     onClick()
@@ -80,6 +79,16 @@ export function AddCategoryButton({
           {getTooltipContent()}
         </TooltipContent>
       </Tooltip>
+      <UpgradeDialog
+        open={upgradeDialogOpen}
+        onOpenChange={setUpgradeDialogOpen}
+        feature="Limite de catégories atteinte"
+        description={
+          subscription && subscription.planConfig
+            ? `Vous avez atteint la limite de ${subscription.planConfig.features.maxCategories} catégories pour le plan ${subscription.planConfig.name}. Passez à un plan supérieur pour en ajouter plus.`
+            : "Vous avez atteint la limite de catégories pour votre plan. Passez à un plan supérieur pour en ajouter plus."
+        }
+      />
     </div>
   )
 }

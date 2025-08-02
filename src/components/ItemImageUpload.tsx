@@ -8,6 +8,7 @@ import ConfirmDeleteDialog from '@/components/ui/ConfirmDeleteDialog';
 import type { MenuItem } from '@/types/supabase_types';
 import { getEstablishmentColor } from '@/lib/utils'
 import ProCrown from '@/components/ui/ProCrown';
+import UpgradeDialog from '@/components/ui/UpgradeDialog';
 
 interface ItemImageUploadProps {
   item: MenuItem;
@@ -39,6 +40,9 @@ export default function ItemImageUpload({
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [displayedImageUrl, setDisplayedImageUrl] = useState<string | undefined>(item.image_url || undefined);
+
+  // State for upgrade dialog
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
 
   useEffect(() => {
     setDisplayedImageUrl(item.image_url || undefined);
@@ -199,14 +203,20 @@ export default function ItemImageUpload({
                     variant="secondary"
                     className="opacity-70 hover:opacity-100 cursor-pointer"
                     title="Modifier"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading || isDemo || !isProOrPremium}
+                    onClick={() => {
+                      if (!isProOrPremium) {
+                        setUpgradeDialogOpen(true)
+                      } else {
+                        fileInputRef.current?.click()
+                      }
+                    }}
+                    disabled={isUploading || isDemo}
                   >
                     {isUploading ? (
                       <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                     ) : (
                       !isProOrPremium ? (
-                        <ProCrown className="w-5 h-5 text-yellow-400" title="Fonctionnalité Pro/Premium" />
+                        <ProCrown className="w-5 h-5 text-yellow-500" title="Fonctionnalité Pro/Premium" />
                       ) : (
                         <Pencil className="w-4 h-4" />
                       )
@@ -216,8 +226,8 @@ export default function ItemImageUpload({
                 <TooltipContent>
                   {!isProOrPremium ? (
                     <span>
-                      <span className="text-yellow-500 font-semibold">Fonctionnalité Pro</span><br/>
-                      Ajoutez une image à vos articles en passant au plan <span className="font-semibold">Pro</span> ou <span className="font-semibold">Premium</span>.
+                      <span className="text-yellow-500 font-semibold">Fonctionnalité Premium</span><br/>
+                      Cliquer pour découvrir les plans et ajouter des images à vos articles.
                     </span>
                   ) : (
                     <p>Modifier l'image</p>
@@ -298,7 +308,15 @@ export default function ItemImageUpload({
         <div>
           <div
             className="relative w-full h-36 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg cursor-pointer mb-4 transition-colors"
-            onClick={() => !isDemo && isProOrPremium && fileInputRef.current?.click()}
+            onClick={() => {
+              if (!isDemo) {
+                if (!isProOrPremium) {
+                  setUpgradeDialogOpen(true)
+                } else {
+                  fileInputRef.current?.click()
+                }
+              }
+            }}
             onDrop={isDemo || !isProOrPremium ? undefined : handleDrop}
             onDragOver={isDemo || !isProOrPremium ? undefined : handleDragOver}
             onDragLeave={isDemo || !isProOrPremium ? undefined : handleDragLeave}
@@ -307,7 +325,7 @@ export default function ItemImageUpload({
               borderColor: '#d1d5db',
               color: '#374151',
               minHeight: '140px',
-              ...( !isProOrPremium ? { opacity: 0.7, pointerEvents: 'none' } : {} )
+              ...( !isProOrPremium ? { opacity: 0.8 } : {} )
             }}
           >
             <input
@@ -321,13 +339,14 @@ export default function ItemImageUpload({
             <div className="flex flex-col items-center justify-center w-full px-2">
               {/* Crown icon for non-pro/premium, upload for pro/premium */}
               {!isProOrPremium ? (
-                <ProCrown className="w-10 h-10 mb-2 text-yellow-400" title="Fonctionnalité Pro/Premium" />
+                <ProCrown className="w-10 h-10 mb-2 text-yellow-500" title="Fonctionnalité Pro/Premium" />
               ) : (
                 <Upload className="mx-auto h-10 w-10 mb-2" style={{ color: dragActive ? establishmentColor : '#9ca3af' }} />
               )}
               {!isProOrPremium ? (
                 <div className="flex flex-col items-center space-y-1">
-                  <span className="text-yellow-500 font-semibold">Fonctionnalité Pro</span>
+                  <span className="text-yellow-600 font-semibold">Fonctionnalité Premium</span>
+                  <span className="text-xs text-gray-500">Cliquer pour découvrir les plans</span>
                   <span className="text-xs text-gray-700 text-center">Ajoutez une image à vos articles en passant au plan <span className="font-semibold">Pro</span> ou <span className="font-semibold">Premium</span>.</span>
                 </div>
               ) : isUploading ? (
@@ -350,6 +369,14 @@ export default function ItemImageUpload({
           </div>
         </div>
       )}
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog
+        open={upgradeDialogOpen}
+        onOpenChange={setUpgradeDialogOpen}
+        feature="Upload d'images"
+        description="L'upload d'images pour vos articles vous permet de rendre votre menu plus attractif et d'augmenter l'appétit de vos clients."
+      />
     </div>
   );
 }

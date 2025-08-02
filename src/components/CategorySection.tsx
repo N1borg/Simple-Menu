@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/dialog"
 import { CategoryDialogForm } from "./CategoryDialogForm"
 import DietaryBadge from '@/components/DietaryBadge'
+import ProCrown from '@/components/ui/ProCrown'
+import UpgradeDialog from '@/components/ui/UpgradeDialog'
 
 interface CategorySectionProps {
   category: Category
@@ -92,6 +94,9 @@ export default function CategorySection({
     }
   }
 
+  // Check if plan allows category duplication (Pro/Premium only)
+  const isProOrPremium = plan === 'pro' || plan === 'premium'
+
   // Use useMenuItems hook for item actions
   const {
     saveItem,
@@ -107,6 +112,11 @@ export default function CategorySection({
   // State for category dialog
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
 
+  // State for upgrade dialog
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false)
+  const [upgradeFeature, setUpgradeFeature] = useState('')
+  const [upgradeDescription, setUpgradeDescription] = useState('')
+
   // Add item handler using the hook, with demo mode protection
   const handleAddMenuItem = async (catId: string) => {
     if (isDemo) {
@@ -117,12 +127,9 @@ export default function CategorySection({
     // Check subscription limits before creating
     if (subscription && !subscription.canCreateMenuItem) {
       const maxItems = subscription.planConfig?.features.maxItems
-      toast.error(`Limite d'éléments atteinte (${maxItems} max pour le plan ${subscription.planConfig?.name}). Passez à un plan supérieur pour ajouter plus d'éléments.`)
-      // Open upgrade dialog
-      window.open(
-        'mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur%20pour%20ajouter%20plus%20d\'éléments%20de%20menu.',
-        '_blank'
-      )
+      setUpgradeFeature("Limite d'articles atteinte")
+      setUpgradeDescription(`Vous avez atteint la limite de ${maxItems} articles pour le plan ${subscription.planConfig?.name}. Passez à un plan supérieur pour ajouter plus d'éléments.`)
+      setUpgradeDialogOpen(true)
       return;
     }
 
@@ -304,6 +311,15 @@ export default function CategorySection({
       toast.info("Modification désactivée (mode démo).")
       return;
     }
+
+    // Check plan restrictions first
+    if (!isProOrPremium) {
+      setUpgradeFeature("Dupliquer des catégories")
+      setUpgradeDescription("La duplication de catégories est une fonctionnalité premium qui vous permet de gagner du temps en copiant instantanément une catégorie et tous ses articles.")
+      setUpgradeDialogOpen(true)
+      return
+    }
+    
     setIsAddingItemGlobally?.(true);
     // Find the index and display_order of the category to duplicate
     const cats = [...categories];
@@ -438,7 +454,7 @@ export default function CategorySection({
                     size="icon"
                     title="Nouvel élément"
                     className={`bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative ${
-                      subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
+                      (subscription && !subscription.canCreateMenuItem) ? 'opacity-80 hover:opacity-100' : ''
                     }`}
                     disabled={category.id.startsWith('temp-') || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
                   >
@@ -480,7 +496,7 @@ export default function CategorySection({
                   title="Modifier la catégorie"
                   className="cursor-pointer"
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -492,22 +508,30 @@ export default function CategorySection({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    onClick={() => handleDuplicateCategory(category.id)}
+                    onClick={!isProOrPremium ? () => {
+                      setUpgradeFeature("Dupliquer des catégories")
+                      setUpgradeDescription("La duplication de catégories est une fonctionnalité premium qui vous permet de gagner du temps en copiant instantanément une catégorie et tous ses articles.")
+                      setUpgradeDialogOpen(true)
+                    } : () => handleDuplicateCategory(category.id)}
                     variant="ghost"
                     size="icon"
                     title="Dupliquer la catégorie"
-                    className={`cursor-pointer relative ${
-                      subscription && !subscription.canCreateMenuItem ? 'opacity-60 hover:opacity-80' : ''
-                    }`}
+                    className={`cursor-pointer relative ${!isProOrPremium ? 'opacity-80 hover:opacity-100' : ''}`}
                     disabled={category.id.startsWith('temp-') || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
                   >
-                    <div className="w-5 h-5 flex items-center justify-center">
+                    <div className="w-5 h-5 flex items-center justify-center relative">
                       {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : subscription && !subscription.canCreateMenuItem ? (
-                        <Crown className="w-5 h-5" />
                       ) : (
                         <CopyPlus className="w-5 h-5" />
+                      )}
+                      {(!isProOrPremium && !isAddingItemGlobally && !Boolean(loadingAction?.includes('adding-category'))) && (
+                        <span
+                          className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 bg-white rounded-full shadow z-10"
+                          style={{ transform: 'rotate(18deg)' }}
+                        >
+                          <ProCrown className="w-3 h-3 !w-3 !h-3 text-yellow-500 drop-shadow" />
+                        </span>
                       )}
                     </div>
                   </Button>
@@ -515,11 +539,10 @@ export default function CategorySection({
                 <TooltipContent>
                   {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
                     <p>Ajout en cours...</p>
-                  ) : subscription && !subscription.canCreateMenuItem ? (
+                  ) : !isProOrPremium ? (
                     <div className="text-center">
-                      <p className="mb-1">Limite d'éléments atteinte</p>
-                      <p className="text-xs">({subscription.planConfig?.features.maxItems} max pour le plan {subscription.planConfig?.name})</p>
-                      <p className="text-xs text-blue-200 mt-1">Passez à un plan supérieur</p>
+                      <p className="mb-1">Fonctionnalité premium</p>
+                      <p className="text-xs">Cliquer pour découvrir les plans</p>
                     </div>
                   ) : (
                     <p>Dupliquer la catégorie</p>
@@ -527,6 +550,7 @@ export default function CategorySection({
                 </TooltipContent>
               </Tooltip>
             </div>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
@@ -902,6 +926,14 @@ export default function CategorySection({
           />
         </DialogContent>
       </Dialog>
+
+      {/* Upgrade Dialog */}
+      <UpgradeDialog
+        open={upgradeDialogOpen}
+        onOpenChange={setUpgradeDialogOpen}
+        feature={upgradeFeature}
+        description={upgradeDescription}
+      />
     </section>
   )
 }

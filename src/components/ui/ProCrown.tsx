@@ -6,7 +6,7 @@ interface ProCrownProps {
 }
 
 export default function ProCrown({
-    className = "w-4 h-4 text-yellow-400 ml-1",
+    className = "w-4 h-4 text-yellow-500 ml-1",
     title = "Pro/Premium",
 }: ProCrownProps) {
     return (
