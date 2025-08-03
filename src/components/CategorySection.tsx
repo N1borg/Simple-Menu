@@ -140,6 +140,20 @@ export default function CategorySection({
     // Set global loading state to disable all add buttons
     setIsAddingItemGlobally?.(true)
 
+    // Find the target category and calculate the correct display_order
+    const targetCategory = categories.find(cat => cat.id === catId);
+    if (!targetCategory) {
+      setIsAddingItemGlobally?.(false);
+      return;
+    }
+
+    // Get the highest display_order from existing real items (not temp ones)
+    const realItems = targetCategory.menu_items.filter((item: MenuItem) => !item.id.startsWith('temp-'));
+    const maxDisplayOrder = realItems.length > 0 
+      ? Math.max(...realItems.map((item: MenuItem) => typeof item.display_order === 'number' ? item.display_order : 0))
+      : -1;
+    const newDisplayOrder = maxDisplayOrder + 1;
+
     // Add a temporary skeleton item
     const newCategories = categories.map((cat) =>
       cat.id === catId
@@ -152,7 +166,7 @@ export default function CategorySection({
                 category_id: catId,
                 created_at: null,
                 description: null,
-                display_order: cat.menu_items.length,
+                display_order: newDisplayOrder,
                 display_style: category.display_style || "card",
                 image_url: null,
                 is_available: null,

@@ -86,10 +86,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     // Set loading state to disable buttons
     setLoadingAction(`adding-category-${position}`)
 
-    const display_order = position === 'top' ? 0 : categories.length;
-    if (position === 'top') {
-      setCategories(cats => cats.map(cat => ({ ...cat, display_order: (cat.display_order ?? 0) + 1 })));
-    }
+    // Sort categories by display_order to get current order
+    const sortedCategories = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    
+    const display_order = position === 'top' ? 0 : sortedCategories.length;
 
     const tempCat = {
       id: `temp-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
@@ -106,11 +106,18 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       vegan: null,
     };
 
-    setCategories(cats => {
-      const arr = [...cats];
-      arr.splice(display_order, 0, tempCat);
-      return arr;
-    });
+    // Update display_order for existing categories if inserting at top
+    if (position === 'top') {
+      setCategories(cats => {
+        const updatedCats = cats.map(cat => ({ 
+          ...cat, 
+          display_order: (cat.display_order ?? 0) + 1 
+        }));
+        return [tempCat, ...updatedCats];
+      });
+    } else {
+      setCategories(cats => [...cats, tempCat]);
+    }
 
     try {
       const res = await fetch('/api/admin/menu-category/create', {
@@ -129,6 +136,19 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         setCategories(cats => cats.map(cat =>
           cat.id === tempCat.id ? { ...data.category, menu_items: [] } : cat
         ));
+        
+        // Update display_order for other categories in the database if inserting at top
+        if (position === 'top') {
+          const updatePromises = categories.map((cat, index) => 
+            fetch('/api/admin/menu-category/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...cat, display_order: index + 1 }),
+            })
+          );
+          await Promise.all(updatePromises);
+        }
+        
         toast.success("Catégorie créée");
       } else {
         // Handle specific API errors
