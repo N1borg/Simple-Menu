@@ -14,6 +14,7 @@ import { useMenuItems } from '@/components/hooks/useMenuItems'
 import { toast } from "sonner"
 import CategorySkeleton from "@/components/CategorySkeleton"
 import MenuItemSkeleton from "@/components/MenuItemSkeleton";
+import AddItemGhost from '@/components/AddItemGhost'
 import { SubscriptionLimits } from '@/hooks/useSubscription'
 import {
   Dialog,
@@ -448,45 +449,6 @@ export default function CategorySection({
         {/* Action buttons: always in a row, but on small screens, below the name */}
         { isAdmin && (
           <div className="flex items-center gap-2 sm:mt-0 mt-2">
-            <div className="tutorial-add-item">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => handleAddMenuItem(category.id)}
-                    variant="ghost"
-                    size="icon"
-                    title="Nouvel élément"
-                    className={`bg-gray-100 hover:bg-gray-200 text-gray-600 cursor-pointer relative ${
-                      (subscription && !subscription.canCreateMenuItem) ? 'opacity-80 hover:opacity-100' : ''
-                    }`}
-                    disabled={category.id.startsWith('temp-') || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
-                  >
-                    <div className="w-5 h-5 flex items-center justify-center">
-                      {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : subscription && !subscription.canCreateMenuItem ? (
-                        <Crown className="w-5 h-5" />
-                      ) : (
-                        <Plus className="w-5 h-5" />
-                      )}
-                    </div>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
-                    <p>Ajout en cours...</p>
-                  ) : subscription && !subscription.canCreateMenuItem ? (
-                    <div className="text-center">
-                      <p className="mb-1">Limite d'éléments atteinte</p>
-                      <p className="text-xs">({subscription.planConfig?.features.maxItems} max pour le plan {subscription.planConfig?.name})</p>
-                      <p className="text-xs text-blue-200 mt-1">Passez à un plan supérieur</p>
-                    </div>
-                  ) : (
-                    <p>Ajouter un élément</p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -905,6 +867,25 @@ export default function CategorySection({
                 )}
               </SortableItem>
             ))}
+
+          {/* Add Item Ghost - only show in admin mode */}
+          {isAdmin && (
+            <div className="tutorial-add-item">
+              <AddItemGhost
+                category={category}
+                displayStyle={category.display_style || "card"}
+                onAddItem={() => handleAddMenuItem(category.id)}
+                loading={isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
+                canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                limitInfo={subscription?.canCreateMenuItem === false && subscription?.planConfig ? {
+                  current: subscription.planConfig.features.currentItemCount || 0,
+                  max: subscription.planConfig.features.maxItems || 0,
+                  planName: subscription.planConfig.name || 'Essentiel'
+                } : undefined}
+                establishmentColor={establishmentColor}
+              />
+            </div>
+          )}
         </div>
       </DndKitWrapper>
 
