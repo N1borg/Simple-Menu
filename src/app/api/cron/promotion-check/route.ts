@@ -7,32 +7,41 @@ import { processPromotionExpirations } from '@/lib/promotion-manager'
  */
 export async function POST(req: NextRequest) {
   try {
-    // Vérifier l'authentification (optionnel)
+    // Vercel Cron Jobs are authenticated differently
+    // Check if the request is coming from Vercel Cron
     const authHeader = req.headers.get('Authorization')
     const cronSecret = process.env.CRON_SECRET
-
-    if (!cronSecret) {
-      throw new Error('CRON_SECRET non défini dans les variables d\'environnement')
-    }
     
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    // For Vercel Cron, check the user-agent or use a different auth method
+    const isVercelCron = req.headers.get('user-agent')?.includes('vercel-cron') || 
+                        req.headers.get('x-vercel-cron') === '1'
+    
+    // Allow Vercel cron requests or requests with valid secret
+    if (!isVercelCron && (!cronSecret || authHeader !== `Bearer ${cronSecret}`)) {
       return NextResponse.json(
         { error: 'Non autorisé' },
         { status: 401 }
       )
     }
 
+    console.log('Starting promotion expiration check...')
     const processedCount = await processPromotionExpirations()
+    console.log(`Processed ${processedCount} subscription(s)`)
     
     return NextResponse.json({ 
       success: true, 
       message: `${processedCount} abonnements traités`,
-      processedCount 
+      processedCount,
+      timestamp: new Date().toISOString()
     })
 
   } catch (error) {
+    console.error('Cron job error:', error)
     return NextResponse.json(
-      { error: 'Erreur interne' },
+      { 
+        error: 'Erreur interne',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
