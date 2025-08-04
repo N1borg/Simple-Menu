@@ -99,10 +99,13 @@ export default function HomePage() {
             {/* Essentiel */}
             <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition cursor-pointer border-2 border-transparent hover:border-blue-600 flex flex-col" onClick={() => handlePlanClick('essentiel')} tabIndex={0} role="button" aria-label="Sélectionner la formule Essentiel">
               <h3 className="text-xl font-bold text-blue-700 mb-2">Essentiel</h3>
-              <div className="mb-4">
+              <div className="mb-4 relative">
                 <span className="text-lg text-gray-400 line-through">13,99€</span>
                 <span className="text-4xl font-extrabold text-blue-700 ml-2">6,99€</span>
                 <span className="text-gray-600"> / mois</span>
+                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full transform rotate-12">
+                  -50%
+                </span>
               </div>
               <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block text-center">
                 + 2 semaines gratuites
@@ -126,10 +129,13 @@ export default function HomePage() {
                 Le plus populaire
               </div>
               <h3 className="text-xl font-bold text-blue-700 mb-2">Pro</h3>
-              <div className="mb-4">
+              <div className="mb-4 relative">
                 <span className="text-lg text-gray-400 line-through">25,99€</span>
                 <span className="text-4xl font-extrabold text-blue-700 ml-2">12,99€</span>
                 <span className="text-gray-600"> / mois</span>
+                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full transform rotate-12">
+                  -50%
+                </span>
               </div>
               <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block text-center">
                 + 2 semaines gratuites + QR codes imprimés
@@ -154,10 +160,13 @@ export default function HomePage() {
             {/* Premium */}
             <div className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition cursor-pointer border-2 border-transparent hover:border-blue-600 flex flex-col" onClick={() => handlePlanClick('premium')} tabIndex={0} role="button" aria-label="Sélectionner la formule Premium">
               <h3 className="text-xl font-bold text-blue-700 mb-2">Premium</h3>
-              <div className="mb-4">
+              <div className="mb-4 relative">
                 <span className="text-lg text-gray-400 line-through">39,99€</span>
                 <span className="text-4xl font-extrabold text-blue-700 ml-2">19,99€</span>
                 <span className="text-gray-600"> / mois</span>
+                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full transform rotate-12">
+                  -50%
+                </span>
               </div>
               <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-4 inline-block text-center">
                 + 2 semaines gratuites + Setup complet offert
