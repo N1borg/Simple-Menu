@@ -54,6 +54,10 @@ export default function UpgradeDialog({
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-500" />
+                <span>Duplication d'articles</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-500" />
                 <span>Gestion de la disponibilité des articles</span>
               </li>
               <li className="flex items-center gap-2">

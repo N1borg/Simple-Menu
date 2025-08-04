@@ -121,6 +121,14 @@ export default function CategorySection({
   const [upgradeFeature, setUpgradeFeature] = useState('')
   const [upgradeDescription, setUpgradeDescription] = useState('')
 
+  // Handler for when upgrade is needed (item limit reached)
+  const handleUpgradeNeeded = () => {
+    const maxItems = subscription?.planConfig?.features.maxItems
+    setUpgradeFeature("Limite d'articles atteinte")
+    setUpgradeDescription(`Vous avez atteint la limite de ${maxItems} articles pour le plan ${subscription?.planConfig?.name}. Passez à un plan supérieur pour ajouter plus d'éléments.`)
+    setUpgradeDialogOpen(true)
+  }
+
   // Add item handler using the hook, with demo mode protection
   const handleAddMenuItem = async (catId: string) => {
     if (isDemo) {
@@ -387,17 +395,25 @@ export default function CategorySection({
         // If the API returns duplicated items, use them; otherwise, fallback to empty array
         const duplicatedItems = data.menu_items || [];
         setCategories((cats) => {
-          // Remove tempCat
-          const filtered = cats.filter((c) => c.id !== tempCatId);
-          // Insert the new category at the right position
-          const insertIdx = filtered.findIndex((c, idx) => idx > originalIdx && (typeof c.display_order === 'number' ? c.display_order : idx) > newDisplayOrder - 1);
-          const newCat = { ...data.category, menu_items: duplicatedItems };
-          if (insertIdx === -1) {
-            // Insert at end
-            return [...filtered.slice(0, originalIdx + 1), newCat, ...filtered.slice(originalIdx + 1)];
-          } else {
-            return [...filtered.slice(0, insertIdx), newCat, ...filtered.slice(insertIdx)];
-          }
+          // Remove tempCat and update display_order of all categories that were shifted by the database
+          return cats
+            .filter((c) => c.id !== tempCatId)
+            .map((cat) => {
+              // If this category's display_order is >= the new category's display_order (and it's not the original), increment it
+              if (typeof cat.display_order === 'number' && 
+                  typeof data.category.display_order === 'number' && 
+                  cat.display_order >= data.category.display_order && 
+                  cat.id !== catId) {
+                return { ...cat, display_order: cat.display_order + 1 };
+              }
+              return cat;
+            })
+            .concat({ ...data.category, menu_items: duplicatedItems })
+            .sort((a, b) => {
+              const orderA = typeof a.display_order === 'number' ? a.display_order : 0;
+              const orderB = typeof b.display_order === 'number' ? b.display_order : 0;
+              return orderA - orderB;
+            });
         });
         toast.success('Catégorie dupliquée');
       } else {
@@ -406,6 +422,155 @@ export default function CategorySection({
       }
     } catch (e) {
       setCategories((cats) => cats.filter((c) => c.id !== tempCatId));
+      toast.error('Erreur lors de la duplication');
+    } finally {
+      setIsAddingItemGlobally?.(false);
+    }
+  }
+
+  // Duplicate item handler
+  const handleDuplicateItem = async (itemId: string) => {
+    if (isDemo) {
+      toast.info("Modification désactivée (mode démo).")
+      return;
+    }
+
+    // Check plan restrictions first
+    if (!isProOrPremium) {
+      setUpgradeFeature("Dupliquer des articles")
+      setUpgradeDescription("La duplication d'articles est une fonctionnalité premium qui vous permet de gagner du temps en copiant instantanément un article avec tous ses paramètres.")
+      setUpgradeDialogOpen(true)
+      return
+    }
+
+    // Check subscription limits before creating
+    if (subscription && !subscription.canCreateMenuItem) {
+      const maxItems = subscription.planConfig?.features.maxItems
+      setUpgradeFeature("Limite d'articles atteinte")
+      setUpgradeDescription(`Vous avez atteint la limite de ${maxItems} articles pour le plan ${subscription.planConfig?.name}. Passez à un plan supérieur pour ajouter plus d'éléments.`)
+      setUpgradeDialogOpen(true)
+      return;
+    }
+    
+    setIsAddingItemGlobally?.(true);
+
+    // Find the item to duplicate in all categories
+    let itemToDuplicate: MenuItem | null = null;
+    let targetCategoryId: string | null = null;
+    
+    for (const cat of categories) {
+      const foundItem = cat.menu_items?.find((item: MenuItem) => item.id === itemId);
+      if (foundItem) {
+        itemToDuplicate = foundItem;
+        targetCategoryId = cat.id;
+        break;
+      }
+    }
+
+    if (!itemToDuplicate || !targetCategoryId) {
+      setIsAddingItemGlobally?.(false);
+      return;
+    }
+
+    // Calculate the new display_order (after the original item)
+    const newDisplayOrder = (typeof itemToDuplicate.display_order === 'number' ? itemToDuplicate.display_order : 0) + 1;
+
+    // Add a temporary item to UI at the right position
+    const tempItemId = `temp-dup-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+    const targetCategory = categories.find(cat => cat.id === targetCategoryId);
+    const tempItem = {
+      ...itemToDuplicate,
+      id: tempItemId,
+      name: itemToDuplicate.name + ' (copie)',
+      isLoading: true,
+      display_order: newDisplayOrder,
+      display_style: targetCategory?.display_style || "card",
+    };
+
+    // Update categories state with temp item and adjust display_order of subsequent items
+    setCategories((cats) => 
+      cats.map((cat) => {
+        if (cat.id === targetCategoryId) {
+          const items = cat.menu_items || [];
+          // Find index of original item
+          const originalIdx = items.findIndex((item: MenuItem) => item.id === itemId);
+          if (originalIdx === -1) return cat;
+          
+          // Update display_order for items after the original
+          const updatedItems = items.map((item: MenuItem, idx) => {
+            if (idx > originalIdx) {
+              return { ...item, display_order: (typeof item.display_order === 'number' ? item.display_order : idx) + 1 };
+            }
+            return item;
+          });
+
+          // Insert temp item after original
+          updatedItems.splice(originalIdx + 1, 0, tempItem);
+          
+          return { ...cat, menu_items: updatedItems };
+        }
+        return cat;
+      })
+    );
+
+    try {
+      const payload = { itemId, display_order: newDisplayOrder };
+      const res = await fetch('/api/admin/menu-item/duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.item) {
+        // Replace temp item with real duplicated item and update display_order of subsequent items
+        setCategories((cats) => 
+          cats.map((cat) => {
+            if (cat.id === targetCategoryId) {
+              const items = cat.menu_items || [];
+              const updatedItems = items.map((item: MenuItem) => {
+                if (item.id === tempItemId) {
+                  // Replace temp item with real duplicated item
+                  return data.item;
+                } else if (typeof item.display_order === 'number' && typeof data.item.display_order === 'number' && 
+                          item.display_order >= data.item.display_order && item.id !== itemId) {
+                  // Increment display_order for items that were shifted by the database
+                  return { ...item, display_order: item.display_order + 1 };
+                }
+                return item;
+              });
+              return { ...cat, menu_items: updatedItems };
+            }
+            return cat;
+          })
+        );
+        toast.success('Article dupliqué');
+      } else {
+        // Remove temp item on error
+        setCategories((cats) => 
+          cats.map((cat) => {
+            if (cat.id === targetCategoryId) {
+              const items = cat.menu_items || [];
+              const filteredItems = items.filter((item: MenuItem) => item.id !== tempItemId);
+              return { ...cat, menu_items: filteredItems };
+            }
+            return cat;
+          })
+        );
+        toast.error(data.error || 'Erreur lors de la duplication');
+      }
+    } catch (e) {
+      // Remove temp item on error
+      setCategories((cats) => 
+        cats.map((cat) => {
+          if (cat.id === targetCategoryId) {
+            const items = cat.menu_items || [];
+            const filteredItems = items.filter((item: MenuItem) => item.id !== tempItemId);
+            return { ...cat, menu_items: filteredItems };
+          }
+          return cat;
+        })
+      );
       toast.error('Erreur lors de la duplication');
     } finally {
       setIsAddingItemGlobally?.(false);
@@ -620,6 +785,7 @@ export default function CategorySection({
                   savingItemId={savingItemId}
                   loadingAction={loadingAction}
                   deleteMenuItem={handleDeleteMenuItem}
+                  duplicateItem={handleDuplicateItem}
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
@@ -629,6 +795,8 @@ export default function CategorySection({
                     alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
                   }}
                   categoryIsAvailable={category.is_available !== false}
+                  isGloballyLoading={isAddingItemGlobally}
+                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
                 />
               ) : category.display_style === "compact" ? (
                 <MenuItemCompact
@@ -642,6 +810,7 @@ export default function CategorySection({
                   savingItemId={savingItemId}
                   loadingAction={loadingAction}
                   deleteMenuItem={handleDeleteMenuItem}
+                  duplicateItem={handleDuplicateItem}
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
@@ -651,6 +820,8 @@ export default function CategorySection({
                     alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
                   }}
                   categoryIsAvailable={category.is_available !== false}
+                  isGloballyLoading={isAddingItemGlobally}
+                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
                 />
               ) : category.display_style === "table" ? (
                 <MenuItemSkeleton key={item.id} displayStyle="table" />
@@ -667,6 +838,7 @@ export default function CategorySection({
                   savingItemId={savingItemId}
                   loadingAction={loadingAction}
                   deleteMenuItem={handleDeleteMenuItem}
+                  duplicateItem={handleDuplicateItem}
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
@@ -676,6 +848,8 @@ export default function CategorySection({
                     alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
                   }}
                   categoryIsAvailable={category.is_available !== false}
+                  isGloballyLoading={isAddingItemGlobally}
+                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
                 />
               )
             ))}
@@ -717,6 +891,7 @@ export default function CategorySection({
                   savingItemId={savingItemId}
                   loadingAction={loadingAction}
                   deleteMenuItem={handleDeleteMenuItem}
+                  duplicateItem={handleDuplicateItem}
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
@@ -726,6 +901,8 @@ export default function CategorySection({
                     alcoholFree: categoryDietary.alcoholFree
                   }}
                   categoryIsAvailable={category.is_available !== false}
+                  isGloballyLoading={isAddingItemGlobally}
+                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
                 />
               );
             case "compact":
@@ -740,6 +917,7 @@ export default function CategorySection({
                   savingItemId={savingItemId}
                   loadingAction={loadingAction}
                   deleteMenuItem={handleDeleteMenuItem}
+                  duplicateItem={handleDuplicateItem}
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
@@ -749,6 +927,8 @@ export default function CategorySection({
                     alcoholFree: categoryDietary.alcoholFree
                   }}
                   categoryIsAvailable={category.is_available !== false}
+                  isGloballyLoading={isAddingItemGlobally}
+                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
                 />
               );
             case "table":
@@ -768,6 +948,7 @@ export default function CategorySection({
                   savingItemId={savingItemId}
                   loadingAction={loadingAction}
                   deleteMenuItem={handleDeleteMenuItem}
+                  duplicateItem={handleDuplicateItem}
                   establishmentColor={establishmentColor}
                   isDemo={isDemo}
                   isAdmin={isAdmin}
@@ -777,6 +958,8 @@ export default function CategorySection({
                     alcoholFree: categoryDietary.alcoholFree
                   }}
                   categoryIsAvailable={category.is_available !== false}
+                  isGloballyLoading={isAddingItemGlobally}
+                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
                 />
               );
           }
@@ -823,6 +1006,7 @@ export default function CategorySection({
                     savingItemId={savingItemId}
                     loadingAction={loadingAction}
                     deleteMenuItem={handleDeleteMenuItem}
+                    duplicateItem={handleDuplicateItem}
                     establishmentColor={establishmentColor}
                     isDemo={isDemo}
                     isAdmin={isAdmin}
@@ -832,6 +1016,8 @@ export default function CategorySection({
                       alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
                     }}
                     categoryIsAvailable={category.is_available !== false}
+                    isGloballyLoading={isAddingItemGlobally}
+                    canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
                   />
                 ) : category.display_style === "compact" ? (
                   <MenuItemCompact
@@ -844,6 +1030,7 @@ export default function CategorySection({
                     savingItemId={savingItemId}
                     loadingAction={loadingAction}
                     deleteMenuItem={handleDeleteMenuItem}
+                    duplicateItem={handleDuplicateItem}
                     establishmentColor={establishmentColor}
                     isDemo={isDemo}
                     isAdmin={isAdmin}
@@ -853,6 +1040,8 @@ export default function CategorySection({
                       alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
                     }}
                     categoryIsAvailable={category.is_available !== false}
+                    isGloballyLoading={isAddingItemGlobally}
+                    canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
                   />
                 ) : category.display_style === "table" ? (
                   <MenuItemSkeleton displayStyle="table" />
@@ -868,6 +1057,7 @@ export default function CategorySection({
                     savingItemId={savingItemId}
                     loadingAction={loadingAction}
                     deleteMenuItem={handleDeleteMenuItem}
+                    duplicateItem={handleDuplicateItem}
                     establishmentColor={establishmentColor}
                     isDemo={isDemo}
                     isAdmin={isAdmin}
@@ -877,6 +1067,8 @@ export default function CategorySection({
                       alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
                     }}
                     categoryIsAvailable={category.is_available !== false}
+                    isGloballyLoading={isAddingItemGlobally}
+                    canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
                   />
                 )}
               </SortableItem>
@@ -897,6 +1089,7 @@ export default function CategorySection({
                   planName: subscription.planConfig.name || 'Essentiel'
                 } : undefined}
                 establishmentColor={establishmentColor}
+                onUpgradeNeeded={handleUpgradeNeeded}
               />
             </div>
           )}

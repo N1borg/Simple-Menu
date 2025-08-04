@@ -2,6 +2,7 @@ import { getServerSupabase } from '@/lib/supabase'
 import { requireSecureAdminAuth } from '@/lib/auth'
 import { auditLog } from '@/lib/security'
 import { NextRequest, NextResponse } from 'next/server'
+import { SubscriptionServerService } from '@/lib/subscription-server'
 
 export async function POST(req: NextRequest) {
   const supabase = await getServerSupabase()
@@ -18,6 +19,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { color } = body
     
+    // Check subscription - customBranding feature required for color updates
+    const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
+    if (!subscription) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Établissement non trouvé' 
+      }, { status: 404 })
+    }
+
     // Input validation
     if (!color || typeof color !== 'string') {
       await auditLog({

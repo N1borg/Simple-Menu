@@ -15,6 +15,7 @@ interface AddItemGhostProps {
     planName: string
   }
   establishmentColor?: string
+  onUpgradeNeeded?: () => void
 }
 
 export default function AddItemGhost({
@@ -24,7 +25,8 @@ export default function AddItemGhost({
   loading,
   canCreateMenuItem,
   limitInfo,
-  establishmentColor
+  establishmentColor,
+  onUpgradeNeeded
 }: AddItemGhostProps) {
   const ringColor = getEstablishmentColor(establishmentColor)
 
@@ -65,8 +67,12 @@ export default function AddItemGhost({
   )
 
   const handleClick = () => {
-    if (!loading && canCreateMenuItem) {
-      onAddItem()
+    if (!loading) {
+      if (canCreateMenuItem) {
+        onAddItem()
+      } else if (onUpgradeNeeded) {
+        onUpgradeNeeded()
+      }
     }
   }
 
@@ -95,7 +101,7 @@ export default function AddItemGhost({
       <TooltipTrigger asChild>
         <div 
           onClick={handleClick}
-          className={canCreateMenuItem && !loading ? "cursor-pointer" : "cursor-not-allowed"}
+          className={!loading ? "cursor-pointer" : "cursor-not-allowed"}
         >
           {ghostElement}
         </div>

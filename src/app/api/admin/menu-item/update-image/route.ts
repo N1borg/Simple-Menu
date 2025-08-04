@@ -4,6 +4,7 @@ import { auditLog } from '@/lib/security'
 import { sanitizeString, isDemoSlug } from '@/lib/validate'
 import { jwtVerify } from 'jose'
 import { requireSecureAdminAuth } from '@/lib/auth'
+import { SubscriptionServerService } from '@/lib/subscription-server'
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
@@ -19,6 +20,20 @@ export async function POST(req: NextRequest) {
     if (isDemoSlug(slug)) {
       return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
     }
+
+    // Get establishment subscription info and check plan
+    const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
+    if (!subscription) {
+      return NextResponse.json({ error: 'Établissement introuvable ou plan invalide.' }, { status: 404 })
+    }
+
+    // Check if plan allows image management (Pro and Premium only)
+    if (!(subscription.plan === 'pro' || subscription.plan === 'premium')) {
+      return NextResponse.json({ 
+        error: 'La gestion d\'images est disponible uniquement pour les plans Pro et Premium. Passez à un plan supérieur pour utiliser cette fonctionnalité.' 
+      }, { status: 403 })
+    }
+
     if (!id) {
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
     }
@@ -44,12 +59,30 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = await requireSecureAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
+
   try {
-    const { id, slug } = await req.json()
+    const { id } = await req.json()
     // Blocage des modifications en mode démo
     if (isDemoSlug(slug)) {
       return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
     }
+
+    // Get establishment subscription info and check plan
+    const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
+    if (!subscription) {
+      return NextResponse.json({ error: 'Établissement introuvable ou plan invalide.' }, { status: 404 })
+    }
+
+    // Check if plan allows image management (Pro and Premium only)
+    if (subscription.plan === 'essentiel') {
+      return NextResponse.json({ 
+        error: 'La gestion d\'images est disponible uniquement pour les plans Pro et Premium. Passez à un plan supérieur pour utiliser cette fonctionnalité.' 
+      }, { status: 403 })
+    }
+
     if (!id) {
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
     }

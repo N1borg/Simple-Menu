@@ -2,10 +2,14 @@ import type { Category, MenuItem } from '@/types/supabase_types'
 import Image from 'next/image'
 import { Dialog } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
+import { CopyPlus, Crown, Loader2 } from "lucide-react"
+import ProCrown from "@/components/ui/ProCrown"
 import { useEffect, useState } from 'react'
 import { useCart } from '@/components/hooks/useCart'
 import MenuItemDialog from '@/components/MenuItemDialog'
 import DietaryBadge from '@/components/DietaryBadge'
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface MenuItemListProps {
   item: MenuItem
@@ -18,12 +22,15 @@ interface MenuItemListProps {
   savingItemId: string | null
   loadingAction: string | null
   deleteMenuItem: (catId: string, itemId: string) => Promise<void>
+  duplicateItem?: (itemId: string) => Promise<void>
   establishmentColor?: string
   isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
   basketEnabled?: boolean // New prop to control basket checkbox visibility
   hideDietaryBadges?: { vegan?: boolean; alcoholFree?: boolean } // Hide badges if category has them
   categoryIsAvailable?: boolean // New prop to check if category is available
+  isGloballyLoading?: boolean // Global loading state
+  canCreateMenuItem?: boolean // Whether user can create more items (subscription limit)
 }
 
 export default function MenuItemList({
@@ -36,12 +43,15 @@ export default function MenuItemList({
   savingItemId,
   loadingAction,
   deleteMenuItem,
+  duplicateItem,
   establishmentColor,
   isAdmin = true, // Default to admin mode for backward compatibility
   isDemo = false,
   basketEnabled = true, // Default to enabled for backward compatibility
   hideDietaryBadges = { vegan: false, alcoholFree: false },
-  categoryIsAvailable = true // Default to true for backward compatibility
+  categoryIsAvailable = true, // Default to true for backward compatibility
+  isGloballyLoading = false,
+  canCreateMenuItem = true
 }: MenuItemListProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = establishmentColor || '#3a4fff'
@@ -163,21 +173,67 @@ export default function MenuItemList({
               </div>
               <span className="font-bold">{item.price_one?.toFixed(2)}€</span>
             </div>
-            {!isAdmin && basketEnabled && (
-              <Checkbox
-                checked={isInCart?.(item.id) || false}
-                onCheckedChange={(checked: boolean) => {
-                  if (checked && addToCart) {
-                    addToCart(item)
-                  } else if (!checked && removeFromCart) {
-                    removeFromCart(item.id)
-                  }
-                }}
-                accentColor={establishmentColor}
-                onClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => e.stopPropagation()}
-                className="h-6 w-6"
-              />
-            )}
+            <div className="flex items-center gap-2">
+              {isAdmin && duplicateItem && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          duplicateItem(item.id);
+                        }}
+                        title="Dupliquer l'article"
+                        className={`cursor-pointer h-6 w-6 p-0 ${!instantAvailable ? 'text-gray-900' : ''}`}
+                        disabled={item.id.startsWith('temp-') || Boolean(loadingAction) || isGloballyLoading}
+                      >
+                        {(isGloballyLoading || Boolean(loadingAction)) ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CopyPlus className="w-4 h-4" />
+                        )}
+                      </Button>
+                      {plan === 'essentiel' && !isGloballyLoading && (
+                        <span
+                          className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 bg-white rounded-full shadow z-10"
+                          style={{ transform: 'rotate(18deg)' }}
+                        >
+                          <ProCrown className="w-3 h-3 !w-3 !h-3 text-yellow-500 drop-shadow" />
+                        </span>
+                      )}
+                      {plan !== 'essentiel' && !canCreateMenuItem && !isGloballyLoading && (
+                        <span
+                          className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 bg-white rounded-full shadow z-10"
+                          style={{ transform: 'rotate(18deg)' }}
+                        >
+                          <Crown className="w-3 h-3 text-yellow-500 drop-shadow" />
+                        </span>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Dupliquer l'article</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {!isAdmin && basketEnabled && (
+                <Checkbox
+                  checked={isInCart?.(item.id) || false}
+                  onCheckedChange={(checked: boolean) => {
+                    if (checked && addToCart) {
+                      addToCart(item)
+                    } else if (!checked && removeFromCart) {
+                      removeFromCart(item.id)
+                    }
+                  }}
+                  accentColor={establishmentColor}
+                  onClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => e.stopPropagation()}
+                  className="h-6 w-6"
+                />
+              )}
+            </div>
           </div>
         </div>
 

@@ -104,15 +104,22 @@ export function MenuItemDialogForm({
       <Label className="flex items-center gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="flex items-center">
+            <div className="relative flex items-center">
               <Switch
                 checked={isProOrPremium ? localAvailable : true}
                 onCheckedChange={handleAvailableChange}
-                className={isProOrPremium ? "cursor-pointer" : "cursor-pointer"}
+                className="cursor-pointer"
                 disabled={!isProOrPremium || isDemo}
               />
-              {!isProOrPremium && <ProCrown className="w-4 h-4 text-yellow-500 ml-1" title="Pro/Premium" />}
-            </span>
+              {!isProOrPremium && (
+                <span
+                  className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 bg-white rounded-full shadow z-10"
+                  style={{ transform: 'rotate(18deg)' }}
+                >
+                  <ProCrown className="w-3 h-3 text-yellow-500 drop-shadow" />
+                </span>
+              )}
+            </div>
           </TooltipTrigger>
           {!isProOrPremium && (
             <TooltipContent>
@@ -152,31 +159,69 @@ export function MenuItemDialogForm({
       />
       <Label>Badges alimentaires</Label>
       <div className="flex gap-2 mt-2">
-        <button
-          type="button"
-          onClick={() => setLocalVegan(!localVegan)}
-          disabled={isDemo}
-          className="cursor-pointer"
-        >
-          <DietaryBadge 
-            type="vegan" 
-            variant={localVegan ? "active" : "inactive"}
-          />
-        </button>
-        <button
-          type="button"
-          onClick={() => setLocalAlcoholFree(!localAlcoholFree)}
-          disabled={isDemo}
-          className="cursor-pointer"
-        >
-          <DietaryBadge 
-            type="alcohol-free" 
-            variant={localAlcoholFree ? "active" : "inactive"}
-          />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => isProOrPremium ? setLocalVegan(!localVegan) : setUpgradeDialogOpen(true)}
+                disabled={isDemo}
+                className={isProOrPremium ? "cursor-pointer" : "cursor-pointer opacity-60"}
+              >
+                <DietaryBadge 
+                  type="vegan" 
+                  variant={localVegan && isProOrPremium ? "active" : "inactive"}
+                />
+              </button>
+              {!isProOrPremium && (
+                <span
+                  className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-white rounded-full shadow z-10"
+                  style={{ transform: 'rotate(18deg)' }}
+                >
+                  <ProCrown className="w-3 h-3 text-yellow-500 drop-shadow" />
+                </span>
+              )}
+            </div>
+          </TooltipTrigger>
+          {!isProOrPremium && (
+            <TooltipContent>
+              <span>Fonctionnalité disponible uniquement avec le plan Pro ou Premium</span>
+            </TooltipContent>
+          )}
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => isProOrPremium ? setLocalAlcoholFree(!localAlcoholFree) : setUpgradeDialogOpen(true)}
+                disabled={isDemo}
+                className={isProOrPremium ? "cursor-pointer" : "cursor-pointer opacity-60"}
+              >
+                <DietaryBadge 
+                  type="alcohol-free" 
+                  variant={localAlcoholFree && isProOrPremium ? "active" : "inactive"}
+                />
+              </button>
+              {!isProOrPremium && (
+                <span
+                  className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-white rounded-full shadow z-10"
+                  style={{ transform: 'rotate(18deg)' }}
+                >
+                  <ProCrown className="w-3 h-3 text-yellow-500 drop-shadow" />
+                </span>
+              )}
+            </div>
+          </TooltipTrigger>
+          {!isProOrPremium && (
+            <TooltipContent>
+              <span>Fonctionnalité disponible uniquement avec le plan Pro ou Premium</span>
+            </TooltipContent>
+          )}
+        </Tooltip>
       </div>
       <p className="text-xs text-gray-500 mt-1">
-        Cliquez sur les badges pour les activer/désactiver
+        {isProOrPremium ? "Cliquez sur les badges pour les activer/désactiver" : "Badges disponibles avec les plans Pro et Premium"}
       </p>
       <DialogFooter>
         <div className="flex w-full justify-between gap-2">

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from '@/lib/supabase'
 import { auditLog } from '@/lib/security'
 import { sanitizeString, isDemoSlug } from '@/lib/validate'
-import { jwtVerify } from 'jose'
 import { requireSecureAdminAuth } from '@/lib/auth'
+import { SubscriptionServerService } from '@/lib/subscription-server'
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
@@ -19,6 +19,16 @@ export async function POST(req: NextRequest) {
     if (isDemoSlug(slug)) {
       return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
     }
+    
+    // Check subscription - customBranding feature required for logo updates
+    const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
+    if (!subscription) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Établissement non trouvé' 
+      }, { status: 404 })
+    }
+
     if (!id) {
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
     }
@@ -44,12 +54,26 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const auth = await requireSecureAdminAuth(req)
+  if ('slug' in auth === false) return auth as NextResponse
+  const slug = (auth as { slug: string }).slug
+
   try {
-    const { id, slug } = await req.json()
+    const { id } = await req.json()
     // Blocage des modifications en mode démo
     if (isDemoSlug(slug)) {
       return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
     }
+    
+    // Check subscription - customBranding feature required for logo updates
+    const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
+    if (!subscription) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Établissement non trouvé' 
+      }, { status: 404 })
+    }
+
     if (!id) {
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
     }

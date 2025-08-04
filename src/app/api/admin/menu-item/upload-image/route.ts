@@ -4,6 +4,7 @@ import sharp from "sharp"
 import { auditLog } from '@/lib/security'
 import { isDemoSlug } from '@/lib/validate'
 import { requireSecureAdminAuth } from '@/lib/auth'
+import { SubscriptionServerService } from '@/lib/subscription-server'
 
 cloudinary.v2.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -32,6 +33,20 @@ export async function POST(req: NextRequest) {
     // Protection avancée mode démo
     if (isDemoSlug(slug)) {
       return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
+    }
+
+    // Get establishment subscription info and check plan
+    const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
+    if (!subscription) {
+      return NextResponse.json({ error: 'Établissement introuvable ou plan invalide.' }, { status: 404 })
+    }
+
+    // Check if plan allows image uploads (Pro and Premium only)
+    if (!(subscription.plan === 'pro' || subscription.plan === 'premium')) {
+      auditLog({ action: 'upload_item_image_blocked', ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown', details: { slug, plan: subscription.plan, reason: 'Plan essentiel ne permet pas l\'upload d\'images' } })
+      return NextResponse.json({ 
+        error: 'L\'upload d\'images est disponible uniquement pour les plans Pro et Premium. Passez à un plan supérieur pour utiliser cette fonctionnalité.' 
+      }, { status: 403 })
     }
 
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'

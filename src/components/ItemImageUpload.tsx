@@ -226,7 +226,7 @@ export default function ItemImageUpload({
                 <TooltipContent>
                   {!isProOrPremium ? (
                     <span>
-                      <span className="text-yellow-500 font-semibold">Fonctionnalité Premium</span><br/>
+                      <span className="text-yellow-500 font-semibold">Fonctionnalité Pro</span><br/>
                       Cliquer pour découvrir les plans et ajouter des images à vos articles.
                     </span>
                   ) : (

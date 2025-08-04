@@ -62,9 +62,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-semibold mt-8 mb-4">5. Destinataires des données</h2>
             <h3 className="text-lg font-semibold mt-6 mb-2">5.1 Sous-traitants</h3>
             <ul className="list-disc ml-6 mb-2">
-              <li><span className="font-bold">Supabase</span> (hébergement base de données) - États-Unis</li>
               <li><span className="font-bold">Stripe</span> (paiements) - États-Unis</li>
-              <li><span className="font-bold">Cloudinary</span> (stockage images) - États-Unis</li>
               <li><span className="font-bold">Vercel</span> (hébergement web) - États-Unis</li>
             </ul>
             <h3 className="text-lg font-semibold mt-6 mb-2">5.2 Transferts internationaux</h3>

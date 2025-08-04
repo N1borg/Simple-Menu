@@ -4,6 +4,7 @@ import { auditLog } from '@/lib/security'
 import { sanitizeString, sanitizeNumber, isValidUUID, isDemoSlug } from '@/lib/validate'
 import { jwtVerify } from 'jose'
 import { requireSecureAdminAuth } from '@/lib/auth'
+import { SubscriptionServerService } from '@/lib/subscription-server'
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
@@ -17,6 +18,26 @@ export async function POST(req: NextRequest) {
   if (isDemoSlug(item.slug)) {
     return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
   }
+
+  // Get establishment subscription info
+  const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
+  if (!subscription) {
+    return NextResponse.json({ error: 'Établissement introuvable ou plan invalide.' }, { status: 404 })
+  }
+
+  // Check for unauthorized parameter modifications before processing
+  const isProOrPremium = subscription.plan === 'pro' || subscription.plan === 'premium'
+  if (!isProOrPremium) {
+    // Block attempts to set unavailable or dietary attributes for essentiel plans
+    if (item.is_available === false || item.vegan === true || item.alcohol_free === true) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'La gestion de la disponibilité et des attributs diététiques des articles nécessite un plan Pro ou Premium.',
+        code: 'FEATURE_NOT_AVAILABLE'
+      }, { status: 403 })
+    }
+  }
+
   // Input validation & sanitization
   if (!isValidUUID(item.id)) {
     return NextResponse.json(false, { status: 400 })
@@ -24,12 +45,14 @@ export async function POST(req: NextRequest) {
   const name = sanitizeString(item.name, 100)
   const description = sanitizeString(item.description, 500)
   const price_one = sanitizeNumber(item.price_one, 0, 10000)
-  const is_available = !!item.is_available
   const display_order = sanitizeNumber(item.display_order, 0, 1000)
   const category_id = item.category_id
   const display_style = sanitizeString(item.display_style, 20)
-  const vegan = !!item.vegan
-  const alcohol_free = !!item.alcohol_free
+  
+  // Force restrictions for non-Pro/Premium plans (reuse isProOrPremium from above)
+  const is_available = isProOrPremium ? !!item.is_available : true
+  const vegan = isProOrPremium ? !!item.vegan : false
+  const alcohol_free = isProOrPremium ? !!item.alcohol_free : false
   const supabase = await getServerSupabase()
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
 
