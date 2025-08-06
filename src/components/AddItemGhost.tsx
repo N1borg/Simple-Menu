@@ -4,7 +4,6 @@ import { Plus, Crown, Loader2 } from "lucide-react"
 import { getEstablishmentColor } from '@/lib/utils'
 
 interface AddItemGhostProps {
-  category: Category
   displayStyle: string
   onAddItem: () => void
   loading: boolean
@@ -19,7 +18,6 @@ interface AddItemGhostProps {
 }
 
 export default function AddItemGhost({
-  category,
   displayStyle,
   onAddItem,
   loading,

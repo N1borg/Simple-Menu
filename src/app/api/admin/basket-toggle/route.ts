@@ -1,34 +1,47 @@
 import { getServerSupabase } from '@/lib/supabase'
 import { requireSecureAdminAuth } from '@/lib/auth'
-import { auditLog } from '@/lib/security'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
-  const supabase = await getServerSupabase()
+  const metadata = getRequestMetadata(req)
   
-  // Verify admin authentication
-  const authResult = await requireSecureAdminAuth(req)
-  if ('status' in authResult) {
-    return authResult
-  }
-
-  const { slug } = authResult
-
   try {
+    const supabase = await getServerSupabase()
+    
+    // Verify admin authentication
+    const authResult = await requireSecureAdminAuth(req)
+    if ('status' in authResult) {
+      auditLog({
+        action: 'basket_toggle_failed',
+        ...metadata,
+        statusCode: 401,
+        details: { reason: 'auth_failed' },
+        severity: 'warning'
+      })
+      return authResult
+    }
+
+    const { slug } = authResult
+
     const body = await req.json()
     const { basketEnabled } = body
 
     // Input validation
     if (typeof basketEnabled !== 'boolean') {
-      await auditLog({
-        action: 'update_basket_enabled_failed',
+      auditLog({
+        action: 'basket_toggle_failed',
+        ...metadata,
         user: slug,
-        details: { reason: 'Invalid basketEnabled input', input: typeof basketEnabled }
+        statusCode: 400,
+        details: { 
+          reason: 'invalid_input', 
+          inputType: typeof basketEnabled,
+          expectedType: 'boolean'
+        },
+        severity: 'warning'
       })
-      return NextResponse.json(
-        { error: 'Valeur basket invalide' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     // Find the establishment by slug
@@ -39,19 +52,22 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (fetchError || !establishment) {
-      await auditLog({
-        action: 'update_basket_enabled_failed',
+      auditLog({
+        action: 'basket_toggle_failed',
+        ...metadata,
         user: slug,
-        details: { reason: 'Establishment not found', error: fetchError?.message }
+        statusCode: 404,
+        details: { 
+          reason: 'establishment_not_found', 
+          dbError: fetchError?.code,
+          dbMessage: fetchError?.message
+        },
+        severity: 'error'
       })
-      return NextResponse.json(
-        { error: 'Établissement non trouvé' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: STANDARD_ERRORS.NOT_FOUND }, { status: 404 })
     }
 
     // Update the basket_enabled setting
-    // Note: If basket_enabled column doesn't exist, this will fail gracefully
     const { error: updateError } = await supabase
       .from('establishments')
       .update({ 
@@ -62,46 +78,47 @@ export async function POST(req: NextRequest) {
     if (updateError) {
       // Check if error is due to missing column
       if (updateError.message.includes('basket_enabled') && updateError.message.includes('column')) {
-        await auditLog({
-          action: 'update_basket_enabled_failed',
+        auditLog({
+          action: 'basket_toggle_failed',
+          ...metadata,
           user: slug,
+          statusCode: 500,
           details: { 
-            reason: 'Column basket_enabled does not exist. Please run the database migration.',
-            error: updateError.message,
+            reason: 'missing_column',
+            dbError: updateError.code,
+            dbMessage: updateError.message,
             basketEnabled,
             migration_needed: true
-          }
-        })
-        return NextResponse.json(
-          { 
-            error: 'Fonctionnalité panier non configurée. Veuillez contacter l\'administrateur.',
-            migration_needed: true
           },
-          { status: 500 }
-        )
+          severity: 'critical'
+        })
+        return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
       }
 
-      await auditLog({
-        action: 'update_basket_enabled_failed',
+      auditLog({
+        action: 'basket_toggle_failed',
+        ...metadata,
         user: slug,
+        statusCode: 500,
         details: { 
-          reason: 'Database update failed',
-          error: updateError.message,
+          reason: 'db_update_failed',
+          dbError: updateError.code,
+          dbMessage: updateError.message,
           basketEnabled
-        }
+        },
+        severity: 'error'
       })
-      console.error('Error updating basket setting:', updateError)
-      return NextResponse.json(
-        { error: 'Erreur lors de la mise à jour du paramètre panier' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
     }
 
     // Log successful update
-    await auditLog({
-      action: 'update_basket_enabled_success',
+    auditLog({
+      action: 'basket_toggle_success',
+      ...metadata,
       user: slug,
-      details: { basketEnabled }
+      statusCode: 200,
+      details: { basketEnabled },
+      severity: 'info'
     })
 
     return NextResponse.json({ 
@@ -110,18 +127,16 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    await auditLog({
-      action: 'update_basket_enabled_failed',
-      user: slug,
+    auditLog({
+      action: 'basket_toggle_error',
+      ...metadata,
+      statusCode: 500,
       details: { 
-        reason: 'Unexpected error',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
+        error: error instanceof Error ? error.message : 'unknown_error',
+        stack: error instanceof Error ? error.stack : undefined
+      },
+      severity: 'error'
     })
-    console.error('Error in basket toggle API:', error)
-    return NextResponse.json(
-      { error: 'Erreur interne du serveur' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
 }

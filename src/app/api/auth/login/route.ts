@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -10,20 +11,40 @@ if (!JWT_SECRET) {
 }
 
 export async function POST(req: NextRequest) {
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
+
   try {
     const body = await req.json()
-    const { slug, password } = body
+    const { slug: requestSlug, password } = body
+    slug = requestSlug || 'unknown'
 
     if (!slug) {
-      return NextResponse.json({ 
-        error: 'Slug de l\'établissement requis' 
-      }, { status: 400 })
+      auditLog({
+        action: 'login_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Missing slug' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     if (!password) {
-      return NextResponse.json({ 
-        error: 'Mot de passe requis' 
-      }, { status: 400 })
+      auditLog({
+        action: 'login_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Missing password' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     const supabase = await getServerSupabase()
@@ -36,9 +57,17 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (establishmentError || !establishment) {
-      return NextResponse.json({ 
-        error: 'Établissement non trouvé' 
-      }, { status: 404 })
+      auditLog({
+        action: 'login_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Establishment not found' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.NOT_FOUND }, { status: 404 })
     }
 
     // Check password
@@ -48,9 +77,17 @@ export async function POST(req: NextRequest) {
     }
 
     if (!isValidPassword) {
-      return NextResponse.json({ 
-        error: 'Mot de passe incorrect' 
-      }, { status: 401 })
+      auditLog({
+        action: 'login_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid password' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.UNAUTHORIZED }, { status: 401 })
     }
 
     // Generate JWT token
@@ -63,6 +100,21 @@ export async function POST(req: NextRequest) {
       JWT_SECRET as string,
       { expiresIn: '7d' }
     )
+
+    auditLog({
+      action: 'login_success',
+      severity: 'info',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { 
+        establishmentId: establishment.id,
+        email: establishment.email,
+        plan: establishment.plan
+      }
+    })
 
     return NextResponse.json({
       success: true,
@@ -80,8 +132,17 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    return NextResponse.json({ 
-      error: 'Erreur interne du serveur' 
-    }, { status: 500 })
+    auditLog({
+      action: 'login_error',
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    })
+    
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
 }

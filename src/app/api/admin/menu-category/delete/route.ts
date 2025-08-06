@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
-import { auditLog } from '@/lib/security'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { isValidUUID, isDemoSlug } from '@/lib/validate'
 import { jwtVerify } from 'jose'
 import { requireSecureAdminAuth } from '@/lib/auth'
@@ -9,52 +9,138 @@ const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  const auth = await requireSecureAdminAuth(req)
-  if ('slug' in auth === false) return auth as NextResponse
-  const slug = (auth as { slug: string }).slug
-
-  const { id, slug: categorySlug } = await req.json()
-
-  // Blocage des modifications en mode démo
-  if (isDemoSlug(categorySlug)) {
-    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
-  }
-
-  // Validation des entrées
-  if (!isValidUUID(id)) {
-    return NextResponse.json({ success: false, error: 'ID requis' }, { status: 400 })
-  }
-
-  const supabase = await getServerSupabase()
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
-
-  // Supprimer éventuellement tous les éléments de menu dans cette catégorie d'abord
-  await supabase.from('menu_items').delete().eq('category_id', id)
-
-  const { error } = await supabase
-    .from('categories')
-    .delete()
-    .eq('id', id)
-
-  if (error) {
-    auditLog({ action: 'category_delete_failed', ip, details: { id, error } })
-    
-    // Return more specific error messages
-    let errorMessage = 'Erreur lors de la suppression de la catégorie'
-    
-    if (error.code === '23503') { // Foreign key constraint violation
-      errorMessage = 'Impossible de supprimer cette catégorie car elle contient des éléments'
-    } else if (error.code === '42P01') { // Table doesn't exist
-      errorMessage = 'Service temporairement indisponible'
-    } else if (error.message && error.message.includes('establishment')) {
-      errorMessage = 'Établissement introuvable'
-    } else if (error.message) {
-      // Use the actual error message if it's descriptive
-      errorMessage = error.message
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
+  
+  try {
+    const auth = await requireSecureAdminAuth(req)
+    if ('slug' in auth === false) {
+      auditLog({
+        action: 'category_delete_failed',
+        severity: 'warning',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Authentication failed' }
+      })
+      return auth as NextResponse
     }
+    slug = (auth as { slug: string }).slug
+
+    const { id, slug: categorySlug } = await req.json()
+
+    auditLog({
+      action: 'category_delete_attempt',
+      severity: 'info',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { categoryId: id, categorySlug }
+    })
+
+    // Blocage des modifications en mode démo
+    if (isDemoSlug(categorySlug)) {
+      auditLog({
+        action: 'category_delete_blocked',
+        severity: 'info',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Demo mode restriction', categorySlug }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.DEMO_BLOCKED }, { status: 403 })
+    }
+
+    // Validation des entrées
+    if (!isValidUUID(id)) {
+      auditLog({
+        action: 'category_delete_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid UUID', invalidId: id }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
+    }
+
+    const supabase = await getServerSupabase()
+
+    // Supprimer éventuellement tous les éléments de menu dans cette catégorie d'abord
+    const { error: deleteItemsError } = await supabase.from('menu_items').delete().eq('category_id', id)
     
-    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 })
+    if (deleteItemsError) {
+      auditLog({
+        action: 'category_delete_items_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          categoryId: id,
+          dbError: deleteItemsError.code,
+          dbMessage: deleteItemsError.message
+        }
+      })
+    }
+
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      auditLog({ 
+        action: 'category_delete_failed', 
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          categoryId: id,
+          dbError: error.code,
+          dbMessage: error.message
+        } 
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
+    }
+
+    auditLog({ 
+      action: 'category_delete_success', 
+      severity: 'info',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { categoryId: id } 
+    })
+    
+    return NextResponse.json({ success: true }, { status: 200 })
+
+  } catch (error) {
+    auditLog({
+      action: 'category_delete_error',
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    })
+    
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
-  auditLog({ action: 'category_delete', ip, details: { id } })
-  return NextResponse.json({ success: true }, { status: 200 })
 }

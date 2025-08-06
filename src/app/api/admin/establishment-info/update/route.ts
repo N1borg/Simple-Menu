@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSecureAdminAuth } from '@/lib/auth'
 import { getServerSupabase } from '@/lib/supabase'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { z } from 'zod'
 
 const EstablishmentInfoSchema = z.object({
@@ -24,20 +25,60 @@ function padTimeString(hoursString: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
+  
   try {
     const adminAuth = await requireSecureAdminAuth(req)
     if ('status' in adminAuth) {
+      auditLog({
+        action: 'establishment_info_update_failed',
+        severity: 'warning',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Authentication failed' }
+      })
       return adminAuth
     }
 
-    const { slug } = adminAuth
+    slug = adminAuth.slug
     
     // Block demo requests
     if (slug === 'demo') {
-      return NextResponse.json({ error: 'Modification interdite en mode démo' }, { status: 403 })
+      auditLog({
+        action: 'establishment_info_update_blocked',
+        severity: 'info',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Demo mode restriction' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.DEMO_BLOCKED }, { status: 403 })
     }
     
     const body = await req.json()
+    
+    auditLog({
+      action: 'establishment_info_update_attempt',
+      severity: 'info',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { 
+        hasAddress: !!body.address,
+        hasPhone: !!body.phone,
+        hasEmail: !!body.email,
+        hasOpeningHours: !!body.opening_hours,
+        hasFacebook: !!body.facebook_url,
+        hasInstagram: !!body.instagram_url
+      }
+    })
     
     const validatedData = EstablishmentInfoSchema.parse(body)
     // Pad all hours in opening_hours
@@ -64,23 +105,73 @@ export async function POST(req: NextRequest) {
       .eq('slug', slug)
 
     if (error) {
+      auditLog({
+        action: 'establishment_info_update_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          dbError: error.code,
+          dbMessage: error.message
+        }
+      })
       return NextResponse.json(
-        { error: 'Erreur lors de la mise à jour des informations' },
+        { error: STANDARD_ERRORS.SERVER_ERROR },
         { status: 500 }
       )
     }
+
+    auditLog({
+      action: 'establishment_info_update_success',
+      severity: 'info',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { 
+        fieldsUpdated: Object.keys(validatedData).filter(key => 
+          validatedData[key as keyof typeof validatedData] !== undefined
+        )
+      }
+    })
 
     return NextResponse.json({ success: true })
 
   } catch (error) {
     if (error instanceof z.ZodError) {
+      auditLog({
+        action: 'establishment_info_update_validation_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { validationErrors: error.errors }
+      })
       return NextResponse.json(
-        { error: 'Données invalides', details: error.errors },
+        { error: STANDARD_ERRORS.INVALID_INPUT },
         { status: 400 }
       )
     }
+    
+    auditLog({
+      action: 'establishment_info_update_error',
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    })
+    
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: STANDARD_ERRORS.SERVER_ERROR },
       { status: 500 }
     )
   }

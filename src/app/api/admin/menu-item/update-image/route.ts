@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from '@/lib/supabase'
-import { auditLog } from '@/lib/security'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { sanitizeString, isDemoSlug } from '@/lib/validate'
 import { jwtVerify } from 'jose'
 import { requireSecureAdminAuth } from '@/lib/auth'
@@ -10,97 +10,257 @@ const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  const auth = await requireSecureAdminAuth(req)
-  if ('slug' in auth === false) return auth as NextResponse
-  const slug = (auth as { slug: string }).slug
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
 
   try {
+    const auth = await requireSecureAdminAuth(req)
+    if ('slug' in auth === false) return auth as NextResponse
+    slug = (auth as { slug: string }).slug
+
     const { id, image_url } = await req.json()
+    
     // Blocage des modifications en mode démo
     if (isDemoSlug(slug)) {
-      return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
+      auditLog({
+        action: 'menu_item_image_update_blocked',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Demo mode restriction' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.FORBIDDEN }, { status: 403 })
     }
 
     // Get establishment subscription info and check plan
     const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
     if (!subscription) {
-      return NextResponse.json({ error: 'Établissement introuvable ou plan invalide.' }, { status: 404 })
+      auditLog({
+        action: 'menu_item_image_update_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Establishment not found or invalid plan' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.NOT_FOUND }, { status: 404 })
     }
 
     // Check if plan allows image management (Pro and Premium only)
     if (!(subscription.plan === 'pro' || subscription.plan === 'premium')) {
-      return NextResponse.json({ 
-        error: 'La gestion d\'images est disponible uniquement pour les plans Pro et Premium. Passez à un plan supérieur pour utiliser cette fonctionnalité.' 
-      }, { status: 403 })
+      auditLog({
+        action: 'menu_item_image_update_blocked',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Feature restricted for plan', plan: subscription.plan }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.FORBIDDEN }, { status: 403 })
     }
 
     if (!id) {
-      return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
+      auditLog({
+        action: 'menu_item_image_update_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Missing ID' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
+
     const safeImageUrl = sanitizeString(image_url, 500)
     const supabase = await getServerSupabase()
     const { error } = await supabase
       .from('menu_items')
       .update({ image_url: safeImageUrl })
       .eq('id', id)
+
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      auditLog({
+        action: 'menu_item_image_update_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          itemId: id,
+          dbError: error.code,
+          dbMessage: error.message
+        }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
     }
-    // Audit log: action, user, details
-    await auditLog({
-      action: 'update',
+
+    auditLog({
+      action: 'menu_item_image_update_success',
+      severity: 'info',
       user: slug,
-      details: 'Item Image updated via admin API.'
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { 
+        itemId: id,
+        imageUrl: safeImageUrl,
+        plan: subscription.plan
+      }
     })
+
     return NextResponse.json({ success: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || 'Erreur serveur' }, { status: 500 })
+
+  } catch (error) {
+    auditLog({
+      action: 'menu_item_image_update_error',
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    })
+    
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
 }
 
 export async function DELETE(req: NextRequest) {
-  const auth = await requireSecureAdminAuth(req)
-  if ('slug' in auth === false) return auth as NextResponse
-  const slug = (auth as { slug: string }).slug
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
 
   try {
+    const auth = await requireSecureAdminAuth(req)
+    if ('slug' in auth === false) return auth as NextResponse
+    slug = (auth as { slug: string }).slug
+
     const { id } = await req.json()
+    
     // Blocage des modifications en mode démo
     if (isDemoSlug(slug)) {
-      return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
+      auditLog({
+        action: 'menu_item_image_delete_blocked',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Demo mode restriction' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.FORBIDDEN }, { status: 403 })
     }
 
     // Get establishment subscription info and check plan
     const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
     if (!subscription) {
-      return NextResponse.json({ error: 'Établissement introuvable ou plan invalide.' }, { status: 404 })
+      auditLog({
+        action: 'menu_item_image_delete_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Establishment not found or invalid plan' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.NOT_FOUND }, { status: 404 })
     }
 
     // Check if plan allows image management (Pro and Premium only)
     if (subscription.plan === 'essentiel') {
-      return NextResponse.json({ 
-        error: 'La gestion d\'images est disponible uniquement pour les plans Pro et Premium. Passez à un plan supérieur pour utiliser cette fonctionnalité.' 
-      }, { status: 403 })
+      auditLog({
+        action: 'menu_item_image_delete_blocked',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Feature restricted for plan', plan: subscription.plan }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.FORBIDDEN }, { status: 403 })
     }
 
     if (!id) {
-      return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
+      auditLog({
+        action: 'menu_item_image_delete_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Missing ID' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
+
     const supabase = await getServerSupabase()
     const { error } = await supabase
       .from('menu_items')
       .update({ image_url: null })
       .eq('id', id)
+
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      auditLog({
+        action: 'menu_item_image_delete_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          itemId: id,
+          dbError: error.code,
+          dbMessage: error.message
+        }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
     }
-    await auditLog({
-      action: 'delete',
+
+    auditLog({
+      action: 'menu_item_image_delete_success',
+      severity: 'info',
       user: slug,
-      details: 'Item Image deleted via admin API.'
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { 
+        itemId: id,
+        plan: subscription.plan
+      }
     })
+
     return NextResponse.json({ success: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || 'Erreur serveur' }, { status: 500 })
+
+  } catch (error) {
+    auditLog({
+      action: 'menu_item_image_delete_error',
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    })
+    
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
 }

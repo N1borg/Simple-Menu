@@ -1,44 +1,56 @@
 import { getServerSupabase } from '@/lib/supabase'
 import { requireSecureAdminAuth } from '@/lib/auth'
-import { auditLog } from '@/lib/security'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { NextRequest, NextResponse } from 'next/server'
 import { SubscriptionServerService } from '@/lib/subscription-server'
 
 export async function POST(req: NextRequest) {
-  const supabase = await getServerSupabase()
-  
-  // Verify admin authentication
-  const authResult = await requireSecureAdminAuth(req)
-  if ('status' in authResult) {
-    return authResult
-  }
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
 
-  const { slug } = authResult
-  
   try {
+    const supabase = await getServerSupabase()
+    
+    // Verify admin authentication
+    const authResult = await requireSecureAdminAuth(req)
+    if ('status' in authResult) {
+      return authResult
+    }
+
+    slug = authResult.slug
+    
     const body = await req.json()
     const { color } = body
     
     // Check subscription - customBranding feature required for color updates
     const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
     if (!subscription) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Établissement non trouvé' 
-      }, { status: 404 })
+      auditLog({
+        action: 'update_color_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Establishment not found' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.NOT_FOUND }, { status: 404 })
     }
 
     // Input validation
     if (!color || typeof color !== 'string') {
-      await auditLog({
+      auditLog({
         action: 'update_color_failed',
+        severity: 'warning',
         user: slug,
-        details: { reason: 'Invalid color input', input: typeof color }
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid color input', inputType: typeof color }
       })
-      return NextResponse.json(
-        { error: 'Couleur invalide' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     // Sanitize input - trim whitespace and convert to lowercase for validation
@@ -47,41 +59,47 @@ export async function POST(req: NextRequest) {
     // Validate hex color format (strict validation)
     const hexColorRegex = /^#([a-f0-9]{6}|[a-f0-9]{3})$/
     if (!hexColorRegex.test(sanitizedColor)) {
-      await auditLog({
+      auditLog({
         action: 'update_color_failed',
+        severity: 'warning',
         user: slug,
-        details: { reason: 'Invalid hex color format', input: sanitizedColor }
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid hex color format' }
       })
-      return NextResponse.json(
-        { error: 'Format de couleur invalide. Utilisez le format hexadécimal (#ffffff ou #fff)' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     // Additional security: ensure color is reasonable (not too long)
     if (sanitizedColor.length > 7) {
-      await auditLog({
+      auditLog({
         action: 'update_color_failed',
+        severity: 'warning',
         user: slug,
-        details: { reason: 'Color input too long', input: sanitizedColor }
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Color input too long' }
       })
-      return NextResponse.json(
-        { error: 'Format de couleur invalide' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     // Block demo modifications
     if (slug === 'demo') {
-      await auditLog({
+      auditLog({
         action: 'update_color_blocked',
+        severity: 'warning',
         user: slug,
-        details: { reason: 'Demo modification blocked' }
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Demo mode restriction' }
       })
-      return NextResponse.json(
-        { error: 'Modification désactivée (mode démo)' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: STANDARD_ERRORS.FORBIDDEN }, { status: 403 })
     }
 
     // Verify establishment exists and belongs to authenticated user
@@ -92,15 +110,21 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (fetchError || !establishment) {
-      await auditLog({
+      auditLog({
         action: 'update_color_failed',
+        severity: 'error',
         user: slug,
-        details: { reason: 'Establishment not found' }
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Establishment not found',
+          dbError: fetchError?.code,
+          dbMessage: fetchError?.message
+        }
       })
-      return NextResponse.json(
-        { error: 'Établissement non trouvé' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: STANDARD_ERRORS.NOT_FOUND }, { status: 404 })
     }
 
     // Update the color
@@ -112,21 +136,32 @@ export async function POST(req: NextRequest) {
       .eq('slug', slug)
 
     if (error) {
-      await auditLog({
+      auditLog({
         action: 'update_color_failed',
+        severity: 'error',
         user: slug,
-        details: { reason: 'Database error', error: error.message }
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Database error',
+          dbError: error.code,
+          dbMessage: error.message
+        }
       })
-      return NextResponse.json(
-        { error: 'Erreur lors de la mise à jour de la couleur' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
     }
 
     // Success audit log
-    await auditLog({
+    auditLog({
       action: 'update_color_success',
+      severity: 'info',
       user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
       details: { 
         establishmentName: establishment.name,
         newColor: sanitizedColor 
@@ -140,17 +175,17 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    await auditLog({
+    auditLog({
       action: 'update_color_error',
-      user: slug || 'unknown',
-      details: { 
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      }
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
     })
-    return NextResponse.json(
-      { error: 'Erreur serveur' },
-      { status: 500 }
-    )
+    
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
 }

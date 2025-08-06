@@ -1,34 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
-import { auditLog } from '@/lib/security'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { requireSecureAdminAuth } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
+
   try {
     // Verify admin authentication
     const auth = await requireSecureAdminAuth(req)
     if ('slug' in auth === false) return auth as NextResponse
-    const slug = (auth as { slug: string }).slug
+    slug = (auth as { slug: string }).slug
 
     const { newPassword } = await req.json()
     
     if (!newPassword) {
-      return NextResponse.json({ error: 'Nouveau mot de passe requis.' }, { status: 400 })
+      auditLog({
+        action: 'set_password_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Missing new password' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     if (newPassword.length < 6) {
-      return NextResponse.json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' }, { status: 400 })
+      auditLog({
+        action: 'set_password_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Password too short', length: newPassword.length }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     // Block modifications in demo mode
     if (slug === 'demo') {
-      auditLog({ 
-        action: 'set_password_attempt_demo_blocked', 
-        user: slug, 
-        details: { reason: 'Demo mode' } 
+      auditLog({
+        action: 'set_password_blocked',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Demo mode restriction' }
       })
-      return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
+      return NextResponse.json({ error: STANDARD_ERRORS.FORBIDDEN }, { status: 403 })
     }
 
     const supabase = await getServerSupabase()
@@ -41,12 +69,21 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error || !establishment) {
-      auditLog({ 
-        action: 'set_password_failed', 
-        user: slug, 
-        details: { reason: 'Establishment not found', error } 
+      auditLog({
+        action: 'set_password_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Establishment not found',
+          dbError: error?.code,
+          dbMessage: error?.message
+        }
       })
-      return NextResponse.json({ error: 'Établissement introuvable.' }, { status: 404 })
+      return NextResponse.json({ error: STANDARD_ERRORS.NOT_FOUND }, { status: 404 })
     }
 
     // Hash the new password
@@ -59,29 +96,49 @@ export async function POST(req: NextRequest) {
       .eq('id', establishment.id)
 
     if (updateError) {
-      auditLog({ 
-        action: 'set_password_failed', 
-        user: slug, 
-        details: { reason: 'Database update failed', error: updateError } 
+      auditLog({
+        action: 'set_password_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Database update failed',
+          dbError: updateError.code,
+          dbMessage: updateError.message
+        }
       })
-      return NextResponse.json({ error: 'Erreur lors de la mise à jour du mot de passe.' }, { status: 500 })
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
     }
 
     // Log successful password change
-    auditLog({ 
-      action: 'admin_password_set', 
-      user: slug, 
-      details: { context: 'authenticated_session' } 
+    auditLog({
+      action: 'admin_password_set_success',
+      severity: 'info',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { context: 'authenticated_session' }
     })
 
     return NextResponse.json({ success: true })
 
   } catch (error) {
-    auditLog({ 
-      action: 'set_password_failed', 
-      user: 'unknown', 
-      details: { reason: 'Internal server error', error } 
+    auditLog({
+      action: 'set_password_error',
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
     })
-    return NextResponse.json({ error: 'Erreur interne du serveur.' }, { status: 500 })
+    
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
 }

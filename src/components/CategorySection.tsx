@@ -1078,7 +1078,6 @@ export default function CategorySection({
           {isAdmin && (
             <div className="tutorial-add-item">
               <AddItemGhost
-                category={category}
                 displayStyle={category.display_style || "card"}
                 onAddItem={() => handleAddMenuItem(category.id)}
                 loading={isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}

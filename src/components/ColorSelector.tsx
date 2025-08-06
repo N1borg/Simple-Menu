@@ -11,7 +11,6 @@ interface ColorSelectorProps {
   currentColor?: string
   onColorChange?: (color: string) => void
   onColorSave?: (color: string) => Promise<void>
-  isDemo?: boolean
   showPreview?: boolean
   showSaveButton?: boolean
   title?: string
@@ -23,7 +22,6 @@ export function ColorSelector({
   currentColor = '#3b82f6',
   onColorChange,
   onColorSave,
-  isDemo = false,
   showPreview = true,
   showSaveButton = true,
   title = "Choisir une couleur",
@@ -43,11 +41,6 @@ export function ColorSelector({
   }
 
   const handleSaveColor = async () => {
-    if (isDemo) {
-      toast.info("Modification désactivée (mode démo).")
-      return
-    }
-
     if (!onColorSave) {
       return
     }
@@ -64,11 +57,6 @@ export function ColorSelector({
   }
 
   const handleApiSave = async () => {
-    if (isDemo) {
-      toast.info("Modification désactivée (mode démo).")
-      return
-    }
-
     setIsLoading(true)
     try {
       const response = await fetch('/api/admin/update-color', {
@@ -131,7 +119,7 @@ export function ColorSelector({
         {showSaveButton && (
           <Button
             onClick={onColorSave ? handleSaveColor : handleApiSave}
-            disabled={isLoading || (isDemo && !onColorSave)}
+            disabled={isLoading || !onColorSave}
             className="w-full max-w-sm cursor-pointer"
           >
             {isLoading ? (

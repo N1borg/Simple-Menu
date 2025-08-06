@@ -58,22 +58,15 @@ export function EstablishmentInfoManager({ slug, children, primaryColor, isDemo 
 
   // Load establishment data on mount for non-demo
   useEffect(() => {
-    if (!isDemo) {
-      loadEstablishmentData()
-    }
-  }, [isDemo])
+    loadEstablishmentData()
+  }, [])
 
   const loadEstablishmentData = async () => {
-    if (isDemo) {
-      return // Don't load data in demo mode
-    }
-    
     setIsLoading(true)
     try {
       const response = await fetch(`/api/admin/establishment-info?slug=${slug}`)
       if (response.ok) {
         const data = await response.json()
-        
         const loadedFormData = {
           address: data.address || '',
           phone: data.phone || '',
@@ -81,7 +74,6 @@ export function EstablishmentInfoManager({ slug, children, primaryColor, isDemo 
           facebook_url: data.facebook_url || '',
           instagram_url: data.instagram_url || ''
         }
-        
         setFormData(loadedFormData)
         setInitialFormData(loadedFormData)
       } else {
@@ -241,7 +233,7 @@ export function EstablishmentInfoManager({ slug, children, primaryColor, isDemo 
           </DialogClose>
           <Button 
             onClick={handleSave} 
-            disabled={isSaving || isLoading || isDemo || !hasChanges()}
+            disabled={isSaving || isLoading || !hasChanges() || isDemo}
           >
             {isSaving ? (
               <div className="flex items-center">

@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 
 /**
  * Cleanup job to remove unpaid establishments after 24 hours
  * This prevents the database from filling up with abandoned signups
  */
 export async function POST(req: NextRequest) {
+  const requestMetadata = getRequestMetadata(req)
+
   try {
     // Vercel Cron Jobs are authenticated differently
     const authHeader = req.headers.get('Authorization')
@@ -17,10 +20,17 @@ export async function POST(req: NextRequest) {
     
     // Allow Vercel cron requests or requests with valid secret
     if (!isVercelCron && (!cronSecret || authHeader !== `Bearer ${cronSecret}`)) {
-      return NextResponse.json(
-        { error: 'Non autorisé' },
-        { status: 401 }
-      )
+      auditLog({
+        action: 'cleanup_unpaid_unauthorized',
+        severity: 'warning',
+        user: 'system',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Unauthorized cron access' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.UNAUTHORIZED }, { status: 401 })
     }
 
     const supabase = await getServerSupabase()
@@ -40,14 +50,35 @@ export async function POST(req: NextRequest) {
     
     if (fetchError) {
       console.error('Error fetching unpaid establishments:', fetchError)
-      return NextResponse.json(
-        { error: 'Erreur lors de la récupération' },
-        { status: 500 }
-      )
+      auditLog({
+        action: 'cleanup_unpaid_failed',
+        severity: 'error',
+        user: 'system',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Database fetch error',
+          dbError: fetchError.code,
+          dbMessage: fetchError.message
+        }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
     }
     
     if (!unpaidEstablishments || unpaidEstablishments.length === 0) {
       console.log('No unpaid establishments to clean up')
+      auditLog({
+        action: 'cleanup_unpaid_none',
+        severity: 'info',
+        user: 'system',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { message: 'No establishments to clean up' }
+      })
       return NextResponse.json({
         success: true,
         message: 'Aucun établissement à nettoyer',
@@ -66,13 +97,39 @@ export async function POST(req: NextRequest) {
     
     if (deleteError) {
       console.error('Error deleting unpaid establishments:', deleteError)
-      return NextResponse.json(
-        { error: 'Erreur lors de la suppression' },
-        { status: 500 }
-      )
+      auditLog({
+        action: 'cleanup_unpaid_failed',
+        severity: 'error',
+        user: 'system',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Database delete error',
+          count: unpaidEstablishments.length,
+          dbError: deleteError.code,
+          dbMessage: deleteError.message
+        }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
     }
     
     console.log(`Successfully cleaned up ${unpaidEstablishments.length} unpaid establishments`)
+    
+    auditLog({
+      action: 'cleanup_unpaid_success',
+      severity: 'info',
+      user: 'system',
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { 
+        cleanedCount: unpaidEstablishments.length,
+        cleanedSlugs: unpaidEstablishments.map(e => e.slug)
+      }
+    })
     
     return NextResponse.json({
       success: true,
@@ -84,13 +141,18 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Cleanup cron job error:', error)
-    return NextResponse.json(
-      { 
-        error: 'Erreur interne',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    )
+    auditLog({
+      action: 'cleanup_unpaid_error',
+      severity: 'error',
+      user: 'system',
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    })
+    
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
 }
 

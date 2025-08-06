@@ -213,7 +213,11 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
             <div className="px-4 tutorial-color-settings">
               <Dialog open={colorDialogOpen} onOpenChange={setColorDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    disabled={isDemo}
+                  >
                     <span
                       className="w-4 h-4 rounded-full border"
                       style={{
@@ -234,7 +238,6 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                   <ColorSelector
                     currentColor={currentColor}
                     onColorChange={setCurrentColor}
-                    isDemo={isDemo}
                     showPreview={true}
                     showSaveButton={false}
                     title=""
@@ -246,8 +249,8 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                       <Button variant="outline">Annuler</Button>
                     </DialogClose>
                     <Button 
-                      onClick={handleColorSave}
-                      disabled={isSavingColor}
+                      onClick={isDemo ? () => toast.info('Modification désactivée (mode démo).') : handleColorSave}
+                      disabled={isSavingColor || isDemo}
                     >
                       {isSavingColor ? (
                         <div className="flex items-center">

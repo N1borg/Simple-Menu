@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import cloudinary from "cloudinary"
 import sharp from "sharp"
-import { auditLog } from '@/lib/security'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { isDemoSlug } from '@/lib/validate'
 import { requireSecureAdminAuth } from '@/lib/auth'
 import { SubscriptionServerService } from '@/lib/subscription-server'
@@ -16,15 +16,28 @@ const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  const auth = await requireSecureAdminAuth(req)
-  if ('slug' in auth === false) return auth as NextResponse
-  const slug = (auth as { slug: string }).slug
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
 
   try {
+    const auth = await requireSecureAdminAuth(req)
+    if ('slug' in auth === false) return auth as NextResponse
+    slug = (auth as { slug: string }).slug
+
     // Parse and validate request
     const contentType = req.headers.get('content-type')
     if (!contentType?.includes('application/json')) {
-      return NextResponse.json({ error: "Content-Type doit être application/json" }, { status: 400 })
+      auditLog({
+        action: 'upload_item_image_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid content type' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     const body = await req.json()
@@ -32,38 +45,79 @@ export async function POST(req: NextRequest) {
 
     // Protection avancée mode démo
     if (isDemoSlug(slug)) {
-      return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
+      auditLog({
+        action: 'upload_item_image_blocked',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Demo mode restriction' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.FORBIDDEN }, { status: 403 })
     }
 
     // Get establishment subscription info and check plan
     const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
     if (!subscription) {
-      return NextResponse.json({ error: 'Établissement introuvable ou plan invalide.' }, { status: 404 })
+      auditLog({
+        action: 'upload_item_image_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Establishment not found or invalid plan' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.NOT_FOUND }, { status: 404 })
     }
 
     // Check if plan allows image uploads (Pro and Premium only)
     if (!(subscription.plan === 'pro' || subscription.plan === 'premium')) {
-      auditLog({ action: 'upload_item_image_blocked', ip: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown', details: { slug, plan: subscription.plan, reason: 'Plan essentiel ne permet pas l\'upload d\'images' } })
-      return NextResponse.json({ 
-        error: 'L\'upload d\'images est disponible uniquement pour les plans Pro et Premium. Passez à un plan supérieur pour utiliser cette fonctionnalité.' 
-      }, { status: 403 })
+      auditLog({
+        action: 'upload_item_image_blocked',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Feature restricted for plan', plan: subscription.plan }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.FORBIDDEN }, { status: 403 })
     }
-
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
 
     // Validate file presence
     if (!file) {
-      auditLog({ action: 'upload_item_image_failed', ip, details: { error: 'Aucun fichier fourni' } })
-      return NextResponse.json({ error: "Aucun fichier fourni" }, { status: 400 })
+      auditLog({
+        action: 'upload_item_image_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'No file provided' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     // Validate and extract image data
     const matches = /^data:(image\/(png|jpeg|jpg|webp|gif));base64,/.exec(file)
     if (!matches) {
-      auditLog({ action: 'upload_item_image_failed', ip, details: { error: 'Format invalide', file } })
-      return NextResponse.json({ 
-        error: "Format invalide. Formats acceptés: PNG, JPEG, WebP, GIF" 
-      }, { status: 400 })
+      auditLog({
+        action: 'upload_item_image_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid image format' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     const base64Data = file.replace(/^data:image\/[^;]+;base64,/, "")
@@ -111,7 +165,7 @@ export async function POST(req: NextRequest) {
           },
           (error, result) => {
             if (error || !result) {
-              return reject(error || new Error("Échec de l'upload Cloudinary"))
+              return reject(error || new Error("Upload failed"))
             }
             resolve(result.secure_url)
           }
@@ -120,7 +174,20 @@ export async function POST(req: NextRequest) {
       })
 
       // Success logging (after upload to cloudinary)
-      auditLog({ action: 'upload_image_success', ip, details: { slug, folder, cloudinaryUrl } })
+      auditLog({
+        action: 'upload_item_image_success',
+        severity: 'info',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          folder,
+          cloudinaryUrl,
+          plan: subscription.plan
+        }
+      })
 
       return NextResponse.json({ 
         url: cloudinaryUrl,
@@ -128,19 +195,38 @@ export async function POST(req: NextRequest) {
       })
 
     } catch (imageError: any) {
-      auditLog({ action: 'upload_item_image_failed', ip, details: { error: imageError.message } })
+      auditLog({
+        action: 'upload_item_image_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Image processing failed',
+          error: imageError.message
+        }
+      })
+
       if (imageError.message?.includes('Input buffer contains unsupported image format')) {
-        return NextResponse.json({ 
-          error: "Format d'image non supporté ou fichier corrompu" 
-        }, { status: 400 })
+        return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
       }
-      return NextResponse.json({ 
-        error: "Impossible de traiter l'image. Vérifiez que c'est un fichier valide." 
-      }, { status: 400 })
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 400 })
     }
+
   } catch (error: any) {
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
-    auditLog({ action: 'upload_item_image_failed', ip, details: { error: error.message } })
-    return NextResponse.json({ error: error.message || 'Erreur serveur' }, { status: 500 })
+    auditLog({
+      action: 'upload_item_image_error',
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    })
+    
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
 }

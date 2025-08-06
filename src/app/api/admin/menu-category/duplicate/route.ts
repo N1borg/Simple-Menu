@@ -4,44 +4,111 @@ import { requireSecureAdminAuth } from '@/lib/auth';
 import { SubscriptionServerService } from '@/lib/subscription-server';
 import { SUBSCRIPTION_PLANS } from '@/lib/subscription';
 import { isDemoSlug } from '@/lib/validate';
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security';
 
 export async function POST(req: NextRequest) {
-  const auth = await requireSecureAdminAuth(req)
-  if ('slug' in auth === false) return auth as NextResponse
-  const slug = (auth as { slug: string }).slug
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
+  
+  try {
+    const auth = await requireSecureAdminAuth(req)
+    if ('slug' in auth === false) return auth as NextResponse
+    slug = (auth as { slug: string }).slug
 
-  const { categoryId, display_order } = await req.json();
-  if (!categoryId) {
-    return NextResponse.json({ error: 'Missing categoryId' }, { status: 400 });
-  }
+    const { categoryId, display_order } = await req.json();
+    
+    auditLog({
+      action: 'category_duplicate_attempt',
+      severity: 'info',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { categoryId, display_order }
+    })
 
-  // Blocage des modifications en mode démo
-  if (isDemoSlug(slug)) {
-    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
-  }
+    if (!categoryId) {
+      auditLog({
+        action: 'category_duplicate_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { error: 'Missing categoryId' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 });
+    }
 
-  // Check subscription limits and plan features
-  const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
-  if (!subscription) {
+    // Blocage des modifications en mode démo
+    if (isDemoSlug(slug)) {
+      auditLog({
+        action: 'category_duplicate_blocked',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Demo mode restriction' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.DEMO_BLOCKED }, { status: 403 })
+    }
+
+    // Check subscription limits and plan features
+    const subscription = await SubscriptionServerService.getEstablishmentSubscription(slug)
+    if (!subscription) {
+      auditLog({
+        action: 'category_duplicate_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { error: 'Establishment not found' }
+      })
+      return NextResponse.json({ 
+        success: false, 
+        error: STANDARD_ERRORS.NOT_FOUND
+      }, { status: 404 })
+    }
+
+    // Check if plan allows duplication (Pro/Premium only)
+    const planConfig = SUBSCRIPTION_PLANS[subscription.plan]
+    if (!planConfig) {
+    auditLog({
+      action: 'category_duplicate_failed',
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: 'Invalid plan', plan: subscription.plan }
+    })
     return NextResponse.json({ 
       success: false, 
-      error: 'Établissement non trouvé' 
-    }, { status: 404 })
-  }
-
-  // Check if plan allows duplication (Pro/Premium only)
-  const planConfig = SUBSCRIPTION_PLANS[subscription.plan]
-  if (!planConfig) {
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Plan non reconnu' 
+      error: STANDARD_ERRORS.BAD_REQUEST
     }, { status: 400 })
   }
 
   if (subscription.plan === 'essentiel') {
+    auditLog({
+      action: 'category_duplicate_blocked',
+      severity: 'warning',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { reason: 'Plan restriction', plan: subscription.plan }
+    })
     return NextResponse.json({ 
       success: false, 
-      error: 'La duplication de catégories est une fonctionnalité Pro et Premium. Passez à un plan supérieur pour utiliser cette option.',
+      error: STANDARD_ERRORS.FORBIDDEN,
       code: 'FEATURE_RESTRICTED',
       requiredPlan: 'pro'
     }, { status: 403 })
@@ -148,5 +215,37 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  auditLog({
+    action: 'category_duplicate_success',
+    severity: 'info',
+    user: slug,
+    ip: requestMetadata.ip,
+    userAgent: requestMetadata.userAgent,
+    method: requestMetadata.method,
+    url: requestMetadata.url,
+    details: { 
+      categoryId,
+      newCategoryId: insertedCat.id,
+      itemsCreated: duplicatedItems.length 
+    }
+  })
+
   return NextResponse.json({ success: true, category: insertedCat, menu_items: duplicatedItems });
+
+  } catch (error) {
+    auditLog({
+      action: 'category_duplicate_error',
+      severity: 'error',
+      user: slug || 'unknown',
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    })
+    
+    return NextResponse.json({ 
+      error: STANDARD_ERRORS.SERVER_ERROR 
+    }, { status: 500 })
+  }
 }

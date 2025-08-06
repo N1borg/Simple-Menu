@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
-import { auditLog } from '@/lib/security'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { jwtVerify } from 'jose'
 import { requireSecureAdminAuth } from '@/lib/auth'
 
@@ -9,40 +9,136 @@ const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) throw new Error('JWT_SECRET not defined')
 
 export async function POST(req: NextRequest) {
-  const auth = await requireSecureAdminAuth(req)
-  if ('slug' in auth === false) return auth as NextResponse
-  const slug = (auth as { slug: string }).slug
+  const requestMetadata = getRequestMetadata(req)
+  let slug = 'unknown'
 
-  const { establishmentId, currentPassword, newPassword } = await req.json()
-  if (!establishmentId || !currentPassword || !newPassword) {
-    return NextResponse.json({ error: 'Champs manquants.' }, { status: 400 })
+  try {
+    const auth = await requireSecureAdminAuth(req)
+    if ('slug' in auth === false) return auth as NextResponse
+    slug = (auth as { slug: string }).slug
+
+    const { establishmentId, currentPassword, newPassword } = await req.json()
+    
+    if (!establishmentId || !currentPassword || !newPassword) {
+      auditLog({
+        action: 'update_password_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Missing required fields' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
+    }
+
+    // Blocage des modifications en mode démo
+    if (slug === 'demo') {
+      auditLog({
+        action: 'update_password_blocked',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Demo mode restriction' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.FORBIDDEN }, { status: 403 })
+    }
+
+    const supabase = await getServerSupabase()
+    const { data: establishment, error } = await supabase
+      .from('establishments')
+      .select('admin_hash')
+      .eq('id', establishmentId)
+      .single()
+
+    if (error || !establishment || typeof establishment.admin_hash !== 'string') {
+      auditLog({
+        action: 'update_password_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Establishment not found',
+          establishmentId,
+          dbError: error?.code,
+          dbMessage: error?.message
+        }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.NOT_FOUND }, { status: 404 })
+    }
+
+    const valid = await bcrypt.compare(currentPassword, establishment.admin_hash)
+    if (!valid) {
+      auditLog({
+        action: 'update_password_failed',
+        severity: 'warning',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid current password' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.UNAUTHORIZED }, { status: 401 })
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 10)
+    const { error: updateError } = await supabase
+      .from('establishments')
+      .update({ admin_hash: newHash })
+      .eq('id', establishmentId)
+
+    if (updateError) {
+      auditLog({
+        action: 'update_password_failed',
+        severity: 'error',
+        user: slug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Database update failed',
+          establishmentId,
+          dbError: updateError.code,
+          dbMessage: updateError.message
+        }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
+    }
+
+    auditLog({
+      action: 'update_password_success',
+      severity: 'info',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { establishmentId }
+    })
+
+    return NextResponse.json({ success: true })
+
+  } catch (error) {
+    auditLog({
+      action: 'update_password_error',
+      severity: 'error',
+      user: slug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
+    })
+    
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
-  // Blocage des modifications en mode démo
-  if (slug === 'demo') {
-    return NextResponse.json({ error: 'Modification désactivée (mode démo).' }, { status: 403 })
-  }
-  const supabase = await getServerSupabase()
-  const { data: establishment, error } = await supabase
-    .from('establishments')
-    .select('admin_hash')
-    .eq('id', establishmentId)
-    .single()
-  if (error || !establishment || typeof establishment.admin_hash !== 'string') {
-    return NextResponse.json({ error: 'Établissement introuvable.' }, { status: 404 })
-  }
-  const valid = await bcrypt.compare(currentPassword, establishment.admin_hash)
-  if (!valid) {
-    auditLog({ action: 'admin_password_change_failed', user: slug, details: { reason: 'Mot de passe actuel invalide' } })
-    return NextResponse.json({ error: 'Mot de passe actuel invalide.' }, { status: 401 })
-  }
-  const newHash = await bcrypt.hash(newPassword, 10)
-  const { error: updateError } = await supabase
-    .from('establishments')
-    .update({ admin_hash: newHash })
-    .eq('id', establishmentId)
-  if (updateError) {
-    return NextResponse.json({ error: 'Erreur lors de la mise à jour.' }, { status: 500 })
-  }
-  auditLog({ action: 'admin_password_changed', user: slug })
-  return NextResponse.json({ success: true })
 }
