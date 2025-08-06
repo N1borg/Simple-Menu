@@ -48,13 +48,17 @@ export function MenuItemDialogForm({
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false)
 
   useEffect(() => {
-    setLocalName(item.name)
-    setLocalDescription(item.description || '')
-    setLocalPrice(item.price_one?.toFixed(2) ?? '')
-    setLocalAvailable(!!item.is_available)
-    setLocalVegan(!!item.vegan)
-    setLocalAlcoholFree(!!item.alcohol_free)
-  }, [item])
+    // Only update local state if we're not currently saving
+    // This prevents inputs from reverting to old values during save
+    if (savingItemId !== item.id) {
+      setLocalName(item.name)
+      setLocalDescription(item.description || '')
+      setLocalPrice(item.price_one?.toFixed(2) ?? '')
+      setLocalAvailable(isProOrPremium ? !!item.is_available : true)
+      setLocalVegan(!!item.vegan)
+      setLocalAlcoholFree(!!item.alcohol_free)
+    }
+  }, [item, savingItemId, isProOrPremium])
 
   // Check if any changes were made
   const hasChanges = () => {

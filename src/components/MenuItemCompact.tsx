@@ -122,7 +122,7 @@ export default function MenuItemCompact({
             <div className="flex items-center gap-2">
               <span
                 ref={titleSpanRef}
-                className="text-base font-semibold max-w-full overflow-hidden whitespace-nowrap relative leading-tight flex-1"
+                className={`text-base font-semibold max-w-full overflow-hidden whitespace-nowrap relative leading-tight flex-1 ${!instantAvailable ? 'line-through' : ''}`}
                 title={item.name}
                 style={{
                   textOverflow: "clip",
@@ -172,7 +172,7 @@ export default function MenuItemCompact({
             </div>
           </div>
           <div className="w-full flex justify-between items-end mt-auto">
-            <span className="font-bold">{item.price_one?.toFixed(2)}€</span>
+            <span className={`font-bold ${!instantAvailable ? 'line-through' : ''}`}>{item.price_one?.toFixed(2)}€</span>
             <div className="flex items-center gap-2">
               {isAdmin && duplicateItem && (
                 <Tooltip>
