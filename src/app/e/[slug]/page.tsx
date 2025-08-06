@@ -130,6 +130,7 @@ export default async function MenuPage({ params }: PageProps) {
         </CartProvider>
         <MenuFooter 
           color={establishment.primary_color ?? undefined} 
+          plan={establishment.plan || 'essentiel'}
           establishmentInfo={{
             address: establishment.address ?? undefined,
             phone: establishment.phone ?? undefined,

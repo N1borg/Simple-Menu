@@ -4,10 +4,10 @@ import EstablishmentFooter, { EstablishmentInfo } from "@/components/Establishme
 interface MenuFooterProps {
   color?: string
   establishmentInfo?: EstablishmentInfo
-  showAttribution?: boolean
+  plan?: string
 }
 
-const MenuFooter: React.FC<MenuFooterProps> = ({ color, establishmentInfo, showAttribution=true }) => {
+const MenuFooter: React.FC<MenuFooterProps> = ({ color, establishmentInfo, plan = 'essentiel' }) => {
   const hasInfo = establishmentInfo && (
     establishmentInfo.address ||
     establishmentInfo.phone ||
@@ -34,7 +34,7 @@ const MenuFooter: React.FC<MenuFooterProps> = ({ color, establishmentInfo, showA
         />
         
       {/* Simple Menu attribution */}
-      {showAttribution && (
+      {plan !== 'premium' && (
         <div 
           className={`text-center pt-4 ${hasInfo ? 'border-t' : ''}`} 
           style={{ borderColor: hasInfo ? (color || '#3a4fff') + '20' : undefined }}
