@@ -1,0 +1,139 @@
+/* Primary button style (next button) - use establishment color */
+.dashboard-tutorial-popover .driver-popover-next-btn {
+  background: var(--establishment-color, #2563eb) !important;
+  color: white !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  text-shadow: none !important;
+  text-decoration: none !important;
+  font-style: normal !important;
+}
+
+.dashboard-tutorial-popover .driver-popover-next-btn:hover {
+  background: var(--establishment-color, #2563eb) !important;
+  filter: brightness(0.9);
+  color: white !important;
+}
+/* Tutorial custom styles to match shadcn/ui design */
+
+.dashboard-tutorial-popover {
+  --driver-z-index: 10000;
+  z-index: var(--driver-z-index);
+}
+
+.dashboard-tutorial-popover .driver-popover {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  color: hsl(var(--popover-foreground));
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  font-family: inherit;
+  max-width: 400px;
+}
+
+.dashboard-tutorial-popover .driver-popover-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: hsl(var(--popover-foreground));
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-tutorial-popover .driver-popover-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 1rem;
+}
+
+.dashboard-tutorial-popover .driver-popover-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid hsl(var(--border));
+}
+
+/* Style tutorial buttons to match shadcn Button component */
+.dashboard-tutorial-popover .driver-popover-next-btn,
+.dashboard-tutorial-popover .driver-popover-prev-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+  height: 2.25rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  outline: none;
+  text-decoration: none;
+  /* Prevent any text content duplication */
+  text-overflow: ellipsis;
+  overflow: hidden;
+  /* Remove any text shadows that might cause duplication */
+  text-shadow: none !important;
+  /* Ensure clean text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dashboard-tutorial-popover .driver-popover-next-btn:focus-visible,
+.dashboard-tutorial-popover .driver-popover-prev-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--establishment-color, #2563eb);
+}
+
+/* Progress bar styling */
+.dashboard-tutorial-popover .driver-popover-progress-text {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.5rem;
+}
+
+/* Disable all interactions during tutorial except for allowed elements */
+.driver-active {
+  pointer-events: none !important;
+}
+
+.driver-active .driver-popover,
+.driver-active .driver-popover * {
+  pointer-events: auto !important;
+}
+
+/* Ensure tutorial elements can be clicked when specifically enabled */
+.driver-active .tutorial-element-interactive,
+.driver-active .tutorial-element-interactive *,
+.driver-active .tutorial-element-interactive button,
+.driver-active .tutorial-element-interactive [role="button"] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  /* Remove any hover effects during tutorial */
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.driver-active .tutorial-element-interactive:hover,
+.driver-active .tutorial-element-interactive *:hover,
+.driver-active .tutorial-element-interactive button:hover,
+.driver-active .tutorial-element-interactive [role="button"]:hover {
+  /* Disable hover effects during tutorial */
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  transform: none !important;
+}
+
+/* Disable backdrop click */
+.driver-overlay {
+  pointer-events: none !important;
+}
+
+/* Only the close button should be clickable to exit */
+.dashboard-tutorial-popover .driver-popover-close-btn {
+  pointer-events: auto !important;
+}

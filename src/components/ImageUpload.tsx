@@ -194,7 +194,7 @@ export default function ImageUpload({
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`tutorial-logo-section space-y-4 ${className}`}>
       {/* Centered Logo Preview (same as menu page) + Edit/Trash Buttons */}
       {displayedImageUrl && (
         <div className="relative flex justify-center mb-4">

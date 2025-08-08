@@ -227,23 +227,21 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 relative flex flex-col">
       <div className="flex justify-end mb-4">
-        <div className="tutorial-parameters-button">
-          <ParameterSheet
-            establishment={{
-              id: establishment.id,
-              slug: establishment.slug,
-              primary_color: establishment.primary_color ?? undefined,
-              plan: establishment.plan,
-              logo_url: establishment.logo_url ?? undefined,
-            }}
-            isDemo={isDemo}
-            subscription={subscription}
-            onTutorialStart={startTutorial}
-          />
-        </div>
+        <ParameterSheet
+          establishment={{
+            id: establishment.id,
+            slug: establishment.slug,
+            primary_color: establishment.primary_color ?? undefined,
+            plan: establishment.plan,
+            logo_url: establishment.logo_url ?? undefined,
+          }}
+          isDemo={isDemo}
+          subscription={subscription}
+          onTutorialStart={startTutorial}
+        />
       </div>
 
-      <div className="tutorial-welcome mb-4 mt-7">
+      <div className="mt-6">
         <ImageUpload
           establishmentId={establishment.id}
           currentImageUrl={establishment.logo_url ?? undefined}
@@ -255,133 +253,138 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           }}
           isDemo={isDemo}
         />
-        <h1 className="text-3xl font-bold text-center mt-2">{establishment.name}</h1>
       </div>
 
-      {/* Show only one button when there are no categories */}
-      {categories.length === 0 ? (
-        <AddCategoryButton
-          onClick={() => addCategory('top')}
+      <h1 className="text-3xl font-bold text-center mt-2 mb-4">{establishment.name}</h1>
+
+      <div className="tutorial-category-section">
+        {/* Show only one button when there are no categories */}
+        {categories.length === 0 ? (
+          <AddCategoryButton
+            onClick={() => addCategory('top')}
+            disabled={loadingAction !== null}
+            loading={loadingAction?.startsWith('adding-category')}
+            className="tutorial-add-category flex justify-center mt-4 mb-4"
+            subscription={subscription}
+            isAddingItemGlobally={isAddingItemGlobally}
+          />
+        ) : (
+          <AddCategoryButton
+            onClick={() => addCategory('top')}
+            disabled={loadingAction !== null}
+            loading={loadingAction?.startsWith('adding-category')}
+            className="tutorial-add-category flex justify-center mt-4 mb-4"
+            subscription={subscription}
+            isAddingItemGlobally={isAddingItemGlobally}
+          />
+        )}
+
+        <DndKitWrapper
+          id="categories-dnd"
+          items={categories}
+          modifiers={[restrictToParentElement]}
+          onDragEnd={handleCategoryDragEnd}
+          strategy={verticalListSortingStrategy}
+          renderOverlay={(activeId) => {
+            const category = categories.find(cat => cat.id === activeId);
+            if (!category) return null;
+
+            // Provide dummy drag handle props for overlay (since overlay is not interactive)
+            const setActivatorNodeRef = () => {};
+            const listeners = {};
+            const isDragging = true;
+
+            // Create a consistent drag overlay for categories with fixed size
+            return (
+              <CategorySection
+                category={category}
+                isDemo={isDemo}
+                isAdmin={true}
+                plan={establishment.plan || 'essentiel'}
+                editingCategoryId={editingCategoryId}
+                setEditingCategoryId={setEditingCategoryId}
+                originalCategory={originalCategory}
+                setOriginalCategory={setOriginalCategory}
+                savingCategoryId={savingCategoryId}
+                loadingAction={loadingAction}
+                categories={categories}
+                setCategories={setCategories}
+                saveCategory={handleSaveCategory}
+                establishmentColor={establishment.primary_color ?? '#3b82f6'}
+                deleteCategory={handleDeleteCategory}
+                subscription={subscription}
+                isAddingItemGlobally={isAddingItemGlobally}
+                setIsAddingItemGlobally={setIsAddingItemGlobally}
+                basketEnabled={establishment.basket_enabled ?? true}
+                isFirstCategory={false}
+                // Pass drag handle props to CategorySection
+                dragHandleProps={{
+                  setActivatorNodeRef,
+                  listeners,
+                  isDragging
+                }}
+              />
+            );
+          }}
+        >
+          <div className="space-y-8">
+            {[...categories]
+              .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+              .map((cat, index) => (
+                <SortableCategory key={cat.id} id={cat.id}>
+                  {(setActivatorNodeRef, listeners, isDragging) => (
+                    <CategorySection
+                      category={cat}
+                      isDemo={isDemo}
+                      isAdmin={true}
+                      plan={establishment.plan || 'essentiel'}
+                      editingCategoryId={editingCategoryId}
+                      setEditingCategoryId={setEditingCategoryId}
+                      originalCategory={originalCategory}
+                      setOriginalCategory={setOriginalCategory}
+                      savingCategoryId={savingCategoryId}
+                      loadingAction={loadingAction}
+                      categories={categories}
+                      setCategories={setCategories}
+                      saveCategory={handleSaveCategory}
+                      establishmentColor={establishment.primary_color ?? undefined}
+                      deleteCategory={handleDeleteCategory}
+                      subscription={subscription}
+                      isAddingItemGlobally={isAddingItemGlobally}
+                      setIsAddingItemGlobally={setIsAddingItemGlobally}
+                      basketEnabled={establishment.basket_enabled ?? true}
+                      isFirstCategory={index === 0}
+                      // Pass drag handle props to CategorySection
+                      dragHandleProps={{
+                        setActivatorNodeRef,
+                        listeners,
+                        isDragging
+                      }}
+                    />
+                  )}
+                </SortableCategory>
+              ))}
+          </div>
+        </DndKitWrapper>
+        
+        {/* Show bottom button only when there are categories */}
+        {categories.length > 0 && (
+          <AddCategoryButton
+          onClick={() => addCategory('bottom')}
           disabled={loadingAction !== null}
           loading={loadingAction?.startsWith('adding-category')}
-          className="flex justify-center mt-4"
+          className="flex justify-center mb-8"
           subscription={subscription}
           isAddingItemGlobally={isAddingItemGlobally}
-        />
-      ) : (
-        <AddCategoryButton
-          onClick={() => addCategory('top')}
-          disabled={loadingAction !== null}
-          loading={loadingAction?.startsWith('adding-category')}
-          className="flex justify-center mt-4"
-          subscription={subscription}
-          isAddingItemGlobally={isAddingItemGlobally}
-        />
-      )}
-
-      <DndKitWrapper
-        id="categories-dnd"
-        items={categories}
-        modifiers={[restrictToParentElement]}
-        onDragEnd={handleCategoryDragEnd}
-        strategy={verticalListSortingStrategy}
-        renderOverlay={(activeId) => {
-          const category = categories.find(cat => cat.id === activeId);
-          if (!category) return null;
-
-          // Provide dummy drag handle props for overlay (since overlay is not interactive)
-          const setActivatorNodeRef = () => {};
-          const listeners = {};
-          const isDragging = true;
-
-          // Create a consistent drag overlay for categories with fixed size
-          return (
-            <CategorySection
-              category={category}
-              isDemo={isDemo}
-              isAdmin={true}
-              plan={establishment.plan || 'essentiel'}
-              editingCategoryId={editingCategoryId}
-              setEditingCategoryId={setEditingCategoryId}
-              originalCategory={originalCategory}
-              setOriginalCategory={setOriginalCategory}
-              savingCategoryId={savingCategoryId}
-              loadingAction={loadingAction}
-              categories={categories}
-              setCategories={setCategories}
-              saveCategory={handleSaveCategory}
-              establishmentColor={establishment.primary_color ?? '#3b82f6'}
-              deleteCategory={handleDeleteCategory}
-              subscription={subscription}
-              isAddingItemGlobally={isAddingItemGlobally}
-              setIsAddingItemGlobally={setIsAddingItemGlobally}
-              basketEnabled={establishment.basket_enabled ?? true}
-              // Pass drag handle props to CategorySection
-              dragHandleProps={{
-                setActivatorNodeRef,
-                listeners,
-                isDragging
-              }}
-            />
-          );
-        }}
-      >
-        <div className="space-y-8">
-          {[...categories]
-            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-            .map(cat => (
-              <SortableCategory key={cat.id} id={cat.id}>
-                {(setActivatorNodeRef, listeners, isDragging) => (
-                  <CategorySection
-                    category={cat}
-                    isDemo={isDemo}
-                    isAdmin={true}
-                    plan={establishment.plan || 'essentiel'}
-                    editingCategoryId={editingCategoryId}
-                    setEditingCategoryId={setEditingCategoryId}
-                    originalCategory={originalCategory}
-                    setOriginalCategory={setOriginalCategory}
-                    savingCategoryId={savingCategoryId}
-                    loadingAction={loadingAction}
-                    categories={categories}
-                    setCategories={setCategories}
-                    saveCategory={handleSaveCategory}
-                    establishmentColor={establishment.primary_color ?? undefined}
-                    deleteCategory={handleDeleteCategory}
-                    subscription={subscription}
-                    isAddingItemGlobally={isAddingItemGlobally}
-                    setIsAddingItemGlobally={setIsAddingItemGlobally}
-                    basketEnabled={establishment.basket_enabled ?? true}
-                    // Pass drag handle props to CategorySection
-                    dragHandleProps={{
-                      setActivatorNodeRef,
-                      listeners,
-                      isDragging
-                    }}
-                  />
-                )}
-              </SortableCategory>
-            ))}
-        </div>
-      </DndKitWrapper>
-      
-      {/* Show bottom button only when there are categories */}
-      {categories.length > 0 && (
-        <AddCategoryButton
-        onClick={() => addCategory('bottom')}
-        disabled={loadingAction !== null}
-        loading={loadingAction?.startsWith('adding-category')}
-        className="flex justify-center mb-8"
-        subscription={subscription}
-        isAddingItemGlobally={isAddingItemGlobally}
-        />
-      )}
+          />
+        )}
+      </div>
       
       {/* Badge Legend */}
       <BadgeLegend categories={categories} />
       
       {/* Edit Contact Information Button - Always visible */}
-      <div className="flex justify-center mt-6">
+      <div className="tutorial-establishment-info-form flex justify-center mt-2">
         <EstablishmentControls
           slug={establishment.slug}
           primaryColor={establishment.primary_color ?? undefined}

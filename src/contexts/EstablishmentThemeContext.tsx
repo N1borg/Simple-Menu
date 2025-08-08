@@ -21,8 +21,8 @@ export function EstablishmentThemeProvider({ children, primaryColor }: Establish
   useEffect(() => {
     if (typeof window !== 'undefined') {
       document.body.style.setProperty('--establishment-color', normalizedColor)
-      document.body.style.setProperty('--establishment-color-20', normalizedColor + '20')
-      document.body.style.setProperty('--establishment-color-10', normalizedColor + '10')
+      document.body.style.setProperty('--establishment-color-20', normalizedColor + '33')
+      document.body.style.setProperty('--establishment-color-10', normalizedColor + '1a')
       document.body.style.setProperty('--establishment-color-90', normalizedColor + 'e6')
     }
   }, [normalizedColor])
@@ -32,8 +32,8 @@ export function EstablishmentThemeProvider({ children, primaryColor }: Establish
       <div
         style={{
           '--establishment-color': normalizedColor,
-          '--establishment-color-20': normalizedColor + '20',
-          '--establishment-color-10': normalizedColor + '10',
+          '--establishment-color-20': normalizedColor + '33',
+          '--establishment-color-10': normalizedColor + '1a',
           '--establishment-color-90': normalizedColor + 'e6',
         } as React.CSSProperties}
       >

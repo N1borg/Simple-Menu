@@ -57,7 +57,7 @@ export default function MenuItemDialog({
 }: MenuItemDialogProps) {
   if (isAdmin) {
     return (
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="tutorial-item-dialog sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Modifier l'élément</DialogTitle>
           <DialogDescription>

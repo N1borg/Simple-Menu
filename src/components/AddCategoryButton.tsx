@@ -52,28 +52,26 @@ export function AddCategoryButton({
     <div className={className || "flex justify-center"}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="tutorial-add-category">
-            <Button
-              onClick={handleClick}
-              variant="ghost"
-              size="icon"
-              title="Nouvelle catégorie"
-              className={`bg-gray-100 hover:bg-gray-200 text-gray-600 relative ${
-                isSubscriptionDisabled ? 'opacity-60 hover:opacity-80' : ''
-              }`}
-              disabled={disabled || loading || isAddingItemGlobally}
-            >
-              <div className="w-6 h-6 flex items-center justify-center">
-                {(loading || isAddingItemGlobally) ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                ) : isSubscriptionDisabled ? (
-                  <Crown className="w-6 h-6" />
-                ) : (
-                  <Plus className="w-6 h-6" />
-                )}
-              </div>
-            </Button>
-          </div>
+          <Button
+            onClick={handleClick}
+            variant="ghost"
+            size="icon"
+            title="Nouvelle catégorie"
+            className={`bg-gray-100 hover:bg-gray-200 text-gray-600 relative ${
+              isSubscriptionDisabled ? 'opacity-60 hover:opacity-80' : ''
+            }`}
+            disabled={disabled || loading || isAddingItemGlobally}
+          >
+            <div className="w-6 h-6 flex items-center justify-center">
+              {(loading || isAddingItemGlobally) ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : isSubscriptionDisabled ? (
+                <Crown className="w-6 h-6" />
+              ) : (
+                <Plus className="w-6 h-6" />
+              )}
+            </div>
+          </Button>
         </TooltipTrigger>
         <TooltipContent>
           {getTooltipContent()}

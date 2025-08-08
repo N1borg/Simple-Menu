@@ -46,7 +46,7 @@ export default function AdminBanner({ slug, isDashboard = false, color = '#3a4ff
       href={linkHref}
       prefetch={false}
       onClick={handleClick}
-      className={`w-full border-b shadow-sm py-2 px-0 flex justify-center items-center z-10 sticky top-0 left-0 transition-colors duration-200 focus:outline-none ${isLoading ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'}`}
+      className={`tutorial-admin-banner w-full border-b shadow-sm py-2 px-0 flex justify-center items-center z-10 sticky top-0 left-0 transition-colors duration-200 focus:outline-none ${isLoading ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'}`}
       style={{ backgroundColor: `#f3f6fd`, borderColor: color + '40', color: color, letterSpacing: "0.02em" }}
     >
       {isLoading ? (

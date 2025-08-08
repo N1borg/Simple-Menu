@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { GripVertical, Plus, Pencil, Loader2, Crown, CopyPlus } from "lucide-react"
+import { GripVertical, Pencil, Loader2, CopyPlus } from "lucide-react"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableItem } from '@/components/SortableItem'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
@@ -48,6 +48,7 @@ interface CategorySectionProps {
   isAddingItemGlobally?: boolean
   setIsAddingItemGlobally?: (adding: boolean) => void
   basketEnabled?: boolean
+  isFirstCategory?: boolean
   dragHandleProps?: {
     setActivatorNodeRef: (el: HTMLElement | null) => void
     listeners: any
@@ -75,6 +76,7 @@ export default function CategorySection({
   isAddingItemGlobally = false,
   setIsAddingItemGlobally,
   basketEnabled = false,
+  isFirstCategory = false,
   dragHandleProps,
 }: CategorySectionProps) {
   // Helper function to check dietary attributes for a category
@@ -627,7 +629,7 @@ export default function CategorySection({
         </div>
         {/* Action buttons: always in a row, but on small screens, below the name */}
         { isAdmin && (
-          <div className="flex items-center gap-2 sm:mt-0 mt-2">
+          <div className="tutorial-category-edit-buttons flex items-center gap-2 sm:mt-0 mt-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -648,52 +650,50 @@ export default function CategorySection({
               </TooltipContent>
             </Tooltip>
 
-            <div className="tutorial-dup-category">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={!isProOrPremium ? () => {
-                      setUpgradeFeature("Dupliquer des catégories")
-                      setUpgradeDescription("La duplication de catégories est une fonctionnalité premium qui vous permet de gagner du temps en copiant instantanément une catégorie et tous ses articles.")
-                      setUpgradeDialogOpen(true)
-                    } : () => handleDuplicateCategory(category.id)}
-                    variant="ghost"
-                    size="icon"
-                    title="Dupliquer la catégorie"
-                    className={`cursor-pointer relative ${!isProOrPremium ? 'opacity-80 hover:opacity-100' : ''}`}
-                    disabled={category.id.startsWith('temp-') || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
-                  >
-                    <div className="w-5 h-5 flex items-center justify-center relative">
-                      {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <CopyPlus className="w-5 h-5" />
-                      )}
-                      {(!isProOrPremium && !isAddingItemGlobally && !Boolean(loadingAction?.includes('adding-category'))) && (
-                        <span
-                          className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 bg-white rounded-full shadow z-10"
-                          style={{ transform: 'rotate(18deg)' }}
-                        >
-                          <ProCrown className="w-3 h-3 !w-3 !h-3 text-yellow-500 drop-shadow" />
-                        </span>
-                      )}
-                    </div>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
-                    <p>Ajout en cours...</p>
-                  ) : !isProOrPremium ? (
-                    <div className="text-center">
-                      <p className="mb-1">Fonctionnalité premium</p>
-                      <p className="text-xs">Cliquer pour découvrir les plans</p>
-                    </div>
-                  ) : (
-                    <p>Dupliquer la catégorie</p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={!isProOrPremium ? () => {
+                    setUpgradeFeature("Dupliquer des catégories")
+                    setUpgradeDescription("La duplication de catégories est une fonctionnalité premium qui vous permet de gagner du temps en copiant instantanément une catégorie et tous ses articles.")
+                    setUpgradeDialogOpen(true)
+                  } : () => handleDuplicateCategory(category.id)}
+                  variant="ghost"
+                  size="icon"
+                  title="Dupliquer la catégorie"
+                  className={`cursor-pointer relative ${!isProOrPremium ? 'opacity-80 hover:opacity-100' : ''}`}
+                  disabled={category.id.startsWith('temp-') || isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
+                >
+                  <div className="w-5 h-5 flex items-center justify-center relative">
+                    {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <CopyPlus className="w-5 h-5" />
+                    )}
+                    {(!isProOrPremium && !isAddingItemGlobally && !Boolean(loadingAction?.includes('adding-category'))) && (
+                      <span
+                        className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 bg-white rounded-full shadow z-10"
+                        style={{ transform: 'rotate(18deg)' }}
+                      >
+                        <ProCrown className="w-3 h-3 !w-3 !h-3 text-yellow-500 drop-shadow" />
+                      </span>
+                    )}
+                  </div>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {(isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))) ? (
+                  <p>Ajout en cours...</p>
+                ) : !isProOrPremium ? (
+                  <div className="text-center">
+                    <p className="mb-1">Fonctionnalité premium</p>
+                    <p className="text-xs">Cliquer pour découvrir les plans</p>
+                  </div>
+                ) : (
+                  <p>Dupliquer la catégorie</p>
+                )}
+              </TooltipContent>
+            </Tooltip>
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -986,7 +986,7 @@ export default function CategorySection({
               const orderB = b.display_order
               return orderA - orderB
             })
-            .map((item) => (
+            .map((item, sortedIndex) => (
               <SortableItem
                 key={item.id}
                 id={item.id}
@@ -1069,6 +1069,7 @@ export default function CategorySection({
                     categoryIsAvailable={category.is_available !== false}
                     isGloballyLoading={isAddingItemGlobally}
                     canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                    isFirstItemInFirstCategory={isFirstCategory && sortedIndex === 0}
                   />
                 )}
               </SortableItem>

@@ -20,7 +20,7 @@ const MenuFooter: React.FC<MenuFooterProps> = ({ color, establishmentInfo, plan 
 
   return (
     <footer
-      className={`text-white py-6 w-full ${hasInfo ? 'border-t' : ''}`}
+      className={`tutorial-footer-section text-white py-6 w-full ${hasInfo ? 'border-t' : ''}`}
       style={{ 
         backgroundColor: `#f3f6fd`, 
         borderColor: hasInfo ? (color || '#3a4fff') + '40' : undefined, 

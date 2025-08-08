@@ -185,7 +185,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="default" className="flex items-center gap-2 cursor-pointer">
+        <Button variant="outline" size="default" className="tutorial-parameters-button flex items-center gap-2 cursor-pointer">
           <Settings className="w-4 h-4" /> Paramètres
         </Button>
       </SheetTrigger>
@@ -201,16 +201,15 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
           
             {/* Subscription Plan Information */}
             {!isDemo && (
-              <div className="px-4">
-                <SubscriptionBanner 
-                  subscription={subscription} 
-                  className="mb-2"
+              <div className="tutorial-quota-section px-4">
+                <SubscriptionBanner
+                  subscription={subscription}
                   establishmentColor={establishment.primary_color}
                 />
               </div>
             )}
             
-            <div className="px-4 tutorial-color-settings">
+            <div className="tutorial-color-settings px-4">
               <Dialog open={colorDialogOpen} onOpenChange={setColorDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
@@ -267,10 +266,20 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                 </DialogContent>
               </Dialog>
             </div>
-            
+
+            <div className="tutorial-qr-code px-4">
+              {/* QR Code Button and Dialog */}
+              <QrCodeDialog 
+                url={publicMenuUrl} 
+                adminUrl={adminUrl}
+                establishmentColor={establishment.primary_color}
+                logoUrl={establishment.logo_url}
+              />
+            </div>
+
             {/* Basket Toggle Section */}
-            <div className="px-4">
-              <Label className="text-md gap-1.5 pt-4 pb-2 block">Panier de commande</Label>
+            <div className="tutorial-basket-section px-4">
+              <Label className="text-md gap-1.5 pb-2 block">Panier de commande</Label>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex-1">
                   <div className="font-medium text-sm">Activer le panier</div>
@@ -296,16 +305,7 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                 </p>
               )}
             </div>
-            
-            <div className="px-4 tutorial-qr-code">
-              {/* QR Code Button and Dialog */}
-              <QrCodeDialog 
-                url={publicMenuUrl} 
-                adminUrl={adminUrl}
-                establishmentColor={establishment.primary_color}
-                logoUrl={establishment.logo_url}
-              />
-            </div>
+
             {isPwaAllowed && (
               <div className="px-4">
                   <Button
@@ -324,8 +324,9 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                   </Button>
               </div>
             )}
-            <div className="tutorial-password-change">
-              <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Changer de mot de passe</Label>
+
+            <div className="tutorial-password-change mt-4">
+              <Label className="text-md gap-1.5 px-4 pb-2 block">Changer de mot de passe</Label>
               <AdminPasswordForm
                 establishmentId={establishment.id}
                 slug={establishment.slug}
@@ -333,10 +334,11 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                 establishmentColor={establishment.primary_color}
                 />
             </div>
-            {onTutorialStart && (
-              <div className="px-4">
-                <Label className="text-md gap-1.5 px-4 pt-4 pb-2 block">Aide</Label>
-                <div className="flex flex-col gap-2">
+
+            <div className="tutorial-help-section px-4 mt-4">
+              <Label className="text-md gap-1.5 px-4 pb-2 block">Aide</Label>
+              <div className="flex flex-col gap-2">
+                {onTutorialStart && (
                   <SheetClose asChild>
                     <Button
                       variant="outline"
@@ -346,27 +348,27 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                       }}
                     >
                       <HelpCircle className="w-4 h-4" />
-                      Relancer le tutoriel
+                      Lancer le tutoriel
                     </Button>
                   </SheetClose>
-                  <a
-                    href="mailto:contact.simplemenu@gmail.com"
-                    className="w-full"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                )}
+                <a
+                  href="mailto:contact.simplemenu@gmail.com"
+                  className="w-full"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    variant="outline"
+                    className="w-full flex items-center gap-2"
+                    type="button"
                   >
-                    <Button
-                      variant="outline"
-                      className="w-full flex items-center gap-2"
-                      type="button"
-                    >
-                      <Mail className="text-md" />
-                      Contacter le support
-                    </Button>
-                  </a>
-                </div>
+                    <Mail className="text-md" />
+                    Contacter le support
+                  </Button>
+                </a>
               </div>
-            )}
+            </div>
           </div>
         </div>
         <SheetFooter className="flex-shrink-0 bg-background p-4 flex flex-col gap-2">

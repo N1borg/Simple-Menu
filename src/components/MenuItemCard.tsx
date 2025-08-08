@@ -32,6 +32,7 @@ interface MenuItemCardProps {
   categoryIsAvailable?: boolean // New prop to check if category is available
   isGloballyLoading?: boolean // Global loading state
   canCreateMenuItem?: boolean // Whether user can create more items (subscription limit)
+  isFirstItemInFirstCategory?: boolean // Whether this is the first item in the first category
 }
 
 export default function MenuItemCard({
@@ -52,7 +53,8 @@ export default function MenuItemCard({
   hideDietaryBadges = { vegan: false, alcoholFree: false },
   categoryIsAvailable = true, // Default to available for backward compatibility
   isGloballyLoading = false,
-  canCreateMenuItem = true
+  canCreateMenuItem = true,
+  isFirstItemInFirstCategory = false
 }: MenuItemCardProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = getEstablishmentColor(establishmentColor)
@@ -165,7 +167,7 @@ export default function MenuItemCard({
       if (!open && editingItem === item.id) setEditingItem(null)
       if (open) setEditingItem(item.id)
     }}>
-      <div className="menu-item-card relative group">
+      <div className={`menu-item-card relative group${isFirstItemInFirstCategory ? ' tutorial-edit-item' : ''}`}>
         <div
           className={
             `bg-white rounded-xl shadow-md p-4 flex flex-col justify-between group-hover:ring-2 transition cursor-pointer min-h-[7.5em]${!instantAvailable ? " bg-gray-100 text-gray-400 border border-gray-200" : ""}`

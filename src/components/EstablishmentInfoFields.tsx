@@ -236,7 +236,7 @@ export function EstablishmentInfoFields({
       {/* Email */}
       <div>
         <Label htmlFor="email" className={`flex items-center gap-2 mb-2 ${labelSize}`}>
-          <Mail className="w-4 h-4" />
+          <Mail className="w-4 h-4" color={primaryColor} />
           Email
         </Label>
         <Input
