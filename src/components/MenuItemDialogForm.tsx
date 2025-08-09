@@ -253,6 +253,7 @@ export function MenuItemDialogForm({
                 variant="outline"
                 onClick={onCancel}
                 className="cursor-pointer"
+                data-testid="dialog-close"
               >
                 Annuler
               </Button>

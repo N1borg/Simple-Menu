@@ -201,54 +201,25 @@ export const useDashboardTutorial = () => {
     })
   }
 
-  // Updated waitForItemDialogOpen function with better dialog detection
-  const waitForItemDialogOpen = async (driverObj: any) => {
+    const waitForItemDialogOpen = async () => {
     return new Promise<void>((resolve) => {
       
-      const checkDialogOpen = () => {
-        // Look for the specific MenuItemDialogForm dialog
-        const dialogElement = document.querySelector('[role="dialog"]')
-        if (dialogElement) {
-          // Check if this dialog contains menu item form elements
-          const nameInput = dialogElement.querySelector('input[placeholder*="Nom"]')
-          const descriptionInput = dialogElement.querySelector('input[placeholder*="Description"]')
-          const priceInput = dialogElement.querySelector('input[placeholder*="0.00"], input[type="text"][inputmode="decimal"]')
-          const tutorialDialog = dialogElement.querySelector('.tutorial-item-dialog') || dialogElement.classList.contains('tutorial-item-dialog')
-          
-          // Only resolve if we found the menu item edit dialog specifically
-          if ((nameInput || descriptionInput || priceInput) || tutorialDialog) {
-            console.log('Menu item dialog detected, resolving...')
-            resolve()
-            return true
-          }
+      const checkItemDialogOpen = () => {
+        // Check that no dialog with role="dialog" exists
+        const openDialog = document.querySelector('[data-state="open"]')
+        if (openDialog) {
+          resolve()
+          return true
         }
         return false
       }
 
-      // Check immediately in case dialog is already open
-      if (checkDialogOpen()) return
+      // Check immediately
+      if (checkItemDialogOpen()) return
 
-      let attempts = 0
-      const maxAttempts = 50 // 5 seconds with 100ms intervals
-
-      // Use interval checking as backup
-      const intervalCheck = setInterval(() => {
-        attempts++
-        if (checkDialogOpen()) {
-          clearInterval(intervalCheck)
-          observer.disconnect()
-        } else if (attempts >= maxAttempts) {
-          clearInterval(intervalCheck)
-          observer.disconnect()
-          console.warn('Dialog detection timed out')
-          resolve() // Resolve anyway to prevent hanging
-        }
-      }, 100)
-
-      // Set up observer for new dialogs
-      const observer = new MutationObserver((mutations) => {
-        if (checkDialogOpen()) {
-          clearInterval(intervalCheck)
+      // Set up observer
+      const observer = new MutationObserver(() => {
+        if (checkItemDialogOpen()) {
           observer.disconnect()
         }
       })
@@ -257,24 +228,20 @@ export const useDashboardTutorial = () => {
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ['role', 'data-state', 'aria-hidden', 'class']
+        attributeFilter: ['data-state']
       })
 
-      // Final cleanup timeout
-      setTimeout(() => {
-        clearInterval(intervalCheck)
-        observer.disconnect()
-        resolve() // Resolve anyway to prevent hanging
-      }, 10000)
+      // Cleanup observer if component unmounts
+      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 
   const waitForItemDialogClose = async () => {
     return new Promise<void>((resolve) => {
-      
+
       const checkDialogClosed = () => {
-        // Check that no dialog with role="dialog" exists
-        const openDialog = document.querySelector('[role="dialog"]')
+        // Check that no dialog with data-state="open" exists
+        const openDialog = document.querySelector('[data-state="open"]')
         if (!openDialog) {
           resolve()
           return true
@@ -296,7 +263,7 @@ export const useDashboardTutorial = () => {
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ['role', 'data-state']
+        attributeFilter: ['data-state']
       })
 
       // Cleanup observer if component unmounts
@@ -574,20 +541,16 @@ export const useDashboardTutorial = () => {
             onHighlighted: async () => {
               // Enable interaction for the specific menu item card with tutorial-edit-item class
               const tutorialEditItem = document.querySelector('.tutorial-edit-item')
-              
               if (tutorialEditItem) {
                 tutorialEditItem.classList.add('tutorial-element-interactive')
               }
-              
-              // Wait for the dialog to open and auto-advance
+              // Wait for the dialog to open and auto-advance immediately
               try {
-                await waitForItemDialogOpen(driverObj)
-                // Auto-advance once dialog is opened
-                setTimeout(() => {
-                  if (driverObj && typeof driverObj.moveNext === 'function') {
-                    driverObj.moveNext()
-                  }
-                }, 500)
+                await waitForItemDialogOpen()
+                // Move to next step as soon as dialog is detected (no delay)
+                if (driverObj && typeof driverObj.moveNext === 'function') {
+                  driverObj.moveNext()
+                }
               } catch (error) {
                 console.error('Error waiting for item dialog:', error)
               }
@@ -607,25 +570,30 @@ export const useDashboardTutorial = () => {
               description: 'Parfait ! Ce formulaire vous permet de modifier tous les détails de votre plat : nom, description, prix, disponibilité et badges alimentaires. Fermez cette fenêtre pour continuer.',
               showButtons: ['close', 'next'],
               nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '[data-testid="dialog-close"]',
+            popover: {
+              title: 'Fermer l\'élément',
+              description: 'Pour finir, cliquez sur \'Annuler\' pour fermer la fenêtre et terminer la présentation.',
+              showButtons: ['close']
             },
             onHighlighted: async () => {
-              // Wait for the dialog to close and auto-advance
-              try {
-                await waitForItemDialogClose()
-                // Auto-advance once dialog is closed
-                setTimeout(() => {
-                  if (driverObj && typeof driverObj.moveNext === 'function') {
-                    driverObj.moveNext()
-                  }
-                }, 500)
-              } catch (error) {
-                console.error('Error waiting for dialog close:', error)
-                // Fallback: still try to advance
-                setTimeout(() => {
-                  if (driverObj && typeof driverObj.moveNext === 'function') {
-                    driverObj.moveNext()
-                  }
-                }, 3000)
+              // Enable interaction only for the close button
+              const closeButton = document.querySelector('[data-testid="dialog-close"]')
+              if (closeButton) {
+                closeButton.classList.add('tutorial-element-interactive')
+              }
+              await waitForItemDialogClose()
+              // Auto-advance once dialog is closed
+              setTimeout(() => driverObj.moveNext(), 500)
+            },
+            onDeselected: () => {
+              // Re-disable interactions
+              const closeButton = document.querySelector('[data-testid="dialog-close"]')
+              if (closeButton) {
+                closeButton.classList.remove('tutorial-element-interactive')
               }
             }
           },
