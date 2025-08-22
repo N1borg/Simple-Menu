@@ -35,8 +35,10 @@ export function ColorSelector({
 
   const handleColorChange = (newColor: any) => {
     setColor(newColor)
+    // Ensure we only pass a clean hex value
+    const cleanHex = newColor?.hex || '#3b82f6'
     if (onColorChange) {
-      onColorChange(newColor.hex)
+      onColorChange(cleanHex)
     }
   }
 
@@ -47,7 +49,9 @@ export function ColorSelector({
 
     setIsLoading(true)
     try {
-      await onColorSave(color.hex)
+      // Ensure we only save a clean hex value
+      const cleanHex = color?.hex || '#3b82f6'
+      await onColorSave(cleanHex)
       toast.success('Couleur mise à jour avec succès !')
     } catch (error) {
       toast.error('Erreur lors de la mise à jour de la couleur')
@@ -59,11 +63,13 @@ export function ColorSelector({
   const handleApiSave = async () => {
     setIsLoading(true)
     try {
+      // Ensure we only send a clean hex value
+      const cleanHex = color?.hex || '#3b82f6'
       const response = await fetch('/api/admin/update-color', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          color: color.hex
+          color: cleanHex
         })
       })
 
@@ -99,20 +105,22 @@ export function ColorSelector({
       )}
       
       <div className="flex flex-col items-center space-y-4">
-        <ColorPicker 
+        <div className="touch-manipulation">
+          <ColorPicker 
             color={color} 
             onChange={handleColorChange}
             hideInput={['rgb', 'hsv']}
             height={200}
-        />
+          />
+        </div>
         {showPreview && (
-          <div className="w-full max-w-sm p-4 rounded-lg border" style={{ backgroundColor: color.hex + '20' }}>
+          <div className="w-full max-w-sm p-4 rounded-lg border" style={{ backgroundColor: (color?.hex || '#3b82f6') + '20' }}>
             <p className="text-sm text-gray-700 mb-2">Aperçu de votre couleur</p>
             <div 
               className="h-12 rounded-lg shadow-inner" 
-              style={{ backgroundColor: color.hex }}
+              style={{ backgroundColor: color?.hex || '#3b82f6' }}
             ></div>
-            <p className="text-xs text-gray-500 mt-2 text-center font-mono">{color.hex}</p>
+            <p className="text-xs text-gray-500 mt-2 text-center font-mono">{color?.hex || '#3b82f6'}</p>
           </div>
         )}
 
@@ -120,7 +128,7 @@ export function ColorSelector({
           <Button
             onClick={onColorSave ? handleSaveColor : handleApiSave}
             disabled={isLoading || !onColorSave}
-            className="w-full max-w-sm cursor-pointer"
+            className="w-full max-w-sm cursor-pointer touch-manipulation"
           >
             {isLoading ? (
               <div className="flex items-center">
