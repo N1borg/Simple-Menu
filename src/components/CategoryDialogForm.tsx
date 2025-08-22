@@ -26,7 +26,7 @@ const DISPLAY_STYLES = [
   { value: 'card', label: 'Carte' },
   { value: 'list', label: 'Liste' },
   { value: 'compact', label: 'Compact' },
-  { value: 'table', label: 'Tableau' },
+  // { value: 'table', label: 'Tableau' },
 ]
 
 interface CategoryDialogFormProps {
