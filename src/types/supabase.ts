@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -63,7 +63,6 @@ export type Database = {
           address: string | null
           admin_hash: string | null
           basket_enabled: boolean
-          city: string | null
           created_at: string | null
           email: string | null
           facebook_url: string | null
@@ -77,7 +76,6 @@ export type Database = {
           phone: string | null
           plan: string
           plan_status: string | null
-          postal_code: string | null
           primary_color: string | null
           secondary_color: string | null
           slug: string
@@ -90,7 +88,6 @@ export type Database = {
           address?: string | null
           admin_hash?: string | null
           basket_enabled?: boolean
-          city?: string | null
           created_at?: string | null
           email?: string | null
           facebook_url?: string | null
@@ -104,7 +101,6 @@ export type Database = {
           phone?: string | null
           plan?: string
           plan_status?: string | null
-          postal_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
           slug: string
@@ -117,7 +113,6 @@ export type Database = {
           address?: string | null
           admin_hash?: string | null
           basket_enabled?: boolean
-          city?: string | null
           created_at?: string | null
           email?: string | null
           facebook_url?: string | null
@@ -131,7 +126,6 @@ export type Database = {
           phone?: string | null
           plan?: string
           plan_status?: string | null
-          postal_code?: string | null
           primary_color?: string | null
           secondary_color?: string | null
           slug?: string

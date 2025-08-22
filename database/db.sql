@@ -9,8 +9,6 @@ create table public.establishments (
   admin_hash text null,
   plan character varying(20) not null default 'essentiel'::character varying,
   address text null,
-  city text null,
-  postal_code text null,
   phone text null,
   email text null,
   facebook_url text null,
@@ -28,14 +26,6 @@ create table public.establishments (
   constraint establishments_pkey primary key (id),
   constraint establishments_slug_key unique (slug)
 ) TABLESPACE pg_default;
-
-create index IF not exists idx_establishments_stripe_customer_id on public.establishments using btree (stripe_customer_id) TABLESPACE pg_default;
-
-create index IF not exists idx_establishments_stripe_subscription_id on public.establishments using btree (stripe_subscription_id) TABLESPACE pg_default;
-
-create index IF not exists idx_establishments_plan_status on public.establishments using btree (plan_status) TABLESPACE pg_default;
-
-create index IF not exists idx_establishments_is_active on public.establishments using btree (is_active) TABLESPACE pg_default;
 
 create index IF not exists idx_establishments_stripe_customer_id on public.establishments using btree (stripe_customer_id) TABLESPACE pg_default;
 
