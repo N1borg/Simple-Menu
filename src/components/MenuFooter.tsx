@@ -32,26 +32,33 @@ const MenuFooter: React.FC<MenuFooterProps> = ({ color, establishmentInfo, plan 
           color={color}
           establishmentInfo={establishmentInfo}
         />
-        
-      {/* Simple Menu attribution */}
-      {plan !== 'premium' && (
-        <div 
-          className={`text-center pt-4 ${hasInfo ? 'border-t' : ''}`} 
-          style={{ borderColor: hasInfo ? (color || '#3a4fff') + '20' : undefined }}
-        >
-          <p className="text-xs">
-            Menu digital créé avec ❤️ par{" "}
-            <a
-              href="https://simple-menu.niborgpro.fr"
-              className="underline"
-              target="_blank"
-              rel="noopener"
-            >
-              Simple-Menu
-            </a>
+
+        {/* Alcohol Warning */}
+        <div className="mt-6 py-4 border-t text-center" style={{ borderColor: (color || '#3a4fff') + '20' }}>
+          <p className="text-s" style={{ color: color || '#3a4fff' }}>
+            L'abus d'alcool est dangereux pour la santé. À consommer avec modération.
           </p>
         </div>
-      )}
+          
+        {/* Simple Menu attribution */}
+        {plan !== 'premium' && (
+          <div 
+            className={`text-center pt-4 ${hasInfo ? 'border-t' : ''}`} 
+            style={{ borderColor: hasInfo ? (color || '#3a4fff') + '20' : undefined }}
+          >
+            <p className="text-xs">
+              Menu digital créé avec ❤️ par{" "}
+              <a
+                href="https://simple-menu.niborgpro.fr"
+                className="underline"
+                target="_blank"
+                rel="noopener"
+              >
+                Simple-Menu
+              </a>
+            </p>
+          </div>
+        )}
       </div>
     </footer>
   )

@@ -195,13 +195,6 @@ const EstablishmentFooter: React.FC<EstablishmentFooterProps> = ({
           />
         </div>
       )}
-
-      {/* Alcohol Warning */}
-      <div className="mt-6 pt-4 border-t text-center" style={{ borderColor: (color || '#3a4fff') + '20' }}>
-        <p className="text-s" style={{ color: color || '#3a4fff' }}>
-          L'abus d'alcool est dangereux pour la santé. À consommer avec modération.
-        </p>
-      </div>
     </div>
   );
 }
