@@ -26,6 +26,24 @@ export interface EstablishmentInfo {
   google_maps_url?: string
 }
 
+// Function to decode HTML entities in URLs
+const decodeHtmlEntities = (str: string): string => {
+  // Check if we're in the browser environment
+  if (typeof document !== 'undefined') {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = str;
+    return textarea.value;
+  }
+  
+  // Fallback for server-side rendering - decode common HTML entities manually
+  return str
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
 interface EstablishmentFooterProps {
   color?: string
   establishmentInfo?: EstablishmentInfo
@@ -166,7 +184,7 @@ const EstablishmentFooter: React.FC<EstablishmentFooterProps> = ({
       {establishmentInfo?.google_maps_url && (
         <div className="mb-6">
           <iframe
-            src={establishmentInfo.google_maps_url}
+            src={decodeHtmlEntities(establishmentInfo.google_maps_url)}
             width="100%"
             height="200"
             style={{ border: 0, borderRadius: '8px' }}
