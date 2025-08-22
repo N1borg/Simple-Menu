@@ -86,10 +86,11 @@ const validateSocialMediaUsername = (value: string, platform: 'facebook' | 'inst
       return `Veuillez entrer une URL ${platform === 'facebook' ? 'Facebook' : 'Instagram'} valide`
     }
   } else {
-    const usernameRegex = platform === 'facebook' ? /^[a-zA-Z0-9._-]+$/ : /^[a-zA-Z0-9._]+$/
+    // Validation plus permissive pour Facebook (permet les slash pour les pages p/)
+    const usernameRegex = platform === 'facebook' ? /^[a-zA-Z0-9._\/-]+$/ : /^[a-zA-Z0-9._]+$/
     if (!usernameRegex.test(input)) {
       return platform === 'facebook' 
-        ? 'Le nom de page Facebook ne peut contenir que des lettres, chiffres, points et tirets'
+        ? 'Le nom de page Facebook ne peut contenir que des lettres, chiffres, points, tirets et slash'
         : 'Le nom d\'utilisateur Instagram ne peut contenir que des lettres, chiffres, points et underscores'
     }
     return null
@@ -268,7 +269,7 @@ export function EstablishmentInfoFields({
           placeholder="nomdelapage"
           value={formData.facebook_url?.replace(/^https?:\/\/(www\.)?facebook\.com\//, '') || ''}
           onChange={value => handleFieldChange('facebook_url', value)}
-          maxLength={50}
+          maxLength={100}
           primaryColor={primaryColor}
           compact={compact}
           className={errors.facebook_url ? 'border-red-500' : ''}
@@ -293,7 +294,7 @@ export function EstablishmentInfoFields({
           placeholder="nomdelapage"
           value={formData.instagram_url?.replace(/^https?:\/\/(www\.)?instagram\.com\//, '') || ''}
           onChange={value => handleFieldChange('instagram_url', value)}
-          maxLength={50}
+          maxLength={100}
           primaryColor={primaryColor}
           compact={compact}
           className={errors.instagram_url ? 'border-red-500' : ''}

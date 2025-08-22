@@ -5,15 +5,15 @@ import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { z } from 'zod'
 
 const EstablishmentInfoSchema = z.object({
-  address: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
+  address: z.string().max(200).optional(),
+  phone: z.string().max(20).optional(),
+  email: z.string().email().max(100).optional().or(z.literal('')),
   opening_hours: z.array(z.object({
     day: z.string(),
     hours: z.string()
   })).optional(),
-  facebook_url: z.string().url().optional().or(z.literal('')),
-  instagram_url: z.string().url().optional().or(z.literal(''))
+  facebook_url: z.string().max(100).optional().or(z.literal('')),
+  instagram_url: z.string().max(100).optional().or(z.literal(''))
 })
 
 function padTimeString(hoursString: string): string {
