@@ -118,9 +118,7 @@ export default async function AdminPage({ params, searchParams }: PageProps) {
         <PaymentStatusToast />
         {(isAuthenticated || slug === 'demo') && (
           <>
-            <div className="tutorial-admin-banner">
-              <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />
-            </div>
+            <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />
             {/* Payment Status Banner */}
             {paymentStatus && (
               <div className="max-w-6xl mx-auto px-4 mt-4">
