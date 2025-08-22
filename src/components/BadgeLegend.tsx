@@ -57,7 +57,7 @@ export default function BadgeLegend({ categories, className = '' }: BadgeLegendP
       {usedBadges.has('vegan') && (
         <div className="flex items-center gap-2">
           <DietaryBadge type="vegan" size="sm" showText={true} />
-          <span className="text-xs text-gray-500">Plat sans ingrédients d'origine animale</span>
+          <span className="text-xs text-gray-500">Plat ne contenant ni viande ni poisson</span>
         </div>
       )}
       {usedBadges.has('alcohol-free') && (

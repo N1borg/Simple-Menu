@@ -160,9 +160,6 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
-
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 
@@ -195,9 +192,6 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
-
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 
@@ -230,9 +224,6 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
-
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 
@@ -265,9 +256,6 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
-
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 
@@ -282,183 +270,183 @@ export const useDashboardTutorial = () => {
         stageRadius: 8,
         popoverClass: 'dashboard-tutorial-popover',
         steps: [
-          {
-            popover: {
-              title: 'Bienvenue dans votre tableau de bord !',
-              description: 'Je vais vous présenter l\'interface et vous guider pour créer votre premier menu.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Commencer'
-            }
-          },
-          {
-            element: '.tutorial-admin-banner',
-            popover: {
-              title: 'Bannière d\'administration',
-              description: 'En haut se trouve la bannière d\'administration. Elle vous permet de passer en mode éditeur ou mode public. Vos visiteurs ne la verront pas.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-logo-section',
-            popover: {
-              title: 'Section du logo',
-              description: 'Ici vous pouvez ajouter le logo de votre établissement, cela rajoute une identité au menu.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-category-section',
-            popover: {
-              title: 'Zone des catégories',
-              description: 'Cette zone affichera la partie principale du menu. Vous pouvez créer des catégories qui comportent différents éléments (Boissons, Plats...).',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-establishment-info-form',
-            popover: {
-              title: 'Gérer les informations de l\'établissement',
-              description: 'Ces menus vous permettent de configurer les informations de votre établissement, telles que le nom, l\'adresse et les horaires.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-footer-section',
-            popover: {
-              title: 'Pied de page',
-              description: 'Vous retrouverez donc ces informations ici en bas de page, visibles pour le client.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-parameters-button',
-            popover: {
-              title: 'Les paramètres globaux',
-              description: 'Ce menu gère les paramètres globaux de l\'établissement. Cliquez sur ce bouton pour ouvrir le panneau de paramètres.',
-              showButtons: ['close'],
-            },
-            onHighlighted: async () => {
-              // Enable interaction for the parameters button and its children
-              const paramButton = document.querySelector('.tutorial-parameters-button')
-              const paramButtonChild = document.querySelector('.tutorial-parameters-button button')
+          // {
+          //   popover: {
+          //     title: 'Bienvenue dans votre tableau de bord !',
+          //     description: 'Je vais vous présenter l\'interface et vous guider pour créer votre premier menu.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Commencer'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-admin-banner',
+          //   popover: {
+          //     title: 'Bannière d\'administration',
+          //     description: 'En haut se trouve la bannière d\'administration. Elle vous permet de passer en mode éditeur ou mode public. Vos visiteurs ne la verront pas.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-logo-section',
+          //   popover: {
+          //     title: 'Section du logo',
+          //     description: 'Ici vous pouvez ajouter le logo de votre établissement, cela rajoute une identité au menu.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-category-section',
+          //   popover: {
+          //     title: 'Zone des catégories',
+          //     description: 'Cette zone affichera la partie principale du menu. Vous pouvez créer des catégories qui comportent différents éléments (Boissons, Plats...).',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-establishment-info-form',
+          //   popover: {
+          //     title: 'Gérer les informations de l\'établissement',
+          //     description: 'Ces menus vous permettent de configurer les informations de votre établissement, telles que le nom, l\'adresse et les horaires.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-footer-section',
+          //   popover: {
+          //     title: 'Pied de page',
+          //     description: 'Vous retrouverez donc ces informations ici en bas de page, visibles pour le client.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-parameters-button',
+          //   popover: {
+          //     title: 'Les paramètres globaux',
+          //     description: 'Ce menu gère les paramètres globaux de l\'établissement. Cliquez sur ce bouton pour ouvrir le panneau de paramètres.',
+          //     showButtons: ['close'],
+          //   },
+          //   onHighlighted: async () => {
+          //     // Enable interaction for the parameters button and its children
+          //     const paramButton = document.querySelector('.tutorial-parameters-button')
+          //     const paramButtonChild = document.querySelector('.tutorial-parameters-button button')
               
-              if (paramButton) {
-                paramButton.classList.add('tutorial-element-interactive')
-              }
-              if (paramButtonChild) {
-                paramButtonChild.classList.add('tutorial-element-interactive')
-              }
+          //     if (paramButton) {
+          //       paramButton.classList.add('tutorial-element-interactive')
+          //     }
+          //     if (paramButtonChild) {
+          //       paramButtonChild.classList.add('tutorial-element-interactive')
+          //     }
               
-              await waitForParameterSheetOpen(driverObj)
-              // Auto-advance once sheet is opened
-              setTimeout(() => driverObj.moveNext(), 500)
-            },
-            onDeselected: () => {
-              // Re-disable interactions
-              const paramButton = document.querySelector('.tutorial-parameters-button')
-              const paramButtonChild = document.querySelector('.tutorial-parameters-button button')
+          //     await waitForParameterSheetOpen(driverObj)
+          //     // Auto-advance once sheet is opened
+          //     setTimeout(() => driverObj.moveNext(), 500)
+          //   },
+          //   onDeselected: () => {
+          //     // Re-disable interactions
+          //     const paramButton = document.querySelector('.tutorial-parameters-button')
+          //     const paramButtonChild = document.querySelector('.tutorial-parameters-button button')
               
-              if (paramButton) {
-                paramButton.classList.remove('tutorial-element-interactive')
-              }
-              if (paramButtonChild) {
-                paramButtonChild.classList.remove('tutorial-element-interactive')
-              }
-            }
-          },
-          {
-            element: '.tutorial-quota-section',
-            popover: {
-              title: 'Quotas de l\'établissement',
-              description: 'En haut du panneau, vous verrez les quotas et fonctionnalités incluses de votre plan.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-color-settings',
-            popover: {
-              title: 'Couleur de l\'établissement',
-              description: 'Personnalisez la couleur principale de votre menu pour qu\'elle corresponde à votre image de marque.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-qr-code',
-            popover: {
-              title: 'QR Code',
-              description: 'Générez un QR Code pour votre menu public ou pour accéder à cette page d\'administration (évitez de le partager publiquement).',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-basket-section',
-            popover: {
-              title: 'Panier',
-              description: 'Activez ou désactivez le panier, il permet aux clients de sauvegarder leurs choix dans une liste.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-password-change',
-            popover: {
-              title: 'Changer le mot de passe',
-              description: 'Vous pouvez modifier votre mot de passe administrateur ici. Assurez-vous de le garder secret !',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-help-section',
-            popover: {
-              title: 'Section d\'aide',
-              description: 'La section d\'aide afin de (re)lancer ce tutoriel ou contacter le support.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '.tutorial-logout',
-            popover: {
-              title: 'Déconnexion',
-              description: 'En bas du panneau, utilisez ce bouton pour vous déconnecter en toute sécurité de votre espace administrateur.',
-              showButtons: ['close', 'next'],
-              nextBtnText: 'Suivant'
-            }
-          },
-          {
-            element: '[data-testid="sheet-close"]',
-            popover: {
-              title: 'Fermer le panneau',
-              description: 'Maintenant, fermez ce panneau, on va créer un nouveau menu.',
-              showButtons: ['close'],
-            },
-            onHighlighted: async () => {
-              // Enable interaction only for the close button
-              const closeButton = document.querySelector('[data-testid="sheet-close"]')
-              if (closeButton) {
-                closeButton.classList.add('tutorial-element-interactive')
-              }
-              await waitForParameterSheetClose()
-              // Auto-advance once sheet is closed
-              setTimeout(() => driverObj.moveNext(), 500)
-            },
-            onDeselected: () => {
-              // Re-disable interactions
-              const closeButton = document.querySelector('[data-testid="sheet-close"]')
-              if (closeButton) {
-                closeButton.classList.remove('tutorial-element-interactive')
-              }
-            }
-          },
+          //     if (paramButton) {
+          //       paramButton.classList.remove('tutorial-element-interactive')
+          //     }
+          //     if (paramButtonChild) {
+          //       paramButtonChild.classList.remove('tutorial-element-interactive')
+          //     }
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-quota-section',
+          //   popover: {
+          //     title: 'Quotas de l\'établissement',
+          //     description: 'En haut du panneau, vous verrez les quotas et fonctionnalités incluses de votre plan.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-color-settings',
+          //   popover: {
+          //     title: 'Couleur de l\'établissement',
+          //     description: 'Personnalisez la couleur principale de votre menu pour qu\'elle corresponde à votre image de marque.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-qr-code',
+          //   popover: {
+          //     title: 'QR Code',
+          //     description: 'Générez un QR Code pour votre menu public ou pour accéder à cette page d\'administration (évitez de le partager publiquement).',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-basket-section',
+          //   popover: {
+          //     title: 'Panier',
+          //     description: 'Activez ou désactivez le panier, il permet aux clients de sauvegarder leurs choix dans une liste.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-password-change',
+          //   popover: {
+          //     title: 'Changer le mot de passe',
+          //     description: 'Vous pouvez modifier votre mot de passe administrateur ici. Assurez-vous de le garder secret !',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-help-section',
+          //   popover: {
+          //     title: 'Section d\'aide',
+          //     description: 'La section d\'aide afin de (re)lancer ce tutoriel ou contacter le support.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '.tutorial-logout',
+          //   popover: {
+          //     title: 'Déconnexion',
+          //     description: 'En bas du panneau, utilisez ce bouton pour vous déconnecter en toute sécurité de votre espace administrateur.',
+          //     showButtons: ['close', 'next'],
+          //     nextBtnText: 'Suivant'
+          //   }
+          // },
+          // {
+          //   element: '[data-testid="sheet-close"]',
+          //   popover: {
+          //     title: 'Fermer le panneau',
+          //     description: 'Maintenant, fermez ce panneau, on va créer un nouveau menu.',
+          //     showButtons: ['close'],
+          //   },
+          //   onHighlighted: async () => {
+          //     // Enable interaction only for the close button
+          //     const closeButton = document.querySelector('[data-testid="sheet-close"]')
+          //     if (closeButton) {
+          //       closeButton.classList.add('tutorial-element-interactive')
+          //     }
+          //     await waitForParameterSheetClose()
+          //     // Auto-advance once sheet is closed
+          //     setTimeout(() => driverObj.moveNext(), 500)
+          //   },
+          //   onDeselected: () => {
+          //     // Re-disable interactions
+          //     const closeButton = document.querySelector('[data-testid="sheet-close"]')
+          //     if (closeButton) {
+          //       closeButton.classList.remove('tutorial-element-interactive')
+          //     }
+          //   }
+          // },
           {
             element: '.tutorial-add-category',
             popover: {
@@ -539,11 +527,28 @@ export const useDashboardTutorial = () => {
               showButtons: ['close'],
             },
             onHighlighted: async () => {
-              // Enable interaction for the specific menu item card with tutorial-edit-item class
+              // Enable interaction only on the main card area, not on action buttons
               const tutorialEditItem = document.querySelector('.tutorial-edit-item')
               if (tutorialEditItem) {
                 tutorialEditItem.classList.add('tutorial-element-interactive')
+                
+                // Specifically disable the duplicate button by adding the tutorial-button-disabled class
+                // Use multiple selectors to cover all possible button variants
+                const duplicateButton = tutorialEditItem.querySelector('button[title="Dupliquer l\'article"], [title="Dupliquer l\'article"]')
+                if (duplicateButton) {
+                  duplicateButton.classList.add('tutorial-button-disabled')
+                }
+                
+                // Also disable any buttons containing CopyPlus icon as additional safety
+                const copyPlusButtons = tutorialEditItem.querySelectorAll('button')
+                copyPlusButtons.forEach(button => {
+                  const copyPlusIcon = button.querySelector('[class*="lucide-copy-plus"], .lucide-copy-plus')
+                  if (copyPlusIcon) {
+                    button.classList.add('tutorial-button-disabled')
+                  }
+                })
               }
+              
               // Wait for the dialog to open and auto-advance immediately
               try {
                 await waitForItemDialogOpen()
@@ -556,7 +561,7 @@ export const useDashboardTutorial = () => {
               }
             },
             onDeselected: () => {
-              // Re-disable interactions
+              // Re-enable interactions and restore button styles
               const tutorialEditItem = document.querySelector('.tutorial-edit-item')
               if (tutorialEditItem) {
                 tutorialEditItem.classList.remove('tutorial-element-interactive')
@@ -570,6 +575,20 @@ export const useDashboardTutorial = () => {
               description: 'Parfait ! Ce formulaire vous permet de modifier tous les détails de votre plat : nom, description, prix, disponibilité et badges alimentaires. Fermez cette fenêtre pour continuer.',
               showButtons: ['close', 'next'],
               nextBtnText: 'Suivant'
+            },
+            onHighlighted: async () => {
+              // Wait for the dialog to close and auto-advance to final step
+              try {
+                await waitForItemDialogClose()
+                // Jump directly to the final congratulations step
+                if (driverObj && typeof driverObj.moveNext === 'function') {
+                  // Skip the close button step and go directly to congratulations
+                  driverObj.moveNext() // Go to close button step
+                  setTimeout(() => driverObj.moveNext(), 100) // Then immediately to final step
+                }
+              } catch (error) {
+                console.error('Error waiting for dialog close:', error)
+              }
             }
           },
           {

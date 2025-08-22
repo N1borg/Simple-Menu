@@ -33,7 +33,7 @@ export default function DietaryBadge({ type, size = 'md', variant = 'active', sh
       ) : (
         <WineOff className={iconClasses} />
       )}
-      {showText && (isVegan ? 'Vegan' : 'Sans alcool')}
+      {showText && (isVegan ? 'Végétarien' : 'Sans alcool')}
     </span>
   )
 }
