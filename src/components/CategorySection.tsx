@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { GripVertical, Pencil, Loader2, CopyPlus } from "lucide-react"
+import { GripVertical, Pencil, Loader2, CopyPlus, ChevronDown, ChevronUp } from "lucide-react"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableItem } from '@/components/SortableItem'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
@@ -114,6 +114,9 @@ export default function CategorySection({
 
   // Local state for editing item
   const [editingItem, setEditingItem] = useState<string | null>(null)
+  
+  // State for category collapse
+  const [isCollapsed, setIsCollapsed] = useState(false)
   
   // State for category dialog
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
@@ -612,8 +615,9 @@ export default function CategorySection({
           <h2
             className={`text-2xl font-bold ${isAdmin && 'flex-1'} min-w-0 overflow-hidden text-ellipsis whitespace-nowrap ${
               categoryUnavailable ? 'text-gray-400 line-through' : ''
-            }`}
+            } cursor-pointer select-none`}
             title={category.name}
+            onClick={() => setIsCollapsed(!isCollapsed)}
           >
             {category.name}
           </h2>
@@ -626,6 +630,20 @@ export default function CategorySection({
               <DietaryBadge type="alcohol-free" variant="active" showText={false} />
             )}
           </div>
+          {/* Collapse button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-1 h-auto min-w-0 hover:bg-gray-100"
+            title={isCollapsed ? "Développer la catégorie" : "Réduire la catégorie"}
+          >
+            {isCollapsed ? (
+              <ChevronDown className="w-5 h-5 text-gray-500" />
+            ) : (
+              <ChevronUp className="w-5 h-5 text-gray-500" />
+            )}
+          </Button>
         </div>
         {/* Action buttons: always in a row, but on small screens, below the name */}
         { isAdmin && (
@@ -750,15 +768,16 @@ export default function CategorySection({
         <div className="mb-4">
           {renderCategoryHeader()}
         </div>
-        <div
-          className={
-            category.display_style === "card"
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-full"
-              : category.display_style === "compact"
-              ? "grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full"
-              : "max-w-full"
-          }
-        >
+        {!isCollapsed && (
+          <div
+            className={
+              category.display_style === "card"
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-full"
+                : category.display_style === "compact"
+                ? "grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full"
+                : "max-w-full"
+            }
+          >
           {visibleMenuItems
             .map((item, index) => ({
               ...item,
@@ -854,6 +873,7 @@ export default function CategorySection({
               )
             ))}
         </div>
+        )}
       </section>
     );
   }
@@ -866,12 +886,13 @@ export default function CategorySection({
         {renderCategoryHeader()}
       </div>
 
-      <DndKitWrapper
-        id={`category-${category.id}`}
-        items={category.menu_items}
-        modifiers={[restrictToParentElement]}
-        onDragEnd={handleItemDragEnd}
-        renderOverlay={(activeId) => {
+      {!isCollapsed && (
+        <DndKitWrapper
+          id={`category-${category.id}`}
+          items={category.menu_items}
+          modifiers={[restrictToParentElement]}
+          onDragEnd={handleItemDragEnd}
+          renderOverlay={(activeId) => {
           const item: MenuItem | undefined = category.menu_items.find((i: MenuItem) => i.id === activeId);
           if (!item) return null;
           
@@ -1095,6 +1116,7 @@ export default function CategorySection({
           )}
         </div>
       </DndKitWrapper>
+      )}
 
       {/* Category Edit Dialog */}
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
