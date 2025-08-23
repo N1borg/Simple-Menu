@@ -237,7 +237,6 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                   <ColorSelector
                     currentColor={currentColor}
                     onColorChange={setCurrentColor}
-                    showPreview={true}
                     showSaveButton={false}
                     title=""
                     description="Modifiez la couleur principale de votre établissement."
