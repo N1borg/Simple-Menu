@@ -49,6 +49,8 @@ interface CategorySectionProps {
   setIsAddingItemGlobally?: (adding: boolean) => void
   basketEnabled?: boolean
   isFirstCategory?: boolean
+  isCollapsed?: boolean
+  setIsCollapsed?: (collapsed: boolean) => void
   dragHandleProps?: {
     setActivatorNodeRef: (el: HTMLElement | null) => void
     listeners: any
@@ -77,6 +79,8 @@ export default function CategorySection({
   setIsAddingItemGlobally,
   basketEnabled = false,
   isFirstCategory = false,
+  isCollapsed = false,
+  setIsCollapsed,
   dragHandleProps,
 }: CategorySectionProps) {
   // Helper function to check dietary attributes for a category
@@ -114,9 +118,6 @@ export default function CategorySection({
 
   // Local state for editing item
   const [editingItem, setEditingItem] = useState<string | null>(null)
-  
-  // State for category collapse
-  const [isCollapsed, setIsCollapsed] = useState(false)
   
   // State for category dialog
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
@@ -617,7 +618,7 @@ export default function CategorySection({
               categoryUnavailable ? 'text-gray-400 line-through' : ''
             } cursor-pointer select-none`}
             title={category.name}
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => setIsCollapsed?.(!isCollapsed)}
           >
             {category.name}
           </h2>
@@ -634,7 +635,7 @@ export default function CategorySection({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => setIsCollapsed?.(!isCollapsed)}
             className="p-1 h-auto min-w-0 hover:bg-gray-100"
             title={isCollapsed ? "Développer la catégorie" : "Réduire la catégorie"}
           >
@@ -886,237 +887,247 @@ export default function CategorySection({
         {renderCategoryHeader()}
       </div>
 
-      {!isCollapsed && (
-        <DndKitWrapper
-          id={`category-${category.id}`}
-          items={category.menu_items}
-          modifiers={[restrictToParentElement]}
-          onDragEnd={handleItemDragEnd}
-          renderOverlay={(activeId) => {
-          const item: MenuItem | undefined = category.menu_items.find((i: MenuItem) => i.id === activeId);
-          if (!item) return null;
+      <DndKitWrapper
+        id={`category-${category.id}`}
+        items={category.menu_items}
+        modifiers={[restrictToParentElement]}
+        onDragEnd={handleItemDragEnd}
+        renderOverlay={(activeId) => {
+        const item: MenuItem | undefined = category.menu_items.find((i: MenuItem) => i.id === activeId);
+        if (!item) return null;
+        
+        // If category is collapsed, show category title as overlay
+        if (isCollapsed) {
+          return (
+            <div className="bg-white border rounded-lg shadow-lg p-3 max-w-xs">
+              <div className="font-medium text-sm truncate">{category.name}</div>
+              <div className="text-xs text-gray-500 mt-1">Déplacement en cours...</div>
+            </div>
+          );
+        }
           
-          const categoryDietary = getCategoryDietaryAttributes(category)
-          
-          switch (category.display_style) {
-            case "list":
-              return (
-                <MenuItemList
-                  item={item}
-                  category={category}
-                  plan={plan}
-                  editingItem={editingItem}
-                  setEditingItem={setEditingItem}
-                  handleItemChange={handleItemChange}
-                  saveItem={handleSaveItem}
-                  savingItemId={savingItemId}
-                  loadingAction={loadingAction}
-                  deleteMenuItem={handleDeleteMenuItem}
-                  duplicateItem={handleDuplicateItem}
-                  establishmentColor={establishmentColor}
-                  isDemo={isDemo}
-                  isAdmin={isAdmin}
-                  basketEnabled={basketEnabled}
-                  hideDietaryBadges={{
-                    vegan: categoryDietary.vegan,
-                    alcoholFree: categoryDietary.alcoholFree
-                  }}
-                  categoryIsAvailable={category.is_available !== false}
-                  isGloballyLoading={isAddingItemGlobally}
-                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
-                />
-              );
-            case "compact":
-              return (
-                <MenuItemCompact
-                  item={item}
-                  category={category}
-                  plan={plan}
-                  editingItem={editingItem}
-                  setEditingItem={setEditingItem}
-                  saveItem={handleSaveItem}
-                  savingItemId={savingItemId}
-                  loadingAction={loadingAction}
-                  deleteMenuItem={handleDeleteMenuItem}
-                  duplicateItem={handleDuplicateItem}
-                  establishmentColor={establishmentColor}
-                  isDemo={isDemo}
-                  isAdmin={isAdmin}
-                  basketEnabled={basketEnabled}
-                  hideDietaryBadges={{
-                    vegan: categoryDietary.vegan,
-                    alcoholFree: categoryDietary.alcoholFree
-                  }}
-                  categoryIsAvailable={category.is_available !== false}
-                  isGloballyLoading={isAddingItemGlobally}
-                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
-                />
-              );
-            case "table":
-              return (
-                <MenuItemSkeleton displayStyle="table" />
-              );
-            default:
-              return (
-                <MenuItemCard
-                  item={item}
-                  category={category}
-                  plan={plan}
-                  editingItem={editingItem}
-                  setEditingItem={setEditingItem}
-                  handleItemChange={handleItemChange}
-                  saveItem={handleSaveItem}
-                  savingItemId={savingItemId}
-                  loadingAction={loadingAction}
-                  deleteMenuItem={handleDeleteMenuItem}
-                  duplicateItem={handleDuplicateItem}
-                  establishmentColor={establishmentColor}
-                  isDemo={isDemo}
-                  isAdmin={isAdmin}
-                  basketEnabled={basketEnabled}
-                  hideDietaryBadges={{
-                    vegan: categoryDietary.vegan,
-                    alcoholFree: categoryDietary.alcoholFree
-                  }}
-                  categoryIsAvailable={category.is_available !== false}
-                  isGloballyLoading={isAddingItemGlobally}
-                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
-                />
-              );
+        const categoryDietary = getCategoryDietaryAttributes(category)
+        
+        switch (category.display_style) {
+          case "list":
+            return (
+              <MenuItemList
+                item={item}
+                category={category}
+                plan={plan}
+                editingItem={editingItem}
+                setEditingItem={setEditingItem}
+                handleItemChange={handleItemChange}
+                saveItem={handleSaveItem}
+                savingItemId={savingItemId}
+                loadingAction={loadingAction}
+                deleteMenuItem={handleDeleteMenuItem}
+                duplicateItem={handleDuplicateItem}
+                establishmentColor={establishmentColor}
+                isDemo={isDemo}
+                isAdmin={isAdmin}
+                basketEnabled={basketEnabled}
+                hideDietaryBadges={{
+                  vegan: categoryDietary.vegan,
+                  alcoholFree: categoryDietary.alcoholFree
+                }}
+                categoryIsAvailable={category.is_available !== false}
+                isGloballyLoading={isAddingItemGlobally}
+                canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+              />
+            );
+          case "compact":
+            return (
+              <MenuItemCompact
+                item={item}
+                category={category}
+                plan={plan}
+                editingItem={editingItem}
+                setEditingItem={setEditingItem}
+                saveItem={handleSaveItem}
+                savingItemId={savingItemId}
+                loadingAction={loadingAction}
+                deleteMenuItem={handleDeleteMenuItem}
+                duplicateItem={handleDuplicateItem}
+                establishmentColor={establishmentColor}
+                isDemo={isDemo}
+                isAdmin={isAdmin}
+                basketEnabled={basketEnabled}
+                hideDietaryBadges={{
+                  vegan: categoryDietary.vegan,
+                  alcoholFree: categoryDietary.alcoholFree
+                }}
+                categoryIsAvailable={category.is_available !== false}
+                isGloballyLoading={isAddingItemGlobally}
+                canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+              />
+            );
+          case "table":
+            return (
+              <MenuItemSkeleton displayStyle="table" />
+            );
+          default:
+            return (
+              <MenuItemCard
+                item={item}
+                category={category}
+                plan={plan}
+                editingItem={editingItem}
+                setEditingItem={setEditingItem}
+                handleItemChange={handleItemChange}
+                saveItem={handleSaveItem}
+                savingItemId={savingItemId}
+                loadingAction={loadingAction}
+                deleteMenuItem={handleDeleteMenuItem}
+                duplicateItem={handleDuplicateItem}
+                establishmentColor={establishmentColor}
+                isDemo={isDemo}
+                isAdmin={isAdmin}
+                basketEnabled={basketEnabled}
+                hideDietaryBadges={{
+                  vegan: categoryDietary.vegan,
+                  alcoholFree: categoryDietary.alcoholFree
+                }}
+                categoryIsAvailable={category.is_available !== false}
+                isGloballyLoading={isAddingItemGlobally}
+                canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+              />
+            );
           }
         }}
       >
-        {/* Menu Items with Drag & Drop */}
-        <div
-          className={
-            category.display_style === "card"
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-full"
-              : category.display_style === "compact"
-              ? "grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full"
-              : "max-w-full"
-          }
-        >
-          {category.menu_items
-            .map((item, index) => ({
-              ...item,
-              // Ensure display_order is set if it's null/undefined
-              display_order: typeof item.display_order === 'number' ? item.display_order : index
-            }))
-            .sort((a, b) => {
-              const orderA = a.display_order
-              const orderB = b.display_order
-              return orderA - orderB
-            })
-            .map((item, sortedIndex) => (
-              <SortableItem
-                key={item.id}
-                id={item.id}
-                disabled={editingItem === item.id} // Disable when editing
-              >
-                {item.isLoading ? (
-                  <MenuItemSkeleton displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />
-                ) : category.display_style === "list" ? (
-                  <MenuItemList
-                    item={item}
-                    category={category}
-                    plan={plan}
-                    editingItem={editingItem}
-                    setEditingItem={setEditingItem}
-                    handleItemChange={handleItemChange}
-                    saveItem={handleSaveItem}
-                    savingItemId={savingItemId}
-                    loadingAction={loadingAction}
-                    deleteMenuItem={handleDeleteMenuItem}
-                    duplicateItem={handleDuplicateItem}
-                    establishmentColor={establishmentColor}
-                    isDemo={isDemo}
-                    isAdmin={isAdmin}
-                    basketEnabled={basketEnabled}
-                    hideDietaryBadges={{
-                      vegan: getCategoryDietaryAttributes(category).vegan,
-                      alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
-                    }}
-                    categoryIsAvailable={category.is_available !== false}
-                    isGloballyLoading={isAddingItemGlobally}
-                    canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
-                  />
-                ) : category.display_style === "compact" ? (
-                  <MenuItemCompact
-                    item={item}
-                    category={category}
-                    plan={plan}
-                    editingItem={editingItem}
-                    setEditingItem={setEditingItem}
-                    saveItem={handleSaveItem}
-                    savingItemId={savingItemId}
-                    loadingAction={loadingAction}
-                    deleteMenuItem={handleDeleteMenuItem}
-                    duplicateItem={handleDuplicateItem}
-                    establishmentColor={establishmentColor}
-                    isDemo={isDemo}
-                    isAdmin={isAdmin}
-                    basketEnabled={basketEnabled}
-                    hideDietaryBadges={{
-                      vegan: getCategoryDietaryAttributes(category).vegan,
-                      alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
-                    }}
-                    categoryIsAvailable={category.is_available !== false}
-                    isGloballyLoading={isAddingItemGlobally}
-                    canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
-                  />
-                ) : category.display_style === "table" ? (
-                  <MenuItemSkeleton displayStyle="table" />
-                ) : (
-                  <MenuItemCard
-                    item={item}
-                    category={category}
-                    plan={plan}
-                    editingItem={editingItem}
-                    setEditingItem={setEditingItem}
-                    handleItemChange={handleItemChange}
-                    saveItem={handleSaveItem}
-                    savingItemId={savingItemId}
-                    loadingAction={loadingAction}
-                    deleteMenuItem={handleDeleteMenuItem}
-                    duplicateItem={handleDuplicateItem}
-                    establishmentColor={establishmentColor}
-                    isDemo={isDemo}
-                    isAdmin={isAdmin}
-                    basketEnabled={basketEnabled}
-                    hideDietaryBadges={{
-                      vegan: getCategoryDietaryAttributes(category).vegan,
-                      alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
-                    }}
-                    categoryIsAvailable={category.is_available !== false}
-                    isGloballyLoading={isAddingItemGlobally}
-                    canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
-                    isFirstItemInFirstCategory={isFirstCategory && sortedIndex === 0}
-                  />
-                )}
-              </SortableItem>
-            ))}
+        {/* Menu Items with Drag & Drop - only render when not collapsed */}
+        {!isCollapsed && (
+          <div
+            className={
+              category.display_style === "card"
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-full"
+                : category.display_style === "compact"
+                ? "grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-full"
+                : "max-w-full"
+            }
+          >
+            {category.menu_items
+              .map((item, index) => ({
+                ...item,
+                // Ensure display_order is set if it's null/undefined
+                display_order: typeof item.display_order === 'number' ? item.display_order : index
+              }))
+              .sort((a, b) => {
+                const orderA = a.display_order
+                const orderB = b.display_order
+                return orderA - orderB
+              })
+              .map((item, sortedIndex) => (
+                <SortableItem
+                  key={item.id}
+                  id={item.id}
+                  disabled={editingItem === item.id} // Disable when editing
+                >
+                  {item.isLoading ? (
+                    <MenuItemSkeleton displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />
+                  ) : category.display_style === "list" ? (
+                    <MenuItemList
+                      item={item}
+                      category={category}
+                      plan={plan}
+                      editingItem={editingItem}
+                      setEditingItem={setEditingItem}
+                      handleItemChange={handleItemChange}
+                      saveItem={handleSaveItem}
+                      savingItemId={savingItemId}
+                      loadingAction={loadingAction}
+                      deleteMenuItem={handleDeleteMenuItem}
+                      duplicateItem={handleDuplicateItem}
+                      establishmentColor={establishmentColor}
+                      isDemo={isDemo}
+                      isAdmin={isAdmin}
+                      basketEnabled={basketEnabled}
+                      hideDietaryBadges={{
+                        vegan: getCategoryDietaryAttributes(category).vegan,
+                        alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+                      }}
+                      categoryIsAvailable={category.is_available !== false}
+                      isGloballyLoading={isAddingItemGlobally}
+                      canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                    />
+                  ) : category.display_style === "compact" ? (
+                    <MenuItemCompact
+                      item={item}
+                      category={category}
+                      plan={plan}
+                      editingItem={editingItem}
+                      setEditingItem={setEditingItem}
+                      saveItem={handleSaveItem}
+                      savingItemId={savingItemId}
+                      loadingAction={loadingAction}
+                      deleteMenuItem={handleDeleteMenuItem}
+                      duplicateItem={handleDuplicateItem}
+                      establishmentColor={establishmentColor}
+                      isDemo={isDemo}
+                      isAdmin={isAdmin}
+                      basketEnabled={basketEnabled}
+                      hideDietaryBadges={{
+                        vegan: getCategoryDietaryAttributes(category).vegan,
+                        alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+                      }}
+                      categoryIsAvailable={category.is_available !== false}
+                      isGloballyLoading={isAddingItemGlobally}
+                      canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                    />
+                  ) : category.display_style === "table" ? (
+                    <MenuItemSkeleton displayStyle="table" />
+                  ) : (
+                    <MenuItemCard
+                      item={item}
+                      category={category}
+                      plan={plan}
+                      editingItem={editingItem}
+                      setEditingItem={setEditingItem}
+                      handleItemChange={handleItemChange}
+                      saveItem={handleSaveItem}
+                      savingItemId={savingItemId}
+                      loadingAction={loadingAction}
+                      deleteMenuItem={handleDeleteMenuItem}
+                      duplicateItem={handleDuplicateItem}
+                      establishmentColor={establishmentColor}
+                      isDemo={isDemo}
+                      isAdmin={isAdmin}
+                      basketEnabled={basketEnabled}
+                      hideDietaryBadges={{
+                        vegan: getCategoryDietaryAttributes(category).vegan,
+                        alcoholFree: getCategoryDietaryAttributes(category).alcoholFree
+                      }}
+                      categoryIsAvailable={category.is_available !== false}
+                      isGloballyLoading={isAddingItemGlobally}
+                      canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                      isFirstItemInFirstCategory={isFirstCategory && sortedIndex === 0}
+                    />
+                  )}
+                </SortableItem>
+              ))}
 
-          {/* Add Item Ghost - only show in admin mode */}
-          {isAdmin && (
-            <div className="tutorial-add-item">
-              <AddItemGhost
-                displayStyle={category.display_style || "card"}
-                onAddItem={() => handleAddMenuItem(category.id)}
-                loading={isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
-                canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
-                limitInfo={subscription?.canCreateMenuItem === false && subscription?.planConfig ? {
-                  current: subscription.planConfig.features.currentItemCount || 0,
-                  max: subscription.planConfig.features.maxItems || 0,
-                  planName: subscription.planConfig.name || 'Essentiel'
-                } : undefined}
-                establishmentColor={establishmentColor}
-                onUpgradeNeeded={handleUpgradeNeeded}
-              />
-            </div>
-          )}
-        </div>
+            {/* Add Item Ghost - only show in admin mode */}
+            {isAdmin && (
+              <div className="tutorial-add-item">
+                <AddItemGhost
+                  displayStyle={category.display_style || "card"}
+                  onAddItem={() => handleAddMenuItem(category.id)}
+                  loading={isAddingItemGlobally || Boolean(loadingAction?.includes('adding-category'))}
+                  canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                  limitInfo={subscription?.canCreateMenuItem === false && subscription?.planConfig ? {
+                    current: subscription.planConfig.features.currentItemCount || 0,
+                    max: subscription.planConfig.features.maxItems || 0,
+                    planName: subscription.planConfig.name || 'Essentiel'
+                  } : undefined}
+                  establishmentColor={establishmentColor}
+                  onUpgradeNeeded={handleUpgradeNeeded}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </DndKitWrapper>
-      )}
 
       {/* Category Edit Dialog */}
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>

@@ -30,6 +30,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const [isAddingItemGlobally, setIsAddingItemGlobally] = useState(false)
   const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false)
   const [upgradeFeature, setUpgradeFeature] = useState('')
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({})
   const { startTutorial, tutorialCompleted } = useDashboardTutorial()
   
   const handleUpgradeNeeded = (feature: string) => {
@@ -289,6 +290,19 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
             const category = categories.find(cat => cat.id === activeId);
             if (!category) return null;
 
+            // Get the collapsed state for this category
+            const isCollapsed = collapsedCategories[activeId as string] || false;
+
+            // If collapsed, show just the category title
+            if (isCollapsed) {
+              return (
+                <div className="bg-white border rounded-lg shadow-lg p-4 max-w-md">
+                  <div className="font-bold text-lg text-gray-900">{category.name}</div>
+                  <div className="text-sm text-gray-500 mt-1">Déplacement en cours...</div>
+                </div>
+              );
+            }
+
             // Provide dummy drag handle props for overlay (since overlay is not interactive)
             const setActivatorNodeRef = () => {};
             const listeners = {};
@@ -317,6 +331,7 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                 setIsAddingItemGlobally={setIsAddingItemGlobally}
                 basketEnabled={establishment.basket_enabled ?? true}
                 isFirstCategory={false}
+                isCollapsed={false} // Always show expanded in overlay
                 // Pass drag handle props to CategorySection
                 dragHandleProps={{
                   setActivatorNodeRef,
@@ -354,6 +369,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                       setIsAddingItemGlobally={setIsAddingItemGlobally}
                       basketEnabled={establishment.basket_enabled ?? true}
                       isFirstCategory={index === 0}
+                      isCollapsed={collapsedCategories[cat.id] || false}
+                      setIsCollapsed={(collapsed) => 
+                        setCollapsedCategories(prev => ({ ...prev, [cat.id]: collapsed }))
+                      }
                       // Pass drag handle props to CategorySection
                       dragHandleProps={{
                         setActivatorNodeRef,
