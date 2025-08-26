@@ -573,7 +573,7 @@ export async function sendWelcomeEmail({
         <h3 style="color: #1d4ed8; margin-bottom: 10px;">📱 Votre menu public :</h3>
         <p style="color: #1e40af;">
           Vos clients pourront accéder à votre menu via : 
-          <strong>simple-menu.niborgpro.fr/e/${slug}</strong>
+          <strong>simple-menu.app/e/${slug}</strong>
         </p>
       </div>
     </div>
@@ -599,7 +599,7 @@ Vos informations de connexion :
 
 ⚠️ Important : Changez ce mot de passe lors de votre première connexion
 
-Votre menu public sera accessible à : simple-menu.niborgpro.fr/e/${slug}
+Votre menu public sera accessible à : simple-menu.app/e/${slug}
 
 Prochaines étapes :
 1. Connectez-vous avec vos identifiants

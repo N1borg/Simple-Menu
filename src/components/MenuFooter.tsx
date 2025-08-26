@@ -49,7 +49,7 @@ const MenuFooter: React.FC<MenuFooterProps> = ({ color, establishmentInfo, plan 
             <p className="text-xs">
               Menu digital créé avec ❤️ par{" "}
               <a
-                href="https://simple-menu.niborgpro.fr"
+                href="https://simple-menu.app"
                 className="underline"
                 target="_blank"
                 rel="noopener"

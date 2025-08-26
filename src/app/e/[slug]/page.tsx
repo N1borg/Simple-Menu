@@ -19,13 +19,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: `${name} | Simple-Menu`,
       description: `Découvrez le menu digital de ${name} sur Simple-Menu.`,
-      url: `https://simple-menu.niborgpro.fr/e/${slug}`,
+      url: `https://simple-menu.app/e/${slug}`,
       siteName: "Simple-Menu",
       locale: "fr_FR",
       type: "website",
       images: [
         {
-          url: "https://simple-menu.niborgpro.fr/og-image.jpg",
+          url: "https://simple-menu.app/og-image.jpg",
           width: 1200,
           height: 630,
           alt: "Simple-Menu - Menu digital",
@@ -36,10 +36,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       card: "summary_large_image",
       title: `${name} | Simple-Menu`,
       description: `Découvrez le menu digital de ${name} sur Simple-Menu.`,
-      images: ["https://simple-menu.niborgpro.fr/og-image.jpg"],
+      images: ["https://simple-menu.app/og-image.jpg"],
     },
     alternates: {
-      canonical: `https://simple-menu.niborgpro.fr/e/${slug}`,
+      canonical: `https://simple-menu.app/e/${slug}`,
     },
   };
 }

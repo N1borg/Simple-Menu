@@ -23,13 +23,13 @@ export const metadata: Metadata = {
     title: "Menu digital | Simple-Menu",
     description:
       "Créez et gérez facilement le menu digital de votre bar ou restaurant avec Simple-Menu.",
-    url: "https://simple-menu.niborgpro.fr",
+    url: "https://simple-menu.app",
     siteName: "Simple-Menu",
     locale: "fr_FR",
     type: "website",
     images: [
       {
-        url: "https://simple-menu.niborgpro.fr/og-image.jpg",
+        url: "https://simple-menu.app/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Simple-Menu - Menu digital",
@@ -41,10 +41,10 @@ export const metadata: Metadata = {
     title: "Menu digital | Simple-Menu",
     description:
       "Créez et gérez facilement le menu digital de votre bar ou restaurant avec Simple-Menu.",
-    images: ["https://simple-menu.niborgpro.fr/og-image.jpg"],
+    images: ["https://simple-menu.app/og-image.jpg"],
   },
   alternates: {
-    canonical: "https://simple-menu.niborgpro.fr",
+    canonical: "https://simple-menu.app",
   },
 };
 
