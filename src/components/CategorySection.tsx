@@ -789,7 +789,7 @@ export default function CategorySection({
               const orderB = b.display_order
               return orderA - orderB
             })
-            .map((item) => (
+            .map((item, sortedIndex) => (
               item.isLoading ? (
                 <MenuItemSkeleton key={item.id} displayStyle={item.display_style as "card" | "list" | "compact" | "table"} />
               ) : category.display_style === "list" ? (
@@ -817,6 +817,7 @@ export default function CategorySection({
                   categoryIsAvailable={category.is_available !== false}
                   isGloballyLoading={isAddingItemGlobally}
                   canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                  isFirstItemInFirstCategory={isFirstCategory && sortedIndex === 0}
                 />
               ) : category.display_style === "compact" ? (
                 <MenuItemCompact
@@ -842,6 +843,7 @@ export default function CategorySection({
                   categoryIsAvailable={category.is_available !== false}
                   isGloballyLoading={isAddingItemGlobally}
                   canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                  isFirstItemInFirstCategory={isFirstCategory && sortedIndex === 0}
                 />
               ) : category.display_style === "table" ? (
                 <MenuItemSkeleton key={item.id} displayStyle="table" />
@@ -870,6 +872,7 @@ export default function CategorySection({
                   categoryIsAvailable={category.is_available !== false}
                   isGloballyLoading={isAddingItemGlobally}
                   canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                  isFirstItemInFirstCategory={isFirstCategory && sortedIndex === 0}
                 />
               )
             ))}
@@ -1050,6 +1053,7 @@ export default function CategorySection({
                       categoryIsAvailable={category.is_available !== false}
                       isGloballyLoading={isAddingItemGlobally}
                       canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                      isFirstItemInFirstCategory={isFirstCategory && sortedIndex === 0}
                     />
                   ) : category.display_style === "compact" ? (
                     <MenuItemCompact
@@ -1074,6 +1078,7 @@ export default function CategorySection({
                       categoryIsAvailable={category.is_available !== false}
                       isGloballyLoading={isAddingItemGlobally}
                       canCreateMenuItem={subscription?.canCreateMenuItem ?? true}
+                      isFirstItemInFirstCategory={isFirstCategory && sortedIndex === 0}
                     />
                   ) : category.display_style === "table" ? (
                     <MenuItemSkeleton displayStyle="table" />

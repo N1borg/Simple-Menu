@@ -160,9 +160,6 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
-
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 
@@ -195,9 +192,6 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
-
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 
@@ -230,9 +224,6 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
-
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 
@@ -265,9 +256,6 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
-
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 

@@ -30,6 +30,7 @@ interface MenuItemCompactProps {
   categoryIsAvailable?: boolean; // New prop to check if category is available
   isGloballyLoading?: boolean; // Global loading state
   canCreateMenuItem?: boolean; // Whether user can create more items (subscription limit)
+  isFirstItemInFirstCategory?: boolean; // For tutorial targeting
 }
 
 export default function MenuItemCompact({
@@ -50,7 +51,8 @@ export default function MenuItemCompact({
   hideDietaryBadges = { vegan: false, alcoholFree: false },
   categoryIsAvailable = true, // Default to true for backward compatibility
   isGloballyLoading = false,
-  canCreateMenuItem = true
+  canCreateMenuItem = true,
+  isFirstItemInFirstCategory = false
 }: MenuItemCompactProps) {
   const ringColor = getEstablishmentColor(establishmentColor);
   
@@ -95,7 +97,7 @@ export default function MenuItemCompact({
         if (open) setEditingItem(item.id);
       }}
     >
-      <div className="menu-item-card relative group">
+      <div className={`menu-item-card relative group${isFirstItemInFirstCategory ? ' tutorial-edit-item' : ''}`}>
         <div
           className={
             `bg-white rounded-xl shadow-md p-3 flex flex-col gap-2 group-hover:ring-2 transition cursor-pointer h-full${!instantAvailable ? " bg-gray-100 text-gray-400 border border-gray-200" : ""}`
