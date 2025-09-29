@@ -1,21 +1,20 @@
 import type { Category, MenuItem } from '@/types/supabase_types'
 import Image from 'next/image'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog"
+import { Dialog } from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
+import { CopyPlus, Crown, Loader2 } from "lucide-react"
+import ProCrown from "@/components/ui/ProCrown"
 import { useEffect, useState } from 'react'
-import { toast } from "sonner"
-import { MenuItemDialogForm } from "@/components/MenuItemDialogForm"
+import { useCart } from '@/components/hooks/useCart'
+import MenuItemDialog from '@/components/MenuItemDialog'
+import DietaryBadge from '@/components/DietaryBadge'
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface MenuItemListProps {
   item: MenuItem
   category: Category
+  plan: string;
   editingItem: string | null
   setEditingItem: (id: string | null) => void
   handleItemChange?: (catId: string, itemId: string, field: string, value: any) => void
@@ -23,33 +22,54 @@ interface MenuItemListProps {
   savingItemId: string | null
   loadingAction: string | null
   deleteMenuItem: (catId: string, itemId: string) => Promise<void>
+  duplicateItem?: (itemId: string) => Promise<void>
   establishmentColor?: string
   textColor?: string
   isAdmin?: boolean // New prop to control admin features
   isDemo?: boolean
+  basketEnabled?: boolean // New prop to control basket checkbox visibility
+  hideDietaryBadges?: { vegan?: boolean; alcoholFree?: boolean } // Hide badges if category has them
+  categoryIsAvailable?: boolean // New prop to check if category is available
+  isGloballyLoading?: boolean // Global loading state
+  canCreateMenuItem?: boolean // Whether user can create more items (subscription limit)
+  isFirstItemInFirstCategory?: boolean // For tutorial targeting
 }
 
 export default function MenuItemList({
   item,
   category,
+  plan = 'essentiel',
   editingItem,
   setEditingItem,
   saveItem,
   savingItemId,
   loadingAction,
   deleteMenuItem,
+  duplicateItem,
   establishmentColor,
   textColor,
   isAdmin = true, // Default to admin mode for backward compatibility
-  isDemo = false
+  isDemo = false,
+  basketEnabled = true, // Default to enabled for backward compatibility
+  hideDietaryBadges = { vegan: false, alcoholFree: false },
+  categoryIsAvailable = true, // Default to true for backward compatibility
+  isGloballyLoading = false,
+  canCreateMenuItem = true,
+  isFirstItemInFirstCategory = false
 }: MenuItemListProps) {
   // Use the establishment color if provided, fallback to blue
   const ringColor = establishmentColor || '#3a4fff'
+  
+  // Cart functionality - only use in non-admin mode
+  const cartHook = !isAdmin ? useCart() : null
+  const addToCart = cartHook?.addToCart
+  const removeFromCart = cartHook?.removeFromCart
+  const isInCart = cartHook?.isInCart
 
   // Local state for dialog editing
   const [localName, setLocalName] = useState(item.name)
   const [localDescription, setLocalDescription] = useState(item.description || '')
-  const [localPrice, setLocalPrice] = useState(item.price?.toFixed(2) ?? '')
+  const [localPrice, setLocalPrice] = useState(item.price_one?.toFixed(2) ?? '')
   const [localAvailable, setLocalAvailable] = useState(!!item.is_available)
   const [instantAvailable, setInstantAvailable] = useState(!!item.is_available)
 
@@ -57,7 +77,7 @@ export default function MenuItemList({
     if (editingItem === item.id) {
       setLocalName(item.name)
       setLocalDescription(item.description || '')
-      setLocalPrice(item.price?.toFixed(2) ?? '')
+      setLocalPrice(item.price_one?.toFixed(2) ?? '')
       setLocalAvailable(!!item.is_available)
       setInstantAvailable(!!item.is_available)
     }
@@ -69,20 +89,15 @@ export default function MenuItemList({
     }
   }, [editingItem, item.is_available, item.id])
 
-  const handleAvailableChange = (val: boolean) => {
-    setLocalAvailable(val)
-    setInstantAvailable(val)
-  }
-
   return (
     <Dialog open={editingItem === item.id} onOpenChange={open => {
       if (!open && editingItem === item.id) setEditingItem(null)
       if (open) setEditingItem(item.id)
     }}>
-      <div className="menu-item-card relative group">
+      <div className={`menu-item-card relative group${isFirstItemInFirstCategory ? ' tutorial-edit-item' : ''}`}>
         {/* Menu Item Content - improved list style */}
         <div
-          className={`flex items-center gap-4 p-4 rounded-xl shadow-md border bg-white group-hover:ring-2 transition cursor-pointer min-h-[5.1em] mb-3 ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through border border-gray-200' : ''}`}
+          className={`flex items-center gap-4 p-4 rounded-xl shadow-md border bg-white group-hover:ring-2 transition cursor-pointer min-h-21 mb-3 ${!instantAvailable ? 'bg-gray-100 text-gray-400 line-through border border-gray-200' : ''}`}
           style={{
             boxShadow: '0 1px 4px 0 rgba(0,0,0,0.07)',
             borderColor: 'transparent',
@@ -101,15 +116,21 @@ export default function MenuItemList({
             if (editingItem !== item.id) e.currentTarget.style.boxShadow = '0 1px 4px 0 rgba(0,0,0,0.07)'
           }}
         >
+          {/* Item image preview */}
+          {item.image_url && (
+            <div className="flex-shrink-0 w-12 h-12 mr-3 flex items-center justify-center">
+              <Image
+                src={item.image_url}
+                alt={item.name}
+                className={`object-cover rounded-md border border-gray-200 w-12 h-12 transition duration-200 ${!instantAvailable ? 'grayscale opacity-60' : ''}`}
+                width={48}
+                height={48}
+              />
+            </div>
+          )}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span 
-                className="text-base font-semibold max-w-[100%] truncate" 
-                title={item.name}
-                style={{ color: textColor || undefined }}
-              >
-                {item.name}
-              </span>
+            <div className="flex items-center">
+              <span className="text-base font-semibold max-w-[100%] truncate flex-1" title={item.name}>{item.name}</span>
             </div>
             {item.description && (
               <div className="text-sm text-gray-500 truncate mt-1 relative" title={item.description}>
@@ -130,78 +151,34 @@ export default function MenuItemList({
             )}
           </div>
           <div className="flex flex-col items-end min-w-[70px]">
-            <span 
-              className="font-bold"
-              style={{ color: textColor || undefined }}
-            >
-              {item.price?.toFixed(2)}€
-            </span>
+            <span className="font-bold">{item.price?.toFixed(2)}€</span>
           </div>
         </div>
 
-        {/* Show admin dialog or public dialog based on isAdmin prop */}
-        {isAdmin ? (
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Modifier l'élément</DialogTitle>
-              <DialogDescription>
-                Modifiez les informations de l'élément puis cliquez sur enregistrer.
-              </DialogDescription>
-            </DialogHeader>
-            <MenuItemDialogForm
-              item={item}
-              isDemo={isDemo}
-              savingItemId={savingItemId}
-              loadingAction={loadingAction}
-              onSubmit={async (updatedItem) => {
-                try {
-                  await saveItem(updatedItem)
-                } catch (err) {
-                  toast.error("Erreur lors de la sauvegarde de l'élément")
-                }
-                setInstantAvailable(!!updatedItem.is_available)
-                setEditingItem(null)
-              }}
-              onDelete={async () => {
-                if (isDemo) {
-                  toast.info("Modification désactivée (mode démo).")
-                  return
-                }
-                try {
-                  await deleteMenuItem(category.id, item.id)
-                } catch (err) {
-                  toast.error("Erreur lors de la suppression de l'élément")
-                }
-                setEditingItem(null)
-              }}
-              onCancel={() => setEditingItem(null)}
-            />
-          </DialogContent>
-        ) : (
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{item.name}</DialogTitle>
-              <DialogDescription>
-                {item.description || 'Aucune description.'}
-              </DialogDescription>
-            </DialogHeader>
-            {item.image_url && (
-              <div className="flex justify-center">
-                <Image
-                  src={item.image_url}
-                  alt={item.name}
-                  width={300}
-                  height={200}
-                  className="rounded-lg object-cover max-h-48"
-                />
-              </div>
-            )}
-            <div className="mt-4 text-right font-bold text-lg">{item.price?.toFixed(2)}€</div>
-            <DialogClose asChild>
-              <Button variant="outline" className="mt-4 w-full">Fermer</Button>
-            </DialogClose>
-          </DialogContent>
-        )}
+        {/* Show admin dialog or public dialog using reusable component */}
+        <MenuItemDialog
+          item={item}
+          category={category}
+          isAdmin={isAdmin}
+          isDemo={isDemo}
+          plan={plan}
+          savingItemId={savingItemId}
+          loadingAction={loadingAction}
+          saveItem={saveItem}
+          deleteMenuItem={deleteMenuItem}
+          setEditingItem={setEditingItem}
+          setInstantAvailable={setInstantAvailable}
+          basketEnabled={basketEnabled}
+          isInCart={isInCart}
+          addToCart={addToCart}
+          removeFromCart={removeFromCart}
+          establishmentColor={establishmentColor}
+          categoryIsAvailable={categoryIsAvailable}
+          categoryDietary={{
+            vegan: hideDietaryBadges.vegan || false,
+            alcoholFree: hideDietaryBadges.alcoholFree || false
+          }}
+        />
       </div>
     </Dialog>
   )

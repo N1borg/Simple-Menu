@@ -1,4 +1,48 @@
-import { getServerSupabase } from '@/lib/supabase'
+import type { Metadata } from "next";
+import { getServerSupabase } from '@/lib/supabase';
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug;
+  const supabase = await getServerSupabase();
+  const { data: establishment } = await supabase
+    .from('establishments')
+    .select('name')
+    .eq('slug', slug)
+    .single();
+
+  const name = establishment?.name || slug;
+
+  return {
+    title: `${name} | Simple-Menu`,
+    description: `Découvrez le menu digital de ${name} sur Simple-Menu.`,
+    openGraph: {
+      title: `${name} | Simple-Menu`,
+      description: `Découvrez le menu digital de ${name} sur Simple-Menu.`,
+      url: `https://simple-menu.app/e/${slug}`,
+      siteName: "Simple-Menu",
+      locale: "fr_FR",
+      type: "website",
+      images: [
+        {
+          url: "https://simple-menu.app/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: "Simple-Menu - Menu digital",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${name} | Simple-Menu`,
+      description: `Découvrez le menu digital de ${name} sur Simple-Menu.`,
+      images: ["https://simple-menu.app/og-image.jpg"],
+    },
+    alternates: {
+      canonical: `https://simple-menu.app/e/${slug}`,
+    },
+  };
+}
 import { cookies } from 'next/headers'
 import MenuDisplay from '@/components/MenuDisplay'
 import NotFound from '@/app/not-found'
@@ -6,6 +50,9 @@ import { jwtVerify } from 'jose'
 import AdminBanner from '@/components/AdminBanner'
 import MenuFooter from '@/components/MenuFooter'
 import { redirect } from 'next/navigation'
+import { EstablishmentThemeProvider } from '@/contexts/EstablishmentThemeContext'
+import Basket from '@/components/Basket'
+import { CartProvider } from '@/components/hooks/useCart'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,26 +112,36 @@ export default async function MenuPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {(isAuthenticated || slug === 'demo') && <AdminBanner slug={slug} color={establishment.primary_color ?? undefined} />}
-      <main className="flex-grow">
-        <MenuDisplay 
-          establishment={establishment}
-          textColor={establishment.secondary_color ?? undefined}
+    <EstablishmentThemeProvider primaryColor={establishment.primary_color}>
+      <div className="min-h-screen flex flex-col">
+        {(isAuthenticated || slug === 'demo') && <AdminBanner slug={slug} color={establishment.primary_color ?? undefined} />}
+        <CartProvider>
+          <Basket 
+            establishmentColor={establishment.primary_color ?? undefined}
+            isAdminView={isAuthenticated || slug === 'demo'}
+            basketEnabled={establishment.basket_enabled ?? true}
+            adminBannerPresent={isAuthenticated || slug === 'demo'}
+          />
+          <main className="flex-grow">
+            <MenuDisplay 
+              establishment={establishment}
+            />
+          </main>
+        </CartProvider>
+        <MenuFooter 
+          color={establishment.primary_color ?? undefined} 
+          plan={establishment.plan || 'essentiel'}
+          establishmentInfo={{
+            address: establishment.address ?? undefined,
+            phone: establishment.phone ?? undefined,
+            email: establishment.email ?? undefined,
+            opening_hours: establishment.opening_hours as Array<{ day: string; hours: string }> ?? undefined,
+            facebook_url: establishment.facebook_url ?? undefined,
+            instagram_url: establishment.instagram_url ?? undefined,
+            google_maps_url: establishment.google_maps_url ?? undefined
+          }}
         />
-      </main>
-      <MenuFooter 
-        color={establishment.primary_color ?? undefined} 
-        establishmentInfo={{
-          address: establishment.address ?? undefined,
-          phone: establishment.phone ?? undefined,
-          email: establishment.email ?? undefined,
-          opening_hours: establishment.opening_hours as Array<{ day: string; hours: string }> ?? undefined,
-          facebook_url: establishment.facebook_url ?? undefined,
-          instagram_url: establishment.instagram_url ?? undefined,
-          google_maps_url: establishment.google_maps_url ?? undefined
-        }}
-      />
-    </div>
+      </div>
+    </EstablishmentThemeProvider>
   )
 }

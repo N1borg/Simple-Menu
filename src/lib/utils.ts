@@ -107,8 +107,8 @@ export function sanitizeFacebookUrl(
 
   if (!pageNameOnly) return undefined;
 
-  // Validate page name format (letters, numbers, dots, underscores)
-  if (!/^[a-zA-Z0-9._-]+$/.test(pageNameOnly)) return undefined;
+  // Validate page name format (letters, numbers, dots, underscores, slash for p/ pages)
+  if (!/^[a-zA-Z0-9._\/-]+$/.test(pageNameOnly)) return undefined;
 
   return `https://www.facebook.com/${pageNameOnly}`;
 }

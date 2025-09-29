@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 
 interface ConfirmDeleteDialogProps {
   onConfirm: () => void;
@@ -18,6 +18,8 @@ interface ConfirmDeleteDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   triggerButtonClassName?: string;
+  disabled?: boolean;
+  loading?: boolean;
 }
 
 const ConfirmDeleteDialog = ({
@@ -27,6 +29,8 @@ const ConfirmDeleteDialog = ({
   confirmLabel = "Supprimer",
   cancelLabel = "Annuler",
   triggerButtonClassName = "mr-auto flex items-center justify-center",
+  disabled = false,
+  loading = false,
 }: ConfirmDeleteDialogProps) => {
   const [open, setOpen] = React.useState(false);
 
@@ -38,8 +42,9 @@ const ConfirmDeleteDialog = ({
           variant="destructive"
           className={`${triggerButtonClassName} w-9 h-9 cursor-pointer`}
           aria-label="Supprimer"
+          disabled={disabled}
         >
-          <Trash2 className="w-5 h-5" />
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -62,6 +67,7 @@ const ConfirmDeleteDialog = ({
               onConfirm();
             }}
             className="cursor-pointer"
+            disabled={disabled}
             >
             {confirmLabel}
           </Button>

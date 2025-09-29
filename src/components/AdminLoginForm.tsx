@@ -9,7 +9,6 @@ import { z } from "zod"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -17,11 +16,9 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from "lucide-react"
-import { getEstablishmentColor } from '@/lib/utils'
 
 interface AdminLoginFormProps {
   slug: string
-  color?: string
   error?: string
 }
 
@@ -29,10 +26,11 @@ const FormSchema = z.object({
   password: z.string().min(1, { message: "Le mot de passe est requis." })
 })
 
-export default function AdminLoginForm({ slug, color, error }: AdminLoginFormProps) {
+export default function AdminLoginForm({ slug, error }: AdminLoginFormProps) {
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState<string | undefined>(error)
   const [showPassword, setShowPassword] = useState(false)
+  const [publicLoading, setPublicLoading] = useState(false)
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -61,7 +59,7 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
   return (
     <div className="w-full max-w-xs mx-auto">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="password"
@@ -77,6 +75,14 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
                       {...field}
                       disabled={loading}
                       autoFocus
+                      onFocus={e => {
+                        // Scroll input into view on mobile when focused
+                        if (window.innerWidth <= 600) {
+                          setTimeout(() => {
+                            e.target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                          }, 200)
+                        }
+                      }}
                     />
                     <button
                       type="button"
@@ -99,12 +105,7 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
           <Button
             type="submit"
             className="w-full flex justify-center py-2 px-4"
-            disabled={loading}
-            style={{ 
-              backgroundColor: getEstablishmentColor(color), 
-              borderColor: getEstablishmentColor(color), 
-              color: '#fff' 
-            }}
+            disabled={loading || publicLoading}
           >
             {loading ? (
               <div className="flex items-center">
@@ -115,6 +116,30 @@ export default function AdminLoginForm({ slug, color, error }: AdminLoginFormPro
               </div>
             ) : (
               'Se connecter'
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full flex justify-center py-2 px-4"
+            disabled={loading || publicLoading}
+            onClick={() => {
+              setPublicLoading(true);
+              // Small delay for loading spinner to show
+              setTimeout(() => {
+                window.location.href = `/e/${slug}`;
+              }, 150);
+            }}
+          >
+            {publicLoading ? (
+              <div className="flex items-center">
+                <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </div>
+                Chargement...
+              </div>
+            ) : (
+              'Voir le menu public'
             )}
           </Button>
         </form>

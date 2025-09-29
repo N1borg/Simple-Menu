@@ -31,9 +31,10 @@ interface SocialMediaInputProps {
   primaryColor?: string
   compact?: boolean
   className?: string
+  disabled?: boolean
 }
 
-const SocialMediaInput = ({ id, domain, placeholder, value, onChange, maxLength = 50, primaryColor, compact = false, className = '' }: SocialMediaInputProps) => (
+const SocialMediaInput = ({ id, domain, placeholder, value, onChange, maxLength = 50, primaryColor, compact = false, className = '', disabled = false }: SocialMediaInputProps) => (
   <div className={`flex items-center border border-input rounded-md bg-background overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ${compact ? 'text-sm' : 'text-sm'} ${className}`}>
     {/* Static domain part */}
     <div className={`px-3 py-2 bg-muted/50 border-r border-border text-muted-foreground font-medium whitespace-nowrap ${compact ? 'text-xs px-2 py-1.5' : ''}`}>
@@ -49,6 +50,7 @@ const SocialMediaInput = ({ id, domain, placeholder, value, onChange, maxLength 
       maxLength={maxLength}
       className={`flex-1 bg-transparent outline-none placeholder:text-muted-foreground ${compact ? 'px-2 py-1.5' : 'px-3 py-2'}`}
       style={primaryColor && value ? { color: primaryColor } : {}}
+      disabled={disabled}
     />
   </div>
 )
@@ -108,6 +110,7 @@ interface ContactInfoFieldsProps {
   title?: string
   description?: string
   primaryColor?: string
+  disabled?: boolean
 }
 
 export function ContactInfoFields({
@@ -117,7 +120,8 @@ export function ContactInfoFields({
   compact = false,
   title,
   description,
-  primaryColor
+  primaryColor,
+  disabled = false
 }: ContactInfoFieldsProps) {
   const [errors, setErrors] = useState<Partial<ContactFormData>>({})
   
@@ -126,8 +130,12 @@ export function ContactInfoFields({
   const spacing = compact ? "space-y-4" : "space-y-6"
 
   const handleFieldChange = (field: keyof ContactFormData, value: string) => {
-    let processedValue = value.trim()
-    
+    let processedValue = value
+
+    if (field !== 'address') {
+      processedValue = value.trim()
+    }
+
     // Convert social media usernames to full URLs for storage
     if (field === 'facebook_url' && processedValue && !processedValue.startsWith('http')) {
       processedValue = `https://www.facebook.com/${processedValue}`
@@ -200,6 +208,7 @@ export function ContactInfoFields({
           onChange={(e) => handleFieldChange('address', e.target.value)}
           maxLength={200}
           className={inputSize}
+          disabled={disabled}
         />
       </div>
 
@@ -216,6 +225,7 @@ export function ContactInfoFields({
           onChange={(e) => handleFieldChange('phone', e.target.value)}
           maxLength={20}
           className={`${inputSize} ${errors.phone ? 'border-red-500' : ''}`}
+          disabled={disabled}
         />
         {errors.phone && (
           <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
@@ -236,6 +246,7 @@ export function ContactInfoFields({
           onChange={(e) => handleFieldChange('email', e.target.value)}
           maxLength={255}
           className={`${inputSize} ${errors.email ? 'border-red-500' : ''}`}
+          disabled={disabled}
         />
         {errors.email && (
           <p className="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -261,6 +272,7 @@ export function ContactInfoFields({
           primaryColor={primaryColor}
           compact={compact}
           className={errors.facebook_url ? 'border-red-500' : ''}
+          disabled={disabled}
         />
         {errors.facebook_url && (
           <p className="text-red-500 text-xs mt-1">{errors.facebook_url}</p>
@@ -286,6 +298,7 @@ export function ContactInfoFields({
           primaryColor={primaryColor}
           compact={compact}
           className={errors.instagram_url ? 'border-red-500' : ''}
+          disabled={disabled}
         />
         {errors.instagram_url && (
           <p className="text-red-500 text-xs mt-1">{errors.instagram_url}</p>

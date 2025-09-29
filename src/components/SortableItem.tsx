@@ -2,36 +2,40 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import React, { ReactNode } from 'react';
+import React from 'react';
 
-export function SortableItem({ id, children }: { id: string, children: React.ReactElement<{ className?: string }> | React.ReactElement<{ className?: string }>[] }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const style = {
+export function SortableItem({ 
+  id, 
+  children,
+  disabled = false 
+}: { 
+  id: string, 
+  children: React.ReactNode, 
+  disabled?: boolean 
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
+    id,
+    disabled
+  });
+  
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 100 : undefined,
+    // Disable pointer events when editing
+    pointerEvents: disabled ? 'none' : 'auto',
   };
-  // Fallback: if no drag handle found, apply listeners to the wrapper
-  let handleFound = false;
-  const wrapped = React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
-      // Check if any direct child has the dnd-handle class
-      if (
-        React.isValidElement(child) &&
-        child.props &&
-        typeof child.props.className === 'string' &&
-        child.props.className.includes('dnd-handle')
-      ) {
-        handleFound = true;
-        return React.cloneElement(child, { ...listeners });
-      }
-    }
-    return child;
-  });
+  
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...(!handleFound ? listeners : {})}>
-      {wrapped}
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes} 
+      {...(disabled ? {} : listeners)} // Only attach listeners when not disabled
+      className={`${disabled ? 'pointer-events-none' : ''}`}
+    >
+      {children}
     </div>
   );
 }

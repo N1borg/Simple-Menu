@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { toast } from "sonner"
 import type { EstablishmentWithCategories } from '@/types/supabase_types'
 
-export function useCategories(establishment: EstablishmentWithCategories, isDemo: boolean) {
+export function useCategories(establishment: EstablishmentWithCategories, isDemo: boolean, onUpgradeNeeded?: (feature: string) => void) {
   const [categories, setCategories] = useState(
     establishment.categories.map(cat => ({
       ...cat,
@@ -29,7 +29,10 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
         created_at: new Date().toISOString(),
         display_order: categories.length,
         establishment_id: establishment.id,
+        is_available: true,
         menu_items: [],
+        vegan: false,
+        alcohol_free: false,
       }
       setCategories([newCat, ...categories])
       toast.info("Modification désactivée (mode démo).")
@@ -46,8 +49,11 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
       created_at: new Date().toISOString(),
       display_order: categories.length,
       establishment_id: establishment.id,
+      is_available: true,
       menu_items: [],
       isLoading: true,
+      vegan: false,
+      alcohol_free: false,
     }
 
     setCategories([tempCat, ...categories])
@@ -72,11 +78,19 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
         ))
         toast.success("Catégorie créée")
       } else {
+        // Handle specific API errors
+        if (data?.code === 'SUBSCRIPTION_LIMIT_REACHED') {
+          toast.error(data.error || "Limite d'abonnement atteinte")
+          // Open upgrade dialog
+          onUpgradeNeeded?.('Ajouter plus de catégories')
+        } else {
+          toast.error(data?.error || "Erreur lors de la création de la catégorie")
+        }
         throw new Error('Failed to create category')
       }
     } catch (error) {
       setCategories(cats => cats.filter(cat => cat.id !== tempId))
-      toast.error("Erreur lors de la création de la catégorie")
+      // Don't show additional toast here as we already showed specific error above
     } finally {
       setLoadingAction(null)
     }
@@ -132,6 +146,9 @@ export function useCategories(establishment: EstablishmentWithCategories, isDemo
           name: cat.name,
           display_style: cat.display_style,
           display_order: cat.display_order,
+          is_available: cat.is_available,
+          vegan: cat.vegan,
+          alcohol_free: cat.alcohol_free,
         }),
       })
       

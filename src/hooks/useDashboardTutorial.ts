@@ -160,9 +160,6 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
-
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
     })
   }
 
@@ -195,168 +192,428 @@ export const useDashboardTutorial = () => {
         attributes: true,
         attributeFilter: ['data-state']
       })
+    })
+  }
 
-      // Cleanup observer if component unmounts
-      setTimeout(() => observer.disconnect(), 30000)
+    const waitForItemDialogOpen = async () => {
+    return new Promise<void>((resolve) => {
+      
+      const checkItemDialogOpen = () => {
+        // Check that no dialog with role="dialog" exists
+        const openDialog = document.querySelector('[data-state="open"]')
+        if (openDialog) {
+          resolve()
+          return true
+        }
+        return false
+      }
+
+      // Check immediately
+      if (checkItemDialogOpen()) return
+
+      // Set up observer
+      const observer = new MutationObserver(() => {
+        if (checkItemDialogOpen()) {
+          observer.disconnect()
+        }
+      })
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['data-state']
+      })
+    })
+  }
+
+  const waitForItemDialogClose = async () => {
+    return new Promise<void>((resolve) => {
+
+      const checkDialogClosed = () => {
+        // Check that no dialog with data-state="open" exists
+        const openDialog = document.querySelector('[data-state="open"]')
+        if (!openDialog) {
+          resolve()
+          return true
+        }
+        return false
+      }
+
+      // Check immediately
+      if (checkDialogClosed()) return
+
+      // Set up observer
+      const observer = new MutationObserver(() => {
+        if (checkDialogClosed()) {
+          observer.disconnect()
+        }
+      })
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['data-state']
+      })
     })
   }
 
   const startTutorial = useCallback(() => {
     try {
-      
-      // Check if tutorial elements exist
-      const welcomeElement = document.querySelector('.tutorial-welcome')
-      const addCategoryElement = document.querySelector('.tutorial-add-category')
-      
-      if (!welcomeElement) {
-        console.error('Welcome element not found!')
-        return
-      }
-      
       const driverObj = driver({
         showProgress: true,
         allowClose: false,
-        disableActiveInteraction: false,
+        disableActiveInteraction: true,
         smoothScroll: true,
         stagePadding: 4,
         stageRadius: 8,
         popoverClass: 'dashboard-tutorial-popover',
         steps: [
           {
-            element: '.tutorial-welcome',
             popover: {
-              title: '🎉 Bienvenue dans votre tableau de bord !',
-              description: 'Je vais vous guider pour créer votre premier menu. Suivez les étapes et interagissez avec les vrais éléments !',
-              showButtons: ['next'],
-              nextBtnText: 'Commencer le tutoriel →'
+              title: 'Bienvenue dans votre tableau de bord !',
+              description: 'Je vais vous présenter l\'interface et vous guider pour créer votre premier menu.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Commencer'
             }
           },
-        {
-          element: '.tutorial-add-category',
-          popover: {
-            title: '📁 Créer votre première catégorie',
-            description: 'Cliquez sur ce bouton pour créer votre première catégorie (ex: Entrées, Plats, Desserts). Je ne vous laisserai pas continuer tant que vous ne créez pas une catégorie !',
-            showButtons: [],
+          {
+            element: '.tutorial-admin-banner',
+            popover: {
+              title: 'Bannière d\'administration',
+              description: 'En haut se trouve la bannière d\'administration. Elle vous permet de passer en mode éditeur ou mode public. Vos visiteurs ne la verront pas.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
           },
-          onHighlighted: async () => {
-            await waitForCategoryCreation(driverObj)
-            // Auto-advance once category is created
-            setTimeout(() => driverObj.moveNext(), 500)
-          }
-        },
-        {
-          element: '.tutorial-add-item',
-          popover: {
-            title: '🍽️ Ajouter un plat',
-            description: 'Parfait ! Maintenant cliquez sur le bouton "+" pour ajouter votre premier plat à cette catégorie. Je ne vous laisserai pas continuer tant que vous n\'ajoutez pas un plat !',
-            showButtons: [],
+          {
+            element: '.tutorial-logo-section',
+            popover: {
+              title: 'Section du logo',
+              description: 'Ici vous pouvez ajouter le logo de votre établissement, cela rajoute une identité au menu.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
           },
-          onHighlighted: async () => {
-            await waitForItemCreation(driverObj)
-            // Auto-advance once item is created
-            setTimeout(() => driverObj.moveNext(), 500)
-          }
-        },
-        {
-          element: '.tutorial-admin-banner',
-          popover: {
-            title: '👑 Bannière d\'administration',
-            description: 'Cette bannière vous indique que vous êtes en mode administrateur. Vos visiteurs ne la verront pas - elle n\'apparaît que pour vous !',
-            showButtons: ['next'],
-            nextBtnText: 'Compris !'
-          }
-        },
-        {
-          element: '.tutorial-parameters-button',
-          popover: {
-            title: '⚙️ Panneau de paramètres',
-            description: 'Cliquez sur ce bouton pour ouvrir le panneau de paramètres. Je ne vous laisserai pas continuer tant que vous ne l\'ouvrez pas !',
-            showButtons: [],
+          {
+            element: '.tutorial-category-section',
+            popover: {
+              title: 'Zone des catégories',
+              description: 'Cette zone affichera la partie principale du menu. Vous pouvez créer des catégories qui comportent différents éléments (Boissons, Plats...).',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
           },
-          onHighlighted: async () => {
-            await waitForParameterSheetOpen(driverObj)
-            // Auto-advance once sheet is opened
-            setTimeout(() => driverObj.moveNext(), 500)
-          }
-        },
-        {
-          element: '.tutorial-qr-code',
-          popover: {
-            title: '📱 QR Code',
-            description: 'Générez un QR Code pour que vos clients accèdent facilement à votre menu depuis leur téléphone.',
-            showButtons: ['next'],
-            nextBtnText: 'Suivant →'
-          }
-        },
-        {
-          element: '.tutorial-color-settings',
-          popover: {
-            title: '🎨 Couleur de l\'établissement',
-            description: 'Personnalisez la couleur principale de votre menu pour qu\'elle corresponde à votre image de marque.',
-            showButtons: ['next'],
-            nextBtnText: 'Suivant →'
-          }
-        },
-        {
-          element: '.tutorial-password-change',
-          popover: {
-            title: '🔒 Changer le mot de passe',
-            description: 'Modifiez votre mot de passe administrateur pour sécuriser l\'accès à votre tableau de bord.',
-            showButtons: ['next'],
-            nextBtnText: 'Suivant →'
-          }
-        },
-        {
-          element: '.tutorial-logout',
-          popover: {
-            title: '🚪 Déconnexion',
-            description: 'Utilisez ce bouton pour vous déconnecter en toute sécurité de votre espace administrateur.',
-            showButtons: ['next'],
-            nextBtnText: 'Suivant →'
-          }
-        },
-        {
-          element: '[data-testid="sheet-close"]',
-          popover: {
-            title: '✨ Fermer le panneau',
-            description: 'Maintenant, fermez ce panneau de paramètres en cliquant sur ce bouton. Je ne vous laisserai pas continuer tant que vous ne fermez pas le panneau !',
-            showButtons: [],
+          {
+            element: '.tutorial-establishment-info-form',
+            popover: {
+              title: 'Gérer les informations de l\'établissement',
+              description: 'Ces menus vous permettent de configurer les informations de votre établissement, telles que le nom, l\'adresse et les horaires.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
           },
-          onHighlighted: async () => {
-            await waitForParameterSheetClose()
-            // Auto-advance once sheet is closed
-            setTimeout(() => driverObj.moveNext(), 500)
-          }
-        },
-        {
-          popover: {
-            title: '🎊 Félicitations !',
-            description: 'Vous maîtrisez maintenant votre tableau de bord ! Votre menu est prêt à être partagé avec vos clients. Vous pouvez relancer ce tutoriel à tout moment depuis les paramètres.',
-            showButtons: ['next'],
-            nextBtnText: 'Terminer ✨'
+          {
+            element: '.tutorial-footer-section',
+            popover: {
+              title: 'Pied de page',
+              description: 'Vous retrouverez donc ces informations ici en bas de page, visibles pour le client.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
           },
-          onDeselected: () => {
-            // Launch confetti after a short delay
-            setTimeout(() => {
-              celebrateCompletion()
+          {
+            element: '.tutorial-parameters-button',
+            popover: {
+              title: 'Les paramètres globaux',
+              description: 'Ce menu gère les paramètres globaux de l\'établissement. Cliquez sur ce bouton pour ouvrir le panneau de paramètres.',
+              showButtons: ['close'],
+            },
+            onHighlighted: async () => {
+              // Enable interaction for the parameters button and its children
+              const paramButton = document.querySelector('.tutorial-parameters-button')
+              const paramButtonChild = document.querySelector('.tutorial-parameters-button button')
               
-              // Mark tutorial as completed in memory only
-              setTutorialCompleted(true)
-            }, 500)
+              if (paramButton) {
+                paramButton.classList.add('tutorial-element-interactive')
+              }
+              if (paramButtonChild) {
+                paramButtonChild.classList.add('tutorial-element-interactive')
+              }
+              
+              await waitForParameterSheetOpen(driverObj)
+              // Auto-advance once sheet is opened
+              setTimeout(() => driverObj.moveNext(), 500)
+            },
+            onDeselected: () => {
+              // Re-disable interactions
+              const paramButton = document.querySelector('.tutorial-parameters-button')
+              const paramButtonChild = document.querySelector('.tutorial-parameters-button button')
+              
+              if (paramButton) {
+                paramButton.classList.remove('tutorial-element-interactive')
+              }
+              if (paramButtonChild) {
+                paramButtonChild.classList.remove('tutorial-element-interactive')
+              }
+            }
+          },
+          {
+            element: '.tutorial-quota-section',
+            popover: {
+              title: 'Quotas de l\'établissement',
+              description: 'En haut du panneau, vous verrez les quotas et fonctionnalités incluses de votre plan.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '.tutorial-color-settings',
+            popover: {
+              title: 'Couleur de l\'établissement',
+              description: 'Personnalisez la couleur principale de votre menu pour qu\'elle corresponde à votre image de marque.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '.tutorial-qr-code',
+            popover: {
+              title: 'QR Code',
+              description: 'Générez un QR Code pour votre menu public ou pour accéder à cette page d\'administration (évitez de le partager publiquement).',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '.tutorial-basket-section',
+            popover: {
+              title: 'Panier',
+              description: 'Activez ou désactivez le panier, il permet aux clients de sauvegarder leurs choix dans une liste.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '.tutorial-password-change',
+            popover: {
+              title: 'Changer le mot de passe',
+              description: 'Vous pouvez modifier votre mot de passe administrateur ici. Assurez-vous de le garder secret !',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '.tutorial-help-section',
+            popover: {
+              title: 'Section d\'aide',
+              description: 'La section d\'aide afin de (re)lancer ce tutoriel ou contacter le support.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '.tutorial-logout',
+            popover: {
+              title: 'Déconnexion',
+              description: 'En bas du panneau, utilisez ce bouton pour vous déconnecter en toute sécurité de votre espace administrateur.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '[data-testid="sheet-close"]',
+            popover: {
+              title: 'Fermer le panneau',
+              description: 'Maintenant, fermez ce panneau, on va créer un nouveau menu.',
+              showButtons: ['close'],
+            },
+            onHighlighted: async () => {
+              // Enable interaction only for the close button
+              const closeButton = document.querySelector('[data-testid="sheet-close"]')
+              if (closeButton) {
+                closeButton.classList.add('tutorial-element-interactive')
+              }
+              await waitForParameterSheetClose()
+              // Auto-advance once sheet is closed
+              setTimeout(() => driverObj.moveNext(), 500)
+            },
+            onDeselected: () => {
+              // Re-disable interactions
+              const closeButton = document.querySelector('[data-testid="sheet-close"]')
+              if (closeButton) {
+                closeButton.classList.remove('tutorial-element-interactive')
+              }
+            }
+          },
+          {
+            element: '.tutorial-add-category',
+            popover: {
+              title: 'Créer votre première catégorie',
+              description: 'Créez votre première catégorie en cliquant sur ce bouton.',
+              showButtons: ['close'],
+            },
+            onHighlighted: async () => {
+              // Enable interaction for the add category button and its children
+              const allButtons = document.querySelectorAll('.tutorial-add-category button, .tutorial-add-category [role="button"], .tutorial-add-category')
+              
+              allButtons.forEach(btn => {
+                btn.classList.add('tutorial-element-interactive')
+              })
+              
+              await waitForCategoryCreation(driverObj)
+              // Auto-advance once category is created
+              setTimeout(() => driverObj.moveNext(), 500)
+            },
+            onDeselected: () => {
+              // Re-disable interactions
+              const allButtons = document.querySelectorAll('.tutorial-add-category button, .tutorial-add-category [role="button"], .tutorial-add-category')
+              allButtons.forEach(btn => {
+                btn.classList.remove('tutorial-element-interactive')
+              })
+            }
+          },
+          {
+            element: '.tutorial-category-edit-buttons',
+            popover: {
+              title: 'Modifier la catégorie',
+              description: 'Parfait ! Ces boutons permettent de modifier, dupliquer ou supprimer la catégorie.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '.tutorial-add-item',
+            popover: {
+              title: 'Ajouter un plat',
+              description: 'Ensuite cliquez sur ce bouton pour ajouter votre premier élément à cette catégorie.',
+              showButtons: ['close'],
+            },
+            onHighlighted: async () => {
+              // Enable interaction for the add item button and its children
+              const itemButton = document.querySelector('.tutorial-add-item button')
+              const itemButtonAlt = document.querySelector('.tutorial-add-item')
+              const allButtons = document.querySelectorAll('.tutorial-add-item button, .tutorial-add-item [role="button"], .tutorial-add-item')
+              
+              allButtons.forEach(btn => {
+                btn.classList.add('tutorial-element-interactive')
+              })
+              
+              if (itemButton) {
+                itemButton.classList.add('tutorial-element-interactive')
+              }
+              if (itemButtonAlt) {
+                itemButtonAlt.classList.add('tutorial-element-interactive')
+              }
+              
+              await waitForItemCreation(driverObj)
+              // Auto-advance once item is created
+              setTimeout(() => driverObj.moveNext(), 500)
+            },
+            onDeselected: () => {
+              // Re-disable interactions
+              const allButtons = document.querySelectorAll('.tutorial-add-item button, .tutorial-add-item [role="button"], .tutorial-add-item')
+              allButtons.forEach(btn => {
+                btn.classList.remove('tutorial-element-interactive')
+              })
+            }
+          },
+          {
+            element: '.tutorial-edit-item',
+            popover: {
+              title: 'Modifier l\'élément',
+              description: 'Excellent ! Pour modifier un élément, il suffit de cliquer dessus. Allez-y, cliquez sur le plat que vous venez de créer.',
+              showButtons: ['close'],
+            },
+            onHighlighted: async () => {
+              // Enable interaction for the specific menu item card with tutorial-edit-item class
+              const tutorialEditItem = document.querySelector('.tutorial-edit-item')
+              if (tutorialEditItem) {
+                tutorialEditItem.classList.add('tutorial-element-interactive')
+              }
+              // Wait for the dialog to open and auto-advance immediately
+              try {
+                await waitForItemDialogOpen()
+                // Move to next step as soon as dialog is detected (no delay)
+                if (driverObj && typeof driverObj.moveNext === 'function') {
+                  driverObj.moveNext()
+                }
+              } catch (error) {
+                console.error('Error waiting for item dialog:', error)
+              }
+            },
+            onDeselected: () => {
+              // Re-disable interactions
+              const tutorialEditItem = document.querySelector('.tutorial-edit-item')
+              if (tutorialEditItem) {
+                tutorialEditItem.classList.remove('tutorial-element-interactive')
+              }
+            }
+          },
+          {
+            element: '.tutorial-item-dialog',
+            popover: {
+              title: 'Modifier l\'élément',
+              description: 'Parfait ! Ce formulaire vous permet de modifier tous les détails de votre plat : nom, description, prix, disponibilité et badges alimentaires. Fermez cette fenêtre pour continuer.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Suivant'
+            }
+          },
+          {
+            element: '[data-testid="dialog-close"]',
+            popover: {
+              title: 'Fermer l\'élément',
+              description: 'Pour finir, cliquez sur \'Annuler\' pour fermer la fenêtre et terminer la présentation.',
+              showButtons: ['close']
+            },
+            onHighlighted: async () => {
+              // Enable interaction only for the close button
+              const closeButton = document.querySelector('[data-testid="dialog-close"]')
+              if (closeButton) {
+                closeButton.classList.add('tutorial-element-interactive')
+              }
+              await waitForItemDialogClose()
+              // Auto-advance once dialog is closed
+              setTimeout(() => driverObj.moveNext(), 500)
+            },
+            onDeselected: () => {
+              // Re-disable interactions
+              const closeButton = document.querySelector('[data-testid="dialog-close"]')
+              if (closeButton) {
+                closeButton.classList.remove('tutorial-element-interactive')
+              }
+            }
+          },
+          {
+            popover: {
+              title: 'Félicitations !',
+              description: 'Vous maîtrisez maintenant les bases de Simple Menu ! Vous pouvez continuer à créer d\'autres catégories et plats. N\'hésitez pas à explorer toutes les fonctionnalités.',
+              showButtons: ['close', 'next'],
+              nextBtnText: 'Commencer'
+            },
+            onDeselected: () => {
+              // Launch confetti after a short delay
+              setTimeout(() => {
+                celebrateCompletion()
+                
+                // Mark tutorial as completed in memory only
+                setTutorialCompleted(true)
+              }, 300)
+            }
+          }
+        ],
+        onDestroyed: () => {
+          // Cleanup
+          const sheet = document.querySelector('[data-state="open"]')
+          if (sheet) {
+            const closeButton = document.querySelector('[data-testid="sheet-close"]') as HTMLElement
+            if (closeButton) {
+              closeButton.click()
+            }
           }
         }
-      ],
-      onDestroyed: () => {
-        // Cleanup
-        const sheet = document.querySelector('[data-state="open"]')
-        if (sheet) {
-          const closeButton = document.querySelector('[data-testid="sheet-close"]') as HTMLElement
-          if (closeButton) {
-            closeButton.click()
-          }
-        }
-      }
-    })
+      })
 
       driverObj.drive()
       return driverObj

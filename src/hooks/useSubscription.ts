@@ -16,7 +16,7 @@ export interface SubscriptionLimits {
   error: string | null
 }
 
-export function useSubscription(establishment: EstablishmentWithCategories): SubscriptionLimits {
+export function useSubscription(establishment: EstablishmentWithCategories, currentCategories?: any[]): SubscriptionLimits {
   const [limits, setLimits] = useState<SubscriptionLimits>({
     plan: establishment.plan || 'essentiel',
     planConfig: SUBSCRIPTION_PLANS[establishment.plan || 'essentiel'],
@@ -31,122 +31,66 @@ export function useSubscription(establishment: EstablishmentWithCategories): Sub
     error: null,
   })
 
+  // Helper function to count real items (excluding temporary/loading items)
+  const countRealCategories = (categories: any[]) => {
+    return categories.filter(cat => !cat.id?.startsWith('temp-') && !cat.isLoading).length
+  }
+
+  const countRealMenuItems = (categories: any[]) => {
+    return categories.reduce((total, cat) => {
+      if (cat.id?.startsWith('temp-') || cat.isLoading) return total
+      const realItems = (cat.menu_items || []).filter((item: any) => !item.id?.startsWith('temp-') && !item.isLoading)
+      return total + realItems.length
+    }, 0)
+  }
+
   useEffect(() => {
-    async function fetchLimits() {
-      try {
-        setLimits(prev => ({ ...prev, isLoading: true, error: null }))
-
-        // Handle demo case without API call (no authentication available)
-        if (establishment.slug === 'demo') {
-          const plan = 'pro' // Demo always shows pro features
-          const planConfig = SUBSCRIPTION_PLANS[plan]
-          
-          setLimits({
-            plan,
-            planConfig,
-            categoriesUsed: 5,
-            menuItemsUsed: 25,
-            categoriesRemaining: 10,
-            menuItemsRemaining: 175,
-            canCreateCategory: true,
-            canCreateMenuItem: true,
-            hasFeature: (feature: string) => {
-              return SubscriptionService.hasFeature(plan, feature as any)
-            },
-            isLoading: false,
-            error: null,
-          })
-          return
-        }
-
-        const response = await fetch('/api/admin/subscription/limits')
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch subscription limits')
-        }
-
-        const data = await response.json()
-        
-        const plan = data.plan || establishment.plan || 'essentiel'
-        const planConfig = SUBSCRIPTION_PLANS[plan]
-        
-        if (!planConfig) {
-          throw new Error(`Unknown plan: ${plan}`)
-        }
-
-        const categoriesUsed = data.usage?.categoriesUsed || establishment.categories?.length || 0
-        const menuItemsUsed = data.usage?.menuItemsUsed || 
-          establishment.categories?.reduce((total, cat) => total + (cat.menu_items?.length || 0), 0) || 0
-
-        const maxCategories = planConfig.features.maxCategories
-        const maxItems = planConfig.features.maxItems
-
-        const categoriesRemaining = maxCategories === -1 ? -1 : Math.max(0, maxCategories - categoriesUsed)
-        const menuItemsRemaining = maxItems === -1 ? -1 : Math.max(0, maxItems - menuItemsUsed)
-
-        const canCreateCategory = maxCategories === -1 || categoriesUsed < maxCategories
-        const canCreateMenuItem = maxItems === -1 || menuItemsUsed < maxItems
-
-        setLimits({
-          plan,
-          planConfig,
-          categoriesUsed,
-          menuItemsUsed,
-          categoriesRemaining,
-          menuItemsRemaining,
-          canCreateCategory,
-          canCreateMenuItem,
-          hasFeature: (feature: string) => {
-            return SubscriptionService.hasFeature(plan, feature as any)
-          },
+    function calculateLimits() {
+      const plan = establishment.plan || 'essentiel'
+      const planConfig = SUBSCRIPTION_PLANS[plan]
+      
+      if (!planConfig) {
+        setLimits(prev => ({
+          ...prev,
           isLoading: false,
-          error: null,
-        })
-
-      } catch (error) {
-        console.error('Error fetching subscription limits:', error)
-        
-        // Fallback to client-side calculation with establishment data
-        const plan = establishment.plan || 'essentiel'
-        const planConfig = SUBSCRIPTION_PLANS[plan]
-        
-        if (planConfig) {
-          const categoriesUsed = establishment.categories?.length || 0
-          const menuItemsUsed = establishment.categories?.reduce((total, cat) => total + (cat.menu_items?.length || 0), 0) || 0
-          
-          const maxCategories = planConfig.features.maxCategories
-          const maxItems = planConfig.features.maxItems
-          
-          const categoriesRemaining = maxCategories === -1 ? -1 : Math.max(0, maxCategories - categoriesUsed)
-          const menuItemsRemaining = maxItems === -1 ? -1 : Math.max(0, maxItems - menuItemsUsed)
-          
-          setLimits({
-            plan,
-            planConfig,
-            categoriesUsed,
-            menuItemsUsed,
-            categoriesRemaining,
-            menuItemsRemaining,
-            canCreateCategory: maxCategories === -1 || categoriesUsed < maxCategories,
-            canCreateMenuItem: maxItems === -1 || menuItemsUsed < maxItems,
-            hasFeature: (feature: string) => {
-              return SubscriptionService.hasFeature(plan, feature as any)
-            },
-            isLoading: false,
-            error: 'Unable to fetch latest limits, using cached data',
-          })
-        } else {
-          setLimits(prev => ({
-            ...prev,
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          }))
-        }
+          error: `Unknown plan: ${plan}`,
+        }))
+        return
       }
+
+      // Use current categories if available, otherwise fallback to establishment data
+      const categories = currentCategories || establishment.categories || []
+      const categoriesUsed = countRealCategories(categories)
+      const menuItemsUsed = countRealMenuItems(categories)
+
+      const maxCategories = planConfig.features.maxCategories
+      const maxItems = planConfig.features.maxItems
+
+      const categoriesRemaining = maxCategories === -1 ? -1 : Math.max(0, maxCategories - categoriesUsed)
+      const menuItemsRemaining = maxItems === -1 ? -1 : Math.max(0, maxItems - menuItemsUsed)
+
+      const canCreateCategory = maxCategories === -1 || categoriesUsed < maxCategories
+      const canCreateMenuItem = maxItems === -1 || menuItemsUsed < maxItems
+
+      setLimits({
+        plan,
+        planConfig,
+        categoriesUsed,
+        menuItemsUsed,
+        categoriesRemaining,
+        menuItemsRemaining,
+        canCreateCategory,
+        canCreateMenuItem,
+        hasFeature: (feature: string) => {
+          return SubscriptionService.hasFeature(plan, feature as any)
+        },
+        isLoading: false,
+        error: null,
+      })
     }
 
-    fetchLimits()
-  }, [establishment])
+    calculateLimits()
+  }, [establishment, currentCategories])
 
   return limits
 }

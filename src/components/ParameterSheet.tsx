@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
 import AdminPasswordForm from "@/components/AdminPasswordForm";
 import ColorSelector from "@/components/ColorSelector";
@@ -9,6 +10,7 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -17,13 +19,14 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { LogOut, Settings, Loader2, HelpCircle, Smartphone } from "lucide-react";
+import { LogOut, Settings, Loader2, HelpCircle, Smartphone, Mail } from "lucide-react";
 import QrCodeDialog from "@/components/QrCodeDialog";
 
 interface ParameterSheetProps {
@@ -31,12 +34,12 @@ interface ParameterSheetProps {
     id: string;
     slug: string;
     primary_color?: string;
-    secondary_color?: string;
-    plan?: string;
+    plan: string;
     logo_url?: string;
+    basket_enabled?: boolean;
   };
   isDemo: boolean;
-  subscription: any; // Add subscription prop
+  subscription: any;
   onTutorialStart?: () => void;
 }
 
@@ -50,6 +53,11 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
   const [isSavingTextColor, setIsSavingTextColor] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPWAInstall, setShowPWAInstall] = useState(false);
+  const [basketEnabled, setBasketEnabled] = useState(
+    establishment.basket_enabled !== undefined ? establishment.basket_enabled : true
+  );
+  const [isLoadingBasket, setIsLoadingBasket] = useState(false);
+  const [isSavingBasket, setIsSavingBasket] = useState(false);
 
   // Check if PWA is allowed for this establishment
   const plan = establishment?.plan || 'essentiel';
@@ -121,35 +129,6 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
     }
   };
 
-  const handleTextColorSave = async () => {
-    if (isDemo) {
-      toast.info("Modification désactivée (mode démo).");
-      return;
-    }
-
-    setIsSavingTextColor(true);
-    try {
-      const response = await fetch('/api/admin/update-text-color', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ textColor: currentTextColor })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors de la mise à jour de la couleur du texte');
-      }
-      
-      toast.success('Couleur du texte mise à jour avec succès !');
-      setTextColorDialogOpen(false);
-      setTimeout(() => window.location.reload(), 500);
-    } catch (error) {
-      console.error('Error saving text color:', error);
-      toast.error('Erreur lors de la mise à jour de la couleur du texte');
-    } finally {
-      setIsSavingTextColor(false);
-    }
-  };
-
   // Compute the public menu URL safely (SSR compatible)
   const publicMenuUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/e/${establishment.slug}`
@@ -163,13 +142,16 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="default" className="flex items-center gap-2 cursor-pointer">
+        <Button variant="outline" size="default" className="tutorial-parameters-button flex items-center gap-2 cursor-pointer">
           <Settings className="w-4 h-4" /> Paramètres
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="max-w-md w-full flex flex-col h-full">
         <SheetHeader className="flex-shrink-0">
             <SheetTitle>Paramètres administrateur</SheetTitle>
+            <SheetDescription>
+              Gérez les paramètres de votre établissement, modifiez votre mot de passe et personnalisez votre menu.
+            </SheetDescription>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto min-h-0 pb-4">
           <div className="grid auto-rows-min gap-6 px-1">
@@ -237,58 +219,6 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
               </DialogContent>
             </Dialog>
           </div>
-          <div className="px-4">
-            <Dialog open={textColorDialogOpen} onOpenChange={setTextColorDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full flex items-center gap-2">
-                  <span
-                    className="w-4 h-4 rounded-full border"
-                    style={{
-                      backgroundColor: establishment.secondary_color || '#1f2937',
-                      display: 'inline-block',
-                    }}
-                  />
-                  Modifier la couleur du texte
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Modifier la couleur du texte</DialogTitle>
-                </DialogHeader>
-                <ColorSelector
-                  currentColor={currentTextColor}
-                  onColorChange={setCurrentTextColor}
-                  establishmentId={establishment.id}
-                  isDemo={isDemo}
-                  showPreview={true}
-                  showSaveButton={false}
-                  title=""
-                  description="Modifiez la couleur du texte de votre établissement."
-                  className="mt-2"
-                />
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Annuler</Button>
-                  </DialogClose>
-                  <Button 
-                    onClick={handleTextColorSave}
-                    disabled={isSavingTextColor}
-                  >
-                    {isSavingTextColor ? (
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 mr-2 flex items-center justify-center">
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        </div>
-                        Sauvegarde...
-                      </div>
-                    ) : (
-                      'Enregistrer'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
           <div className="px-4 tutorial-qr-code">
             {/* QR Code Button and Dialog */}
             <QrCodeDialog 
@@ -336,7 +266,6 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
                 </Button>
               </SheetClose>
             </div>
-          )}
           </div>
         </div>
         <SheetFooter className="flex-shrink-0 bg-background p-4 flex flex-col gap-2">
@@ -348,13 +277,29 @@ const ParameterSheet: React.FC<ParameterSheetProps> = ({ establishment, isDemo, 
               disabled={loggingOut}
               onClick={async () => {
                 setLoggingOut(true);
-                await fetch("/api/admin/logout", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ slug: establishment.slug })
-                });
-                document.cookie = "admin-session=; path=/; max-age=0;";
-                window.location.href = `/e/${establishment.slug}/admin`;
+                try {
+                  const response = await fetch("/api/admin/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ slug: establishment.slug })
+                  });
+                  
+                  if (!response.ok) {
+                    const errorData = await response.json();
+                    toast.error(errorData.error || 'Erreur lors de la déconnexion');
+                    setLoggingOut(false);
+                    return;
+                  }
+                  
+                  const data = await response.json();
+                  // Clear the client-side cookie as well
+                  document.cookie = "admin-session=; path=/; max-age=0;";
+                  // Redirect to the admin page
+                  window.location.href = data.redirectUrl || `/e/${establishment.slug}/admin`;
+                } catch (error) {
+                  toast.error('Erreur lors de la déconnexion');
+                  setLoggingOut(false);
+                }
               }}
             >
               {loggingOut ? (

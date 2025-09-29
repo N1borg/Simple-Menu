@@ -3,31 +3,28 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl, convertToLegacyHours, getEstablishmentColor } from '@/lib/utils'
+import { sanitizeEmail, sanitizePhone, sanitizeText, sanitizeFacebookUrl, sanitizeInstagramUrl } from '@/lib/utils'
 import { Loader2, MapPin } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
   DialogClose,
   DialogFooter,
 } from "@/components/ui/dialog"
-import EstablishmentFooter from '@/components/EstablishmentFooter'
 import ContactInfoFields, { ContactFormData } from '@/components/ContactInfoFields'
 
 interface EstablishmentInfoManagerProps {
-  establishmentId: string
   slug: string
   children?: React.ReactNode
   primaryColor?: string
+  isDemo?: boolean
 }
 
-const defaultHours = [] // No longer needed, kept for compatibility
-
-export function EstablishmentInfoManager({ establishmentId, slug, children, primaryColor }: EstablishmentInfoManagerProps) {
-  const isDemo = slug === 'demo'
+export function EstablishmentInfoManager({ slug, children, primaryColor, isDemo = false }: EstablishmentInfoManagerProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
@@ -48,6 +45,8 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
     instagram_url: ''
   })
 
+  const [dialogOpen, setDialogOpen] = useState(false)
+
   // Check if there are any changes
   const hasChanges = () => {
     return Object.keys(formData).some(key => {
@@ -59,22 +58,15 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
 
   // Load establishment data on mount for non-demo
   useEffect(() => {
-    if (!isDemo) {
-      loadEstablishmentData()
-    }
-  }, [isDemo])
+    loadEstablishmentData()
+  }, [])
 
   const loadEstablishmentData = async () => {
-    if (isDemo) {
-      return // Don't load data in demo mode
-    }
-    
     setIsLoading(true)
     try {
       const response = await fetch(`/api/admin/establishment-info?slug=${slug}`)
       if (response.ok) {
         const data = await response.json()
-        
         const loadedFormData = {
           address: data.address || '',
           phone: data.phone || '',
@@ -82,7 +74,6 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
           facebook_url: data.facebook_url || '',
           instagram_url: data.instagram_url || ''
         }
-        
         setFormData(loadedFormData)
         setInitialFormData(loadedFormData)
       } else {
@@ -160,17 +151,21 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
         body: JSON.stringify(sanitizedData)
       })
 
+      const responseData = await response.json()
+
       if (!response.ok) {
-        throw new Error('Erreur lors de la sauvegarde')
+        throw new Error(responseData?.error || 'Erreur lors de la sauvegarde')
       }
 
       toast.success('Informations mises à jour avec succès!')
       // Update initial state to reflect saved changes
       setInitialFormData(formData)
-      // Close dialog by triggering a close - since we're using uncontrolled, we'll reload page
-      setTimeout(() => window.location.reload(), 500)
+      setDialogOpen(false) // Close dialog on success
+      // Optionally reload page or data here if needed
+      // setTimeout(() => window.location.reload(), 500)
     } catch (error) {
       console.error('Error saving establishment data:', error)
+      // Keep the user's edits - don't revert form data on error
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde')
     } finally {
       setIsSaving(false)
@@ -178,7 +173,10 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
   }
 
   return (
-    <Dialog>
+    <Dialog open={dialogOpen} onOpenChange={(open) => {
+      setDialogOpen(open)
+      if (!open) setFormData(initialFormData)
+    }}>
       <DialogTrigger asChild>
         {children || (
           <Button 
@@ -188,12 +186,13 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
               borderColor: primaryColor, 
               color: primaryColor 
             } : {}}
+            onClick={() => setDialogOpen(true)}
           >
             <MapPin 
               className="w-4 h-4" 
               style={primaryColor ? { color: primaryColor } : {}}
             />
-            Contact & adresse
+            Contact et adresse
           </Button>
         )}
       </DialogTrigger>
@@ -205,20 +204,14 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
           >
             Informations de contact
           </DialogTitle>
+          <DialogDescription>
+            Configurez les informations de contact de votre établissement.
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center p-8">
             <Loader2 className="w-6 h-6 animate-spin" />
-          </div>
-        ) : isDemo ? (
-          <div className="flex items-center justify-center p-8 text-center">
-            <div className="space-y-2">
-              <p className="text-lg font-medium text-gray-700">Mode Démo</p>
-              <p className="text-sm text-gray-500">
-                La modification des informations est désactivée en mode démo.
-              </p>
-            </div>
           </div>
         ) : (
           <div className="space-y-6">
@@ -227,6 +220,7 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
               onInputChange={handleInputChange}
               compact={true}
               primaryColor={primaryColor}
+              disabled={isDemo}
             />
           </div>
         )}
@@ -239,11 +233,7 @@ export function EstablishmentInfoManager({ establishmentId, slug, children, prim
           </DialogClose>
           <Button 
             onClick={handleSave} 
-            disabled={isSaving || isLoading || isDemo || !hasChanges()}
-            style={{ 
-              backgroundColor: getEstablishmentColor(primaryColor), 
-              borderColor: getEstablishmentColor(primaryColor) 
-            }}
+            disabled={isSaving || isLoading || !hasChanges() || isDemo}
           >
             {isSaving ? (
               <div className="flex items-center">

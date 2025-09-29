@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Upload, Pencil } from 'lucide-react'
+import { Upload, Pencil, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { toast } from "sonner"
 import { getEstablishmentColor } from '@/lib/utils'
@@ -194,7 +194,7 @@ export default function ImageUpload({
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`tutorial-logo-section space-y-4 ${className}`}>
       {/* Centered Logo Preview (same as menu page) + Edit/Trash Buttons */}
       {displayedImageUrl && (
         <div className="relative flex justify-center mb-4">
@@ -310,7 +310,7 @@ export default function ImageUpload({
                   <Upload className={`mx-auto h-12 w-12`} style={{ color: dragActive ? establishmentColor : '#9ca3af' }} />
                   {isUploading ? (
                     <div className="space-y-2">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderColor: establishmentColor }}></div>
+                      <Loader2 className="mx-auto h-6 w-6 animate-spin" style={{ color: establishmentColor }} />
                       <p className="text-sm text-gray-600">Optimisation et upload...</p>
                       <p className="text-xs text-gray-500">L'image est automatiquement optimisée</p>
                     </div>
@@ -345,6 +345,8 @@ export default function ImageUpload({
                 <Button
                   className="w-32 h-32 rounded-full object-contain border border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 text-gray-700 flex flex-col items-center justify-center whitespace-normal break-words text-center leading-tight space-y-0 cursor-pointer"
                   onClick={() => setShowPopup(true)}
+                  variant="ghost"
+                  style={{ backgroundColor: '#f9fafb', borderColor: '#d1d5db', color: '#374151' }}
                 >
                   <Upload className="h-5 w-5 mb-0.5" />
                   <span className="block">Ajouter un logo</span>

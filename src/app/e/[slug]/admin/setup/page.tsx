@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { WelcomeSetup } from '@/components/WelcomeSetup'
+import { EstablishmentThemeProvider } from '@/contexts/EstablishmentThemeContext'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -100,15 +101,17 @@ export default function WelcomeSetupPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <WelcomeSetup
-        isOpen={true}
-        onComplete={handleComplete}
-        establishmentName={establishment.name}
-        establishmentSlug={establishment.slug}
-        establishmentId={establishment.id}
-        currentLogo={establishment.logo_url || undefined}
-      />
-    </div>
+    <EstablishmentThemeProvider primaryColor={establishment.primary_color}>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <WelcomeSetup
+          isOpen={true}
+          onComplete={handleComplete}
+          establishmentName={establishment.name}
+          establishmentSlug={establishment.slug}
+          establishmentId={establishment.id}
+          currentLogo={establishment.logo_url || undefined}
+        />
+      </div>
+    </EstablishmentThemeProvider>
   )
 }

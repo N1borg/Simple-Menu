@@ -5,12 +5,15 @@ import { Progress } from '@/components/ui/progress'
 import { Crown, Zap, AlertTriangle, CheckCircle } from 'lucide-react'
 import { SubscriptionLimits } from '@/hooks/useSubscription'
 import { getEstablishmentColor } from '@/lib/utils'
+import { useState } from 'react'
+import UpgradeDialog from '@/components/ui/UpgradeDialog'
 
 interface SubscriptionBannerProps {
   subscription: SubscriptionLimits
   className?: string
   establishmentColor?: string | null
 }
+
 
 export function SubscriptionBanner({ subscription, className, establishmentColor }: SubscriptionBannerProps) {
   const { 
@@ -24,6 +27,8 @@ export function SubscriptionBanner({ subscription, className, establishmentColor
     canCreateMenuItem,
     isLoading 
   } = subscription
+
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -81,7 +86,7 @@ export function SubscriptionBanner({ subscription, className, establishmentColor
           <div className="flex items-center gap-2">
             {getPlanIcon(plan)}
             <CardTitle className="text-lg">Plan {planConfig.name}</CardTitle>
-            <Badge className={getPlanColor(plan)}>
+            <Badge className={getPlanColor(plan) + ' pointer-events-none hover:bg-none'}>
               {plan === 'premium' ? 'Premium' : plan === 'pro' ? 'Pro' : 'Essentiel'}
             </Badge>
           </div>
@@ -152,14 +157,17 @@ export function SubscriptionBanner({ subscription, className, establishmentColor
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent'
               }}
-              onClick={() => {
-                // Open upgrade modal or redirect to pricing
-                window.open('mailto:contact.simplemenu@gmail.com?subject=Upgrade%20Plan&body=Je%20souhaite%20passer%20à%20un%20plan%20supérieur.', '_blank')
-              }}
+              onClick={() => setUpgradeDialogOpen(true)}
             >
               <Crown className="w-4 h-4 mr-2" />
               Passer à un plan supérieur
             </Button>
+            <UpgradeDialog
+              open={upgradeDialogOpen}
+              onOpenChange={setUpgradeDialogOpen}
+              feature="Upgrade Plan"
+              description="Débloquez plus de catégories, d'articles et des fonctionnalités avancées en passant à un plan supérieur."
+            />
           </div>
         )}
 

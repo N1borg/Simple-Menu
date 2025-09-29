@@ -11,6 +11,7 @@ import { PaymentStatusBanner } from '@/components/PaymentStatusBanner'
 import { PaymentStatusToast } from '@/components/PaymentStatusToast'
 import Image from 'next/image'
 import NotFound from '@/app/not-found'
+import { EstablishmentThemeProvider } from '@/contexts/EstablishmentThemeContext'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -75,31 +76,33 @@ export default async function AdminPage({ params, searchParams }: PageProps) {
 
   if (!isAuthenticated && slug !== 'demo') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full space-y-8">
-          <div className="flex flex-col items-center">
-            {establishment.logo_url && (
-              <Image
-                src={establishment.logo_url}
-                alt={`Logo de ${establishment.name}`}
-                width={120}
-                height={120}
-                className="mb-4 w-28 h-28 object-contain rounded-full bg-white"
-                priority
-                quality={90}
-                sizes="(max-width: 600px) 100vw, 120px"
-              />
-            )}
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Administration - {establishment.name}
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Connectez-vous pour gérer votre menu
-            </p>
-          </div>
-            <AdminLoginForm slug={slug} color={establishment.primary_color ?? undefined} />
-          </div>
-      </div>
+      <EstablishmentThemeProvider primaryColor={establishment.primary_color}>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="max-w-md w-full space-y-8">
+            <div className="flex flex-col items-center">
+              {establishment.logo_url && (
+                <Image
+                  src={establishment.logo_url}
+                  alt={`Logo de ${establishment.name}`}
+                  width={120}
+                  height={120}
+                  className="mb-4 w-28 h-28 object-contain rounded-full bg-white"
+                  priority
+                  quality={90}
+                  sizes="(max-width: 600px) 100vw, 120px"
+                />
+              )}
+              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Administration - {establishment.name}
+              </h2>
+              <p className="mt-2 text-center text-sm text-gray-600">
+                Connectez-vous pour gérer votre menu
+              </p>
+            </div>
+              <AdminLoginForm slug={slug} />
+            </div>
+        </div>
+      </EstablishmentThemeProvider>
     )
   }
 
@@ -110,42 +113,42 @@ export default async function AdminPage({ params, searchParams }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <PaymentStatusToast />
-      {(isAuthenticated || slug === 'demo') && (
-        <>
-          <div className="tutorial-admin-banner">
+    <EstablishmentThemeProvider primaryColor={establishment.primary_color}>
+      <div className="min-h-screen flex flex-col">
+        <PaymentStatusToast />
+        {(isAuthenticated || slug === 'demo') && (
+          <>
             <AdminBanner slug={slug} isDashboard color={establishment.primary_color ?? undefined} />
-          </div>
-          {/* Payment Status Banner */}
-          {paymentStatus && (
-            <div className="max-w-6xl mx-auto px-4 mt-4">
-              <PaymentStatusBanner 
-                paymentStatus={paymentStatus}
-                sessionId={sessionId}
-                establishmentSlug={slug}
-              />
-            </div>
-          )}
-        </>
-      )}
-      <div className="flex-grow">
-        <AdminDashboard
-          establishment={establishment as EstablishmentWithCategories}
+            {/* Payment Status Banner */}
+            {paymentStatus && (
+              <div className="max-w-6xl mx-auto px-4 mt-4">
+                <PaymentStatusBanner 
+                  paymentStatus={paymentStatus}
+                  sessionId={sessionId}
+                />
+              </div>
+            )}
+          </>
+        )}
+        <div className="flex-grow">
+          <AdminDashboard
+            establishment={establishment as EstablishmentWithCategories}
+          />
+        </div>
+        <MenuFooter 
+          color={establishment.primary_color ?? undefined} 
+          plan={establishment.plan || 'essentiel'}
+          establishmentInfo={{
+            address: establishment.address ?? undefined,
+            phone: establishment.phone ?? undefined,
+            email: establishment.email ?? undefined,
+            opening_hours: establishment.opening_hours as Array<{ day: string; hours: string }> ?? undefined,
+            facebook_url: establishment.facebook_url ?? undefined,
+            instagram_url: establishment.instagram_url ?? undefined,
+            google_maps_url: establishment.google_maps_url ?? undefined
+          }}
         />
       </div>
-      <MenuFooter 
-        color={establishment.primary_color ?? undefined} 
-        establishmentInfo={{
-          address: establishment.address ?? undefined,
-          phone: establishment.phone ?? undefined,
-          email: establishment.email ?? undefined,
-          opening_hours: establishment.opening_hours as Array<{ day: string; hours: string }> ?? undefined,
-          facebook_url: establishment.facebook_url ?? undefined,
-          instagram_url: establishment.instagram_url ?? undefined,
-          google_maps_url: establishment.google_maps_url ?? undefined
-        }}
-      />
-    </div>
+    </EstablishmentThemeProvider>
   )
 }

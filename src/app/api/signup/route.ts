@@ -1,39 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
-import { auditLog } from '@/lib/security'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { createStripeCheckoutSession } from '@/lib/stripe-server'
 
 export async function POST(req: NextRequest) {
+  const requestMetadata = getRequestMetadata(req)
+  let establishmentSlug = 'unknown'
+
   try {
     const body = await req.json()
     const {
       establishmentName,
-      establishmentSlug,
+      establishmentSlug: requestSlug,
       email,
       phone,
       plan
     } = body
+    
+    establishmentSlug = requestSlug || 'unknown'
 
     // Validate required fields
     if (!establishmentName || !establishmentSlug || !email || !plan) {
-      return NextResponse.json({ 
-        error: 'Champs obligatoires manquants' 
-      }, { status: 400 })
+      auditLog({
+        action: 'signup_failed',
+        severity: 'warning',
+        user: establishmentSlug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Missing required fields' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     // Validate slug format
     if (!/^[a-z0-9-]+$/.test(establishmentSlug)) {
-      return NextResponse.json({ 
-        error: 'Le slug ne peut contenir que des lettres minuscules, chiffres et tirets' 
-      }, { status: 400 })
+      auditLog({
+        action: 'signup_failed',
+        severity: 'warning',
+        user: establishmentSlug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid slug format' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     // Forbidden slugs
     const forbiddenSlugs = ['admin', 'api', 'www', 'app', 'demo', 'test', 'signup', 'login']
     if (forbiddenSlugs.includes(establishmentSlug)) {
-      return NextResponse.json({ 
-        error: 'Ce nom d\'URL est réservé, veuillez en choisir un autre' 
-      }, { status: 400 })
+      auditLog({
+        action: 'signup_failed',
+        severity: 'warning',
+        user: establishmentSlug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Forbidden slug' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.INVALID_INPUT }, { status: 400 })
     }
 
     const supabase = await getServerSupabase()
@@ -46,9 +75,17 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (existingEstablishment) {
-      return NextResponse.json({ 
-        error: 'Cette URL est déjà prise, veuillez en choisir une autre' 
-      }, { status: 409 })
+      auditLog({
+        action: 'signup_failed',
+        severity: 'warning',
+        user: establishmentSlug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Slug already taken' }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.BAD_REQUEST }, { status: 409 })
     }
 
     // Generate secure random initial password (will be hashed after payment)
@@ -100,19 +137,35 @@ export async function POST(req: NextRequest) {
     })
 
     if (!stripeResult.success || !stripeResult.checkoutUrl) {
-      return NextResponse.json({ 
-        error: stripeResult.error || 'Erreur lors de la création de la session de paiement' 
-      }, { status: 500 })
+      auditLog({
+        action: 'signup_failed',
+        severity: 'error',
+        user: establishmentSlug,
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          reason: 'Stripe checkout session creation failed',
+          stripeError: stripeResult.error
+        }
+      })
+      return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
     }
 
-    auditLog({ 
-      action: 'signup_payment_initiated', 
-      user: establishmentSlug, 
+    auditLog({
+      action: 'signup_payment_initiated',
+      severity: 'info',
+      user: establishmentSlug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
       details: { 
         plan,
         email,
         checkoutSessionId: stripeResult.sessionId 
-      } 
+      }
     })
 
     return NextResponse.json({
@@ -123,14 +176,17 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    auditLog({ 
-      action: 'signup_error', 
-      user: 'unknown', 
-      details: { error: error instanceof Error ? error.message : 'Unknown error' } 
+    auditLog({
+      action: 'signup_error',
+      severity: 'error',
+      user: establishmentSlug,
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { error: error instanceof Error ? error.message : 'Unknown error' }
     })
 
-    return NextResponse.json({ 
-      error: 'Erreur interne du serveur' 
-    }, { status: 500 })
+    return NextResponse.json({ error: STANDARD_ERRORS.SERVER_ERROR }, { status: 500 })
   }
 }

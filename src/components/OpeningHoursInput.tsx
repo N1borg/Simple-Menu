@@ -20,7 +20,10 @@ interface OpeningHoursInputProps {
   onChange: (schedule: DaySchedule[]) => void
   className?: string
   primaryColor?: string
+  disabled?: boolean
 }
+
+const padTime = (val: string) => val.length === 1 ? '0' + val : val;
 
 const TimeSlotInput: React.FC<{
   timeSlot: TimeSlot
@@ -30,8 +33,8 @@ const TimeSlotInput: React.FC<{
   primaryColor?: string
 }> = ({ timeSlot, onChange, label, disabled = false, primaryColor }) => {
   const updateField = (field: keyof TimeSlot, value: string) => {
-    const sanitized = sanitizeTimeInput(value)
-    
+    let sanitized = sanitizeTimeInput(value)
+
     // Validate based on field type
     if ((field === 'startHour' || field === 'endHour') && sanitized && !validateHour(sanitized)) {
       return
@@ -39,11 +42,22 @@ const TimeSlotInput: React.FC<{
     if ((field === 'startMinute' || field === 'endMinute') && sanitized && !validateMinute(sanitized)) {
       return
     }
-    
+    // Do NOT pad here, only onBlur
     onChange({
       ...timeSlot,
       [field]: sanitized
     })
+  }
+
+  const handleBlur = (field: keyof TimeSlot, value: string) => {
+    let sanitized = sanitizeTimeInput(value)
+    if (sanitized.length === 1) sanitized = padTime(sanitized)
+    if (sanitized !== (timeSlot[field] || '')) {
+      onChange({
+        ...timeSlot,
+        [field]: sanitized
+      })
+    }
   }
 
   return (
@@ -57,6 +71,7 @@ const TimeSlotInput: React.FC<{
             placeholder="HH"
             value={timeSlot.startHour}
             onChange={(e) => updateField('startHour', e.target.value)}
+            onBlur={(e) => handleBlur('startHour', e.target.value)}
             disabled={disabled}
             className="w-9 h-8 text-center text-xs p-1"
             style={primaryColor && timeSlot.startHour ? { color: primaryColor } : {}}
@@ -69,6 +84,7 @@ const TimeSlotInput: React.FC<{
             placeholder="MM"
             value={timeSlot.startMinute}
             onChange={(e) => updateField('startMinute', e.target.value)}
+            onBlur={(e) => handleBlur('startMinute', e.target.value)}
             disabled={disabled}
             className="w-9 h-8 text-center text-xs p-1"
             style={primaryColor && timeSlot.startMinute ? { color: primaryColor } : {}}
@@ -83,6 +99,7 @@ const TimeSlotInput: React.FC<{
             placeholder="HH"
             value={timeSlot.endHour}
             onChange={(e) => updateField('endHour', e.target.value)}
+            onBlur={(e) => handleBlur('endHour', e.target.value)}
             disabled={disabled}
             className="w-9 h-8 text-center text-xs p-1"
             style={primaryColor && timeSlot.endHour ? { color: primaryColor } : {}}
@@ -95,6 +112,7 @@ const TimeSlotInput: React.FC<{
             placeholder="MM"
             value={timeSlot.endMinute}
             onChange={(e) => updateField('endMinute', e.target.value)}
+            onBlur={(e) => handleBlur('endMinute', e.target.value)}
             disabled={disabled}
             className="w-9 h-8 text-center text-xs p-1"
             style={primaryColor && timeSlot.endMinute ? { color: primaryColor } : {}}
@@ -110,7 +128,8 @@ const DayScheduleInput: React.FC<{
   daySchedule: DaySchedule
   onChange: (daySchedule: DaySchedule) => void
   primaryColor?: string
-}> = ({ daySchedule, onChange, primaryColor }) => {
+  disabled?: boolean
+}> = ({ daySchedule, onChange, primaryColor, disabled = false }) => {
   const updateSchedule = (updates: Partial<DaySchedule>) => {
     onChange({ ...daySchedule, ...updates })
   }
@@ -140,6 +159,7 @@ const DayScheduleInput: React.FC<{
                 backgroundColor: primaryColor,
                 borderColor: primaryColor 
               } : {}}
+              disabled={disabled}
             />
             <span 
               className="text-xs"
@@ -163,6 +183,7 @@ const DayScheduleInput: React.FC<{
               borderColor: primaryColor, 
               color: primaryColor 
             } : {}}
+            disabled={disabled}
           >
             {daySchedule.hasSecondPeriod ? (
               <>
@@ -188,6 +209,7 @@ const DayScheduleInput: React.FC<{
             onChange={(firstPeriod) => updateSchedule({ firstPeriod })}
             label="1ère période"
             primaryColor={primaryColor}
+            disabled={disabled}
           />
           
           {daySchedule.hasSecondPeriod && (
@@ -196,6 +218,7 @@ const DayScheduleInput: React.FC<{
               onChange={(secondPeriod) => updateSchedule({ secondPeriod })}
               label="2ème période"
               primaryColor={primaryColor}
+              disabled={disabled}
             />
           )}
         </div>
@@ -208,7 +231,8 @@ export const OpeningHoursInput: React.FC<OpeningHoursInputProps> = ({
   schedule,
   onChange,
   className = "",
-  primaryColor
+  primaryColor,
+  disabled = false
 }) => {
   const updateDay = (index: number, daySchedule: DaySchedule) => {
     const newSchedule = [...schedule]
@@ -220,7 +244,6 @@ export const OpeningHoursInput: React.FC<OpeningHoursInputProps> = ({
     <div className={className}>
       <Label 
         className="flex items-center gap-2 mb-3"
-        style={primaryColor ? { color: primaryColor } : {}}
       >
         <Clock 
           className="w-4 h-4" 
@@ -236,6 +259,7 @@ export const OpeningHoursInput: React.FC<OpeningHoursInputProps> = ({
             daySchedule={daySchedule}
             onChange={(newDaySchedule) => updateDay(index, newDaySchedule)}
             primaryColor={primaryColor}
+            disabled={disabled}
           />
         ))}
       </div>

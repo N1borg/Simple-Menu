@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase'
-import { auditLog } from '@/lib/security'
+import { auditLog, getRequestMetadata, STANDARD_ERRORS } from '@/lib/security'
 import { sanitizeString } from '@/lib/validate'
 import { sanitizeEmail } from '@/lib/utils'
 import bcrypt from 'bcryptjs'
@@ -15,22 +15,36 @@ const CreateEstablishmentSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+  const requestMetadata = getRequestMetadata(req)
   
   try {
     // Parse and validate input
     const body = await req.json()
     const { name, contactEmail, adminKey } = CreateEstablishmentSchema.parse(body)
 
+    auditLog({
+      action: 'establishment_create_attempt',
+      severity: 'info',
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
+      details: { name, contactEmail }
+    })
+
     // Verify admin key (environment variable for security)
     if (adminKey !== process.env.ADMIN_CREATE_KEY) {
       auditLog({ 
         action: 'establishment_create_unauthorized', 
-        ip, 
-        details: { name, contactEmail } 
+        severity: 'warning',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { name, contactEmail, reason: 'Invalid admin key' } 
       })
       return NextResponse.json({ 
-        error: 'Clé d\'administration invalide' 
+        error: STANDARD_ERRORS.UNAUTHORIZED
       }, { status: 401 })
     }
 
@@ -39,8 +53,17 @@ export async function POST(req: NextRequest) {
     const safeEmail = sanitizeEmail(contactEmail)
 
     if (!safeName || !safeEmail) {
+      auditLog({
+        action: 'establishment_create_failed',
+        severity: 'warning',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid input after sanitization', hasName: !!safeName, hasEmail: !!safeEmail }
+      })
       return NextResponse.json({ 
-        error: 'Données invalides' 
+        error: STANDARD_ERRORS.INVALID_INPUT
       }, { status: 400 })
     }
 
@@ -66,8 +89,17 @@ export async function POST(req: NextRequest) {
       
       // Prevent infinite loop
       if (counter > 100) {
+        auditLog({
+          action: 'establishment_create_failed',
+          severity: 'error',
+          ip: requestMetadata.ip,
+          userAgent: requestMetadata.userAgent,
+          method: requestMetadata.method,
+          url: requestMetadata.url,
+          details: { reason: 'Slug generation failed after 100 attempts', baseName: safeName }
+        })
         return NextResponse.json({ 
-          error: 'Impossible de générer un identifiant unique' 
+          error: STANDARD_ERRORS.SERVER_ERROR
         }, { status: 500 })
       }
     }
@@ -93,11 +125,20 @@ export async function POST(req: NextRequest) {
     if (createError) {
       auditLog({ 
         action: 'establishment_create_failed', 
-        ip, 
-        details: { name: safeName, slug, error: createError } 
+        severity: 'error',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          name: safeName, 
+          slug, 
+          dbError: createError.code,
+          dbMessage: createError.message
+        } 
       })
       return NextResponse.json({ 
-        error: 'Erreur lors de la création de l\'établissement' 
+        error: STANDARD_ERRORS.SERVER_ERROR
       }, { status: 500 })
     }
 
@@ -117,15 +158,27 @@ export async function POST(req: NextRequest) {
       // Log email failure but don't fail the establishment creation
       auditLog({ 
         action: 'establishment_email_failed', 
-        ip, 
-        details: { slug, email: safeEmail, error: error.message } 
+        severity: 'warning',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { 
+          slug, 
+          email: safeEmail, 
+          error: error.message 
+        } 
       })
     })
 
     // Log successful creation
     auditLog({ 
       action: 'establishment_created', 
-      ip, 
+      severity: 'info',
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
       details: { 
         name: safeName, 
         slug, 
@@ -150,43 +203,60 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
+      auditLog({
+        action: 'establishment_create_validation_failed',
+        severity: 'warning',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { validationErrors: error.errors }
+      })
       return NextResponse.json({ 
-        error: 'Données invalides', 
-        details: error.errors 
+        error: STANDARD_ERRORS.INVALID_INPUT
       }, { status: 400 })
     }
 
     auditLog({ 
       action: 'establishment_create_error', 
-      ip, 
+      severity: 'error',
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
       details: { error: error instanceof Error ? error.message : 'Unknown error' } 
     })
     
     return NextResponse.json({ 
-      error: 'Erreur interne du serveur' 
+      error: STANDARD_ERRORS.SERVER_ERROR
     }, { status: 500 })
   }
 }
 
 // Optional: GET endpoint to list establishments (admin only)
 export async function GET(req: NextRequest) {
-  const url = new URL(req.url)
-  const adminKey = url.searchParams.get('adminKey')
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown'
+  const requestMetadata = getRequestMetadata(req)
   
-  // Verify admin key
-  if (adminKey !== process.env.ADMIN_CREATE_KEY) {
-    auditLog({ 
-      action: 'establishment_list_unauthorized', 
-      ip, 
-      details: {} 
-    })
-    return NextResponse.json({ 
-      error: 'Non autorisé' 
-    }, { status: 401 })
-  }
-
   try {
+    const url = new URL(req.url)
+    const adminKey = url.searchParams.get('adminKey')
+    
+    // Verify admin key
+    if (adminKey !== process.env.ADMIN_CREATE_KEY) {
+      auditLog({ 
+        action: 'establishment_list_unauthorized', 
+        severity: 'warning',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { reason: 'Invalid admin key' } 
+      })
+      return NextResponse.json({ 
+        error: STANDARD_ERRORS.UNAUTHORIZED
+      }, { status: 401 })
+    }
+
     const supabase = await getServerSupabase()
     
     const { data: establishments, error } = await supabase
@@ -196,14 +266,27 @@ export async function GET(req: NextRequest) {
       .limit(50) // Limit for performance
 
     if (error) {
+      auditLog({
+        action: 'establishment_list_failed',
+        severity: 'error',
+        ip: requestMetadata.ip,
+        userAgent: requestMetadata.userAgent,
+        method: requestMetadata.method,
+        url: requestMetadata.url,
+        details: { dbError: error.code, dbMessage: error.message }
+      })
       return NextResponse.json({ 
-        error: 'Erreur lors de la récupération des établissements' 
+        error: STANDARD_ERRORS.SERVER_ERROR
       }, { status: 500 })
     }
 
     auditLog({ 
       action: 'establishment_list_accessed', 
-      ip, 
+      severity: 'info',
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
       details: { count: establishments.length } 
     })
 
@@ -220,12 +303,16 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     auditLog({ 
       action: 'establishment_list_error', 
-      ip, 
+      severity: 'error',
+      ip: requestMetadata.ip,
+      userAgent: requestMetadata.userAgent,
+      method: requestMetadata.method,
+      url: requestMetadata.url,
       details: { error: error instanceof Error ? error.message : 'Unknown error' } 
     })
     
     return NextResponse.json({ 
-      error: 'Erreur interne du serveur' 
+      error: STANDARD_ERRORS.SERVER_ERROR
     }, { status: 500 })
   }
 }

@@ -9,6 +9,7 @@ import OpeningHoursInput from '@/components/OpeningHoursInput'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -17,57 +18,29 @@ import {
 } from "@/components/ui/dialog"
 
 interface OpeningHoursManagerProps {
-  establishmentId: string
   slug: string
   children?: React.ReactNode
   primaryColor?: string
+  isDemo?: boolean
+  openingHoursData?: any // Accept opening_hours directly
 }
 
 const defaultHours = defaultWeekSchedule
 
-export function OpeningHoursManager({ establishmentId, slug, children, primaryColor }: OpeningHoursManagerProps) {
-  const isDemo = slug === 'demo'
+export function OpeningHoursManager({ slug, children, primaryColor, isDemo = false, openingHoursData }: OpeningHoursManagerProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [openingHours, setOpeningHours] = useState<DaySchedule[]>(defaultHours)
-  const [initialOpeningHours, setInitialOpeningHours] = useState<DaySchedule[]>(defaultHours)
+  const initialHours = openingHoursData ? convertLegacyHours(openingHoursData) : defaultHours
+  const [openingHours, setOpeningHours] = useState<DaySchedule[]>(initialHours)
+  const [initialOpeningHours, setInitialOpeningHours] = useState<DaySchedule[]>(initialHours)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   // Check if there are any changes
   const hasChanges = () => {
     return JSON.stringify(convertToLegacyHours(openingHours)) !== JSON.stringify(convertToLegacyHours(initialOpeningHours))
   }
 
-  // Load establishment data on mount for non-demo
-  useEffect(() => {
-    if (!isDemo) {
-      loadOpeningHours()
-    }
-  }, [isDemo])
-
-  const loadOpeningHours = async () => {
-    if (isDemo) {
-      return // Don't load data in demo mode
-    }
-    
-    setIsLoading(true)
-    try {
-      const response = await fetch(`/api/admin/establishment-info?slug=${slug}`)
-      if (response.ok) {
-        const data = await response.json()
-        const loadedHours = data.opening_hours ? convertLegacyHours(data.opening_hours) : defaultHours
-        
-        setOpeningHours(loadedHours)
-        setInitialOpeningHours(loadedHours)
-      } else {
-        toast.error('Erreur lors du chargement des horaires')
-      }
-    } catch (error) {
-      console.error('Error loading opening hours:', error)
-      toast.error('Erreur lors du chargement des horaires')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // No API call for loading opening hours; use prop
 
   const handleHoursChange = (newSchedule: DaySchedule[]) => {
     setOpeningHours(newSchedule)
@@ -96,10 +69,10 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
       toast.success('Horaires mis à jour avec succès!')
       // Update initial state to reflect saved changes
       setInitialOpeningHours(openingHours)
-      // Close dialog by triggering a close - since we're using uncontrolled, we'll reload page
-      setTimeout(() => window.location.reload(), 500)
+      setDialogOpen(false)
     } catch (error) {
       console.error('Error saving opening hours:', error)
+      // Keep the user's edits - don't revert opening hours on error
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde')
     } finally {
       setIsSaving(false)
@@ -107,7 +80,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
   }
 
   return (
-    <Dialog>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         {children || (
           <Button 
@@ -117,6 +90,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
               borderColor: getEstablishmentColor(primaryColor), 
               color: getEstablishmentColor(primaryColor) 
             }}
+            onClick={() => setDialogOpen(true)}
           >
             <Clock 
               className="w-4 h-4" 
@@ -134,20 +108,14 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
           >
             Horaires d'ouverture
           </DialogTitle>
+          <DialogDescription>
+            Configurez les heures d'ouverture de votre établissement.
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center p-8">
             <Loader2 className="w-6 h-6 animate-spin" />
-          </div>
-        ) : isDemo ? (
-          <div className="flex items-center justify-center p-8 text-center">
-            <div className="space-y-2">
-              <p className="text-lg font-medium text-gray-700">Mode Démo</p>
-              <p className="text-sm text-gray-500">
-                La modification des horaires est désactivée en mode démo.
-              </p>
-            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -155,6 +123,7 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
               schedule={openingHours}
               onChange={handleHoursChange}
               primaryColor={primaryColor}
+              disabled={isDemo}
             />
           </div>
         )}
@@ -168,10 +137,6 @@ export function OpeningHoursManager({ establishmentId, slug, children, primaryCo
           <Button 
             onClick={handleSave} 
             disabled={isSaving || isLoading || isDemo || !hasChanges()}
-            style={{ 
-              backgroundColor: getEstablishmentColor(primaryColor), 
-              borderColor: getEstablishmentColor(primaryColor) 
-            }}
           >
             {isSaving ? (
               <div className="flex items-center">

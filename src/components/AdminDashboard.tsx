@@ -1,24 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { EstablishmentWithCategories } from '@/types/supabase_types'
 import { toast } from "sonner"
 import ImageUpload from "@/components/ImageUpload"
 import { DndKitWrapper } from '@/components/DndKitWrapper'
 import { SortableCategory } from '@/components/SortableCategory'
 import { restrictToParentElement } from '@dnd-kit/modifiers'
+import { verticalListSortingStrategy } from '@dnd-kit/sortable'
 import CategorySection from '@/components/CategorySection'
 import { useCategories } from '@/components/hooks/useCategories'
-import { useMenuItems } from '@/components/hooks/useMenuItems'
 import ParameterSheet from '@/components/ParameterSheet'
 import { AddCategoryButton } from '@/components/AddCategoryButton'
 import { useDashboardTutorial } from '@/hooks/useDashboardTutorial'
 import { EstablishmentControls } from '@/components/EstablishmentControls'
-import { Settings } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useSubscription } from '@/hooks/useSubscription'
-
+import BadgeLegend from '@/components/BadgeLegend'
+import UpgradeDialog from '@/components/ui/UpgradeDialog'
 
 interface AdminDashboardProps {
   establishment: EstablishmentWithCategories
@@ -26,16 +24,20 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   const isDemo = establishment.slug === 'demo'
-  const subscription = useSubscription(establishment)
   const [demoLogoUrl, setDemoLogoUrl] = useState<string | undefined>(
     isDemo ? (establishment.logo_url ?? undefined) : undefined
   )
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [loggingOut, setLoggingOut] = useState(false)
   const [isAddingItemGlobally, setIsAddingItemGlobally] = useState(false)
-
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false)
+  const [upgradeFeature, setUpgradeFeature] = useState('')
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({})
   const { startTutorial, tutorialCompleted } = useDashboardTutorial()
-
+  
+  const handleUpgradeNeeded = (feature: string) => {
+    setUpgradeFeature(feature)
+    setUpgradeDialogOpen(true)
+  }
+  
   const {
     categories,
     setCategories,
@@ -48,17 +50,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     originalCategory,
     setOriginalCategory,
     setLoadingAction
-  } = useCategories(establishment, isDemo)
-
-  const {
-    addMenuItem,
-    deleteMenuItem,
-    saveItem,
-    handleItemChange,
-    savingItemId,
-    editingItem,
-    setEditingItem
-  } = useMenuItems(categories, setCategories, isDemo)
+  } = useCategories(establishment, isDemo, handleUpgradeNeeded)
+  
+  // Initialize subscription hook with current categories for real-time count updates
+  const subscription = useSubscription(establishment, categories)
 
   const handleLogoUpload = async (url: string) => {
     if (isDemo) {
@@ -92,10 +87,10 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     // Set loading state to disable buttons
     setLoadingAction(`adding-category-${position}`)
 
-    const display_order = position === 'top' ? 0 : categories.length;
-    if (position === 'top') {
-      setCategories(cats => cats.map(cat => ({ ...cat, display_order: (cat.display_order ?? 0) + 1 })));
-    }
+    // Sort categories by display_order to get current order
+    const sortedCategories = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    
+    const display_order = position === 'top' ? 0 : sortedCategories.length;
 
     const tempCat = {
       id: `temp-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
@@ -105,15 +100,25 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
       created_at: new Date().toISOString(),
       display_order,
       establishment_id: establishment.id,
+      is_available: true,
       menu_items: [],
       isLoading: true,
+      alcohol_free: null,
+      vegan: null,
     };
 
-    setCategories(cats => {
-      const arr = [...cats];
-      arr.splice(display_order, 0, tempCat);
-      return arr;
-    });
+    // Update display_order for existing categories if inserting at top
+    if (position === 'top') {
+      setCategories(cats => {
+        const updatedCats = cats.map(cat => ({ 
+          ...cat, 
+          display_order: (cat.display_order ?? 0) + 1 
+        }));
+        return [tempCat, ...updatedCats];
+      });
+    } else {
+      setCategories(cats => [...cats, tempCat]);
+    }
 
     try {
       const res = await fetch('/api/admin/menu-category/create', {
@@ -132,13 +137,35 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
         setCategories(cats => cats.map(cat =>
           cat.id === tempCat.id ? { ...data.category, menu_items: [] } : cat
         ));
+        
+        // Update display_order for other categories in the database if inserting at top
+        if (position === 'top') {
+          const updatePromises = categories.map((cat, index) => 
+            fetch('/api/admin/menu-category/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...cat, display_order: index + 1 }),
+            })
+          );
+          await Promise.all(updatePromises);
+        }
+        
         toast.success("Catégorie créée");
       } else {
+        // Handle specific API errors
+        if (data?.code === 'SUBSCRIPTION_LIMIT_REACHED') {
+          toast.error(data.error || "Limite d'abonnement atteinte")
+          // Open upgrade dialog
+          setUpgradeFeature('Ajouter plus de catégories')
+          setUpgradeDialogOpen(true)
+        } else {
+          toast.error(data?.error || "Erreur lors de la création de la catégorie")
+        }
         throw new Error('Failed to create category');
       }
     } catch (error) {
       setCategories(cats => cats.filter(cat => cat.id !== tempCat.id));
-      toast.error("Erreur lors de la création de la catégorie");
+      // Don't show additional toast here as we already showed specific error above
     } finally {
       setLoadingAction(null);
     }
@@ -152,16 +179,27 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
     }
     if (oldIndex === newIndex) return
 
-    const sorted = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-    const [moved] = sorted.splice(oldIndex, 1)
-    sorted.splice(newIndex, 0, moved)
-    sorted.forEach((cat, idx) => (cat.display_order = idx))
+    // Get properly sorted categories first
+    const sortedCategories = [...categories].sort((a, b) => {
+      const orderA = typeof a.display_order === 'number' ? a.display_order : 999999
+      const orderB = typeof b.display_order === 'number' ? b.display_order : 999999
+      return orderA - orderB
+    })
 
-    setCategories(sorted)
+    // Move the category
+    const [moved] = sortedCategories.splice(oldIndex, 1)
+    sortedCategories.splice(newIndex, 0, moved)
+    
+    // Reassign display_order to all categories sequentially
+    sortedCategories.forEach((cat, idx) => {
+      cat.display_order = idx
+    })
+
+    setCategories(sortedCategories)
 
     // Persist order to API
     if (!isDemo) {
-      sorted.forEach((cat, idx) => {
+      sortedCategories.forEach((cat, idx) => {
         fetch('/api/admin/menu-category/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -190,24 +228,21 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 relative flex flex-col">
       <div className="flex justify-end mb-4">
-        <div className="tutorial-parameters-button">
-          <ParameterSheet
-            establishment={{
-              id: establishment.id,
-              slug: establishment.slug,
-              primary_color: establishment.primary_color ?? undefined,
-              secondary_color: establishment.secondary_color ?? undefined,
-              plan: establishment.plan,
-              logo_url: establishment.logo_url ?? undefined,
-            }}
-            isDemo={isDemo}
-            subscription={subscription}
-            onTutorialStart={startTutorial}
-          />
-        </div>
+        <ParameterSheet
+          establishment={{
+            id: establishment.id,
+            slug: establishment.slug,
+            primary_color: establishment.primary_color ?? undefined,
+            plan: establishment.plan,
+            logo_url: establishment.logo_url ?? undefined,
+          }}
+          isDemo={isDemo}
+          subscription={subscription}
+          onTutorialStart={startTutorial}
+        />
       </div>
 
-      <div className="tutorial-welcome mb-4 mt-7">
+      <div className="mt-6">
         <ImageUpload
           establishmentId={establishment.id}
           currentImageUrl={establishment.logo_url ?? undefined}
@@ -219,32 +254,32 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           }}
           isDemo={isDemo}
         />
-        <h1 
-          className="text-3xl font-bold text-center mt-2"
-          style={{ color: establishment.secondary_color || undefined }}
-        >
-          {establishment.name}
-        </h1>
+        <h1 className="text-3xl font-bold text-center mt-2">{establishment.name}</h1>
       </div>
 
-      {/* Show only one button when there are no categories */}
-      {categories.length === 0 ? (
-        <AddCategoryButton
-          onClick={() => addCategory('top')}
-          disabled={loadingAction !== null}
-          loading={loadingAction?.startsWith('adding-category')}
-          className="flex justify-center mt-4"
-          subscription={subscription}
-        />
-      ) : (
-        <AddCategoryButton
-          onClick={() => addCategory('top')}
-          disabled={loadingAction !== null}
-          loading={loadingAction?.startsWith('adding-category')}
-          className="flex justify-center mt-4"
-          subscription={subscription}
-        />
-      )}
+      <h1 className="text-3xl font-bold text-center mt-2 mb-4">{establishment.name}</h1>
+
+      <div className="tutorial-category-section">
+        {/* Show only one button when there are no categories */}
+        {categories.length === 0 ? (
+          <AddCategoryButton
+            onClick={() => addCategory('top')}
+            disabled={loadingAction !== null}
+            loading={loadingAction?.startsWith('adding-category')}
+            className="tutorial-add-category flex justify-center mt-4 mb-4"
+            subscription={subscription}
+            isAddingItemGlobally={isAddingItemGlobally}
+          />
+        ) : (
+          <AddCategoryButton
+            onClick={() => addCategory('top')}
+            disabled={loadingAction !== null}
+            loading={loadingAction?.startsWith('adding-category')}
+            className="tutorial-add-category flex justify-center mt-4 mb-4"
+            subscription={subscription}
+            isAddingItemGlobally={isAddingItemGlobally}
+          />
+        )}
 
       <DndKitWrapper
         items={categories}
@@ -270,7 +305,6 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
                   setCategories={setCategories}
                   saveCategory={handleSaveCategory}
                   establishmentColor={establishment.primary_color ?? undefined}
-                  textColor={establishment.secondary_color ?? undefined}
                   deleteCategory={handleDeleteCategory}
                   subscription={subscription}
                   isAddingItemGlobally={isAddingItemGlobally}
@@ -287,37 +321,31 @@ export default function AdminDashboard({ establishment }: AdminDashboardProps) {
           onClick={() => addCategory('bottom')}
           disabled={loadingAction !== null}
           loading={loadingAction?.startsWith('adding-category')}
-          className="flex justify-center mt-8"
+          className="flex justify-center mb-8"
           subscription={subscription}
-        />
-      )}
-      
-      {/* Edit Contact Information Button - Always visible */}
-      <div className="flex justify-center mt-6 mb-6">
-        {isDemo ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2"
-                disabled={true}
-              >
-                <Settings className="w-4 h-4" />
-                Modifier les informations de contact
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Modification désactivée (mode démo)</p>
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <EstablishmentControls 
-            establishmentId={establishment.id}
-            slug={establishment.slug}
-            primaryColor={establishment.primary_color ?? undefined}
+          isAddingItemGlobally={isAddingItemGlobally}
           />
         )}
       </div>
+      
+      {/* Badge Legend */}
+      <BadgeLegend categories={categories} />
+      
+      {/* Edit Contact Information Button - Always visible */}
+      <div className="tutorial-establishment-info-form flex justify-center mt-2">
+        <EstablishmentControls
+          slug={establishment.slug}
+          primaryColor={establishment.primary_color ?? undefined}
+          isDemo={isDemo}
+          openingHoursData={establishment.opening_hours}
+        />
+      </div>
+
+      <UpgradeDialog
+        open={upgradeDialogOpen}
+        onOpenChange={setUpgradeDialogOpen}
+        feature={upgradeFeature}
+      />
     </div>
   )
 }
